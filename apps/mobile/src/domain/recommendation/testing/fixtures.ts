@@ -1,5 +1,5 @@
 import type { FactorId } from '../../activities/types';
-import type { HourlyConditions } from '../../forecast/types';
+import type { Forecast, HourlyConditions } from '../../forecast/types';
 import type { HourScore, ScoreLabel } from '../scoreHour';
 import type { VetoId } from '../vetoes';
 
@@ -53,5 +53,25 @@ export function makeHourScore(
     comforts: { thermal: 1, rain: 1, wind: 1, uv: 1, sun: 1, ...overrides.comforts },
     veto: overrides.veto ?? null,
     label: labelOf(score),
+  };
+}
+
+/** Previsão de teste com dias inteiros e resumo diário coerente. */
+export function makeForecast(
+  dates: readonly string[],
+  perHour: (date: string, hour: number) => Partial<HourlyConditions> = () => ({}),
+): Forecast {
+  return {
+    timezone: 'America/Sao_Paulo',
+    utcOffsetSeconds: -10800,
+    hourly: dates.flatMap((date) => makeDay(date, (hour) => perHour(date, hour))),
+    daily: dates.map((date) => ({
+      date,
+      sunrise: `${date}T06:12`,
+      sunset: `${date}T18:04`,
+      weatherCode: 1,
+      tempMax: 26,
+      tempMin: 16,
+    })),
   };
 }
