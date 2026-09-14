@@ -1,0 +1,44 @@
+import { View, type ViewProps } from 'react-native';
+
+import { tokens } from './tokens';
+
+type Strength = 'soft' | 'strong' | 'shade';
+
+type Props = ViewProps & {
+  readonly strength?: Strength;
+  readonly radius?: keyof typeof tokens.radius;
+  readonly padding?: keyof typeof tokens.space;
+  readonly gap?: keyof typeof tokens.space;
+};
+
+const BACKGROUND_BY_STRENGTH: Record<Strength, string> = {
+  soft: tokens.color.surface,
+  strong: tokens.color.surfaceStrong,
+  shade: tokens.color.shade,
+};
+
+export function Surface({
+  strength = 'soft',
+  radius = 'card',
+  padding,
+  gap,
+  style,
+  ...rest
+}: Props) {
+  return (
+    <View
+      {...rest}
+      style={[
+        {
+          backgroundColor: BACKGROUND_BY_STRENGTH[strength],
+          borderRadius: tokens.radius[radius],
+          borderWidth: strength === 'strong' ? 1 : 0,
+          borderColor: tokens.color.border,
+        },
+        padding !== undefined && { padding: tokens.space[padding] },
+        gap !== undefined && { gap: tokens.space[gap] },
+        style,
+      ]}
+    />
+  );
+}

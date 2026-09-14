@@ -1,0 +1,35 @@
+export type SkyPhase = 'dawn' | 'day' | 'dusk' | 'night' | 'rainy';
+
+export const tokens = {
+  color: {
+    text: '#FFFFFF',
+    textMuted: 'rgba(255,255,255,0.78)',
+    surface: 'rgba(255,255,255,0.14)',
+    surfaceStrong: 'rgba(255,255,255,0.22)',
+    border: 'rgba(255,255,255,0.28)',
+    ink: '#2C2C5E',
+    accent: '#FFFFFF',
+    accentInk: '#4B3FB5',
+    mint: '#8FF0B6',
+    mintInk: '#0A4A2A',
+    gold: '#FFD66B',
+    goldInk: '#5A3F00',
+    danger: '#FF9B8A',
+    dangerInk: '#5A1A0F',
+    score: { great: '#8FF0B6', good: '#8FF0B6', fair: '#FFD66B', poor: '#FF9B8A' },
+    scoreInk: { great: '#0A4A2A', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
+    shade: 'rgba(0,0,0,0.16)',
+  },
+  space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40 },
+  radius: { hero: 24, card: 16, inner: 12, pill: 999 },
+  font: { display: 52, xp: 56, title: 20, subtitle: 16, body: 14, small: 12, micro: 10 },
+  gradients: {
+    dawn: ['#F6C9A0', '#E8927A', '#8E6AA6', '#4C4477'],
+    day: ['#9FD3F5', '#5AA2E0', '#3D6FC0'],
+    dusk: ['#F7B388', '#E58AA0', '#7D63B8', '#2C2C5E'],
+    night: ['#3B3F7A', '#23264F', '#101230'],
+    rainy: ['#B6BCC8', '#7C8597', '#444B5A'],
+  } satisfies Record<SkyPhase, readonly [string, string, ...string[]]>,
+} as const;
+
+export type ScoreTone = keyof typeof tokens.color.score;
