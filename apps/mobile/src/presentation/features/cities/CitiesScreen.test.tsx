@@ -1,0 +1,73 @@
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+
+import { fakeGeocoding, fakeLocation, fakeServices, saoPaulo } from '@/application/testing/fakes';
+import { err, ok } from '@/domain';
+
+import { usePreferences } from '../../state/preferencesStore';
+import { renderWithProviders } from '../../testing/renderWithProviders';
+
+import { CitiesScreen } from './CitiesScreen';
+
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+
+// A FlatList (VirtualizedList) agenda a atualização de células visíveis via setTimeout interno.
+// Sem esperar por ela dentro de act(), o React acusa "setState fora de act()" após o teste.
+const flushListBatching = () => act(() => new Promise((resolve) => setTimeout(resolve, 100)));
+
+beforeEach(() => {
+  mockPush.mockClear();
+  usePreferences.setState({ city: null, activity: 'walk', favorites: [], recents: [] });
+});
+
+describe('CitiesScreen', () => {
+  it('busca depois de 2 letras, mostra resultado e seleciona a cidade', async () => {
+    const geocoding = fakeGeocoding(ok([saoPaulo]));
+    renderWithProviders(<CitiesScreen />, { services: fakeServices({ geocoding }) });
+    fireEvent.changeText(screen.getByLabelText('Digite o nome da cidade'), 'São');
+    await screen.findByText('São Paulo, São Paulo, Brasil', {}, { timeout: 2000 });
+    expect(geocoding.calls).toEqual(['São']);
+    await flushListBatching();
+    fireEvent.press(screen.getByText('São Paulo, São Paulo, Brasil'));
+    expect(usePreferences.getState().city?.id).toBe(saoPaulo.id);
+    expect(usePreferences.getState().recents.map((c) => c.id)).toEqual([saoPaulo.id]);
+    expect(mockPush).toHaveBeenCalledWith('/');
+  });
+
+  it('sem resultados mostra a mensagem', async () => {
+    renderWithProviders(<CitiesScreen />, {
+      services: fakeServices({ geocoding: fakeGeocoding(ok([])) }),
+    });
+    fireEvent.changeText(screen.getByLabelText('Digite o nome da cidade'), 'zzz');
+    await screen.findByText('Nenhuma cidade encontrada para "zzz"', {}, { timeout: 2000 });
+    await flushListBatching();
+  });
+
+  it('usa a localização quando permitida e mostra erro quando negada', async () => {
+    const fix = { coords: { latitude: -23.5, longitude: -46.6 }, city: saoPaulo };
+    const { unmount } = renderWithProviders(<CitiesScreen />, {
+      services: fakeServices({ location: fakeLocation(ok(fix)) }),
+    });
+    fireEvent.press(screen.getByText('Usar minha localização'));
+    await waitFor(() => expect(usePreferences.getState().city?.id).toBe(saoPaulo.id));
+    await flushListBatching();
+    unmount();
+    renderWithProviders(<CitiesScreen />, {
+      services: fakeServices({ location: fakeLocation(err({ code: 'denied' })) }),
+    });
+    fireEvent.press(screen.getByText('Usar minha localização'));
+    await screen.findByText('Sem permissão de localização. Busque a cidade pelo nome.');
+    await flushListBatching();
+  });
+
+  it('favorita e lista em Favoritas; recente some ao virar favorita', async () => {
+    usePreferences.setState({ recents: [saoPaulo] });
+    renderWithProviders(<CitiesScreen />, { services: fakeServices() });
+    expect(screen.getByText('Recentes')).toBeTruthy();
+    await flushListBatching();
+    fireEvent.press(screen.getByLabelText('Favoritar'));
+    await screen.findByText('Favoritas');
+    expect(screen.queryByText('Recentes')).toBeNull();
+    await flushListBatching();
+  });
+});
