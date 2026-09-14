@@ -24,7 +24,8 @@ export async function fetchJson(
     state.timedOut = true;
     controller.abort();
   }, timeoutMs);
-  opts.signal?.addEventListener('abort', () => controller.abort());
+  const onAbort = () => controller.abort();
+  opts.signal?.addEventListener('abort', onAbort);
 
   try {
     const response = await fetchFn(url, { signal: controller.signal });
@@ -41,5 +42,6 @@ export async function fetchJson(
       : err({ code: 'network', message: messageOf(e) });
   } finally {
     clearTimeout(timer);
+    opts.signal?.removeEventListener('abort', onAbort);
   }
 }
