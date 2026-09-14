@@ -42,19 +42,38 @@ gerado com sucesso, 1406 módulos) e removeu o diretório de saída em seguida.
   `todayBestOfWeek` / nenhum) e o dia marcado como `bestDate` no `NextDaysList`. Não bloqueia a
   cobertura global (96–97 % agregado), mas vale endurecer ao construir o design system do Plano 3
   sobre esses componentes.
-- **Aviso `react-hooks/exhaustive-deps` em `useOverview`**: `pnpm --filter mobile exec eslint
-src/presentation/queries/useOverview.ts` reporta
-  `React Hook useMemo has an unnecessary dependency: 'tick'` na linha do `useMemo` de
-  `useOverview.ts`. `tick` é usado deliberadamente só para forçar a recomputação do "agora" a cada
-  minuto (comentário no código), então o "unnecessary" é falso-positivo do lint — mas hoje ele passa
-  silencioso (warning, não error, não falha `pnpm lint`). Resolver com um
-  `// eslint-disable-next-line react-hooks/exhaustive-deps` explicado, ou reestruturar para não
-  depender de um valor não lido dentro do callback.
+- resolvido: `buildOverview` puro com `nowEpochMs`.
+- **Seletor de hora para "Registrar atividade"**: hoje `hourLeft` é sempre a hora atual
+  (`snapshot.now.hour`) quando o usuário toca "Registrar atividade" no `HomeScreen`. Não há como
+  registrar uma atividade feita numa hora diferente da atual; adicionar um seletor de hora ao fluxo
+  de registro livre no Plano 3.
+- **Minutos no texto "Concluído às"**: `t.home.done(hour, minute)` já aceita minuto, mas o registro
+  (`logActivity`/`confirmActivity`) só guarda `hourLeft` (hora inteira) — o minuto exibido é sempre
+  `00`. Guardar o minuto real do evento para exibir "Concluído às 14h37" em vez de "14h00".
+- **Funções de tela acima de 50 linhas**: `HomeScreen.tsx` e `CitiesScreen.tsx` têm funções de
+  componente acima do limite de 50 linhas do checklist de estilo; extrair subcomponentes ao
+  construir o design system do Plano 3.
 - **MSW para testes de tela com HTTP real**: os testes de `HomeScreen`/`CitiesScreen` usam
   `fakeServices`/ports falsos (decisão documentada no Plano 2, seção 8.2 do spec). Adicionar MSW
   (Mock Service Worker) para cobrir pelo menos um teste de tela ponta a ponta contra os adapters
   reais de `infrastructure/openMeteo`, validando serialização de query params, parsing do DTO e
   mapeamento de erros HTTP sem depender só dos testes unitários de `forecastClient`/`geocodingClient`.
+
+## Herdado do Plano 1, ainda aberto
+
+- **`tsconfig.json`**: `baseUrl`/`ignoreDeprecations` seguem como decisão pendente herdada do
+  Plano 1 (não revisitada nesta tarefa).
+
+## Para o Plano 4
+
+- **`expo lint` não cobre `eslint.config.js`/`jest.setup.js`**: esses dois arquivos ficam fora da
+  raiz `src/` e não passam pelo `expo lint` do Plano 2 (nem pelo probe manual desta tarefa, que usa
+  `eslint --stdin` direto). Tratar isso na configuração de CI do Plano 4, cobrindo explicitamente
+  arquivos de config na raiz de `apps/mobile`.
+- **`env.ts`: modo `bff` com URL inválida deve falhar alto**: hoje uma `EXPO_PUBLIC_BFF_URL`
+  inválida em modo `bff` degrada silenciosamente para `direct` (com aviso de log); quando o Plano 4
+  introduzir o BFF de verdade, isso deve falhar alto (erro visível, não fallback silencioso) para
+  não mascarar configuração quebrada em produção.
 
 ## Minors diferidos (fazer se sobrar tempo)
 
@@ -65,3 +84,6 @@ src/presentation/queries/useOverview.ts` reporta
   mas sem teste de tela direto para o card de erro de rede combinado com retry a partir de `HomeScreen`.
 - `env.ts` linha 30 sem cobertura (branch do modo `bff` caindo em `direct` com aviso) — só
   relevante quando o Plano 4 introduzir o BFF de verdade.
+- **Ramos nulos de `mapForecast`**: os ramos que tratam campos ausentes/nulos do DTO da Open-Meteo
+  só são cobertos com um DTO sintético construído no teste, não com uma resposta real da API —
+  vale revisitar com um fixture gravado de uma resposta real ao endurecer `infrastructure/openMeteo`.
