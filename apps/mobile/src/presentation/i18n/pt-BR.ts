@@ -97,6 +97,8 @@ export const t = {
     cancelPlan: 'Desfazer plano',
     confirm: 'Confirmar que fui',
     logOther: 'Saí em outro horário',
+    confirmHour: (hour: number) => `Registrar às ${hour}h`,
+    cancelPick: 'Cancelar',
     done: (hour: number, minute: number) =>
       `Concluído às ${hour}h${String(minute).padStart(2, '0')}`,
     xpEarned: (xp: number) => `+${xp} XP`,

@@ -68,7 +68,6 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
         state={hero}
         config={config}
         now={snapshot.now}
-        nowScore={snapshot.overview.now?.score ?? 0}
         hours={snapshot.overview.today.hours}
         level={progress.level}
         actions={actions}

@@ -8,6 +8,7 @@ import { t } from '../../i18n/pt-BR';
 import { useGamificationActions } from '../../queries/useGamificationActions';
 
 import type { HeroState } from './heroState';
+import { pickableHours, type PickableHour } from './pickableHours';
 
 type ActionErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
@@ -51,12 +52,14 @@ export type HeroActionsResult = {
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
   readonly onLogNow: (hour: number, minute: number, hourScore: number) => void;
+  /** Horas de hoje até "agora", para o seletor usado ao registrar fora de um plano. */
+  readonly pickableHours: readonly PickableHour[];
   readonly busy: boolean;
   readonly errorMessage: string | null;
 };
 
 type Actions = ReturnType<typeof useGamificationActions>;
-type Handlers = Omit<HeroActionsResult, 'busy' | 'errorMessage'>;
+type Handlers = Omit<HeroActionsResult, 'busy' | 'errorMessage' | 'pickableHours'>;
 
 /** Pura: monta os quatro handlers a partir dos dados de entrada, do herói e das mutações. */
 function buildHeroHandlers(
@@ -121,5 +124,6 @@ export function useHeroActions(input: Input): HeroActionsResult {
   const actions = useGamificationActions();
   const { run, errorMessage } = useActionRunner();
   const handlers = buildHeroHandlers(input, actions, run);
-  return { ...handlers, busy: isBusy(actions), errorMessage };
+  const hours = pickableHours(input.snapshot.overview.today, input.snapshot.now);
+  return { ...handlers, pickableHours: hours, busy: isBusy(actions), errorMessage };
 }
