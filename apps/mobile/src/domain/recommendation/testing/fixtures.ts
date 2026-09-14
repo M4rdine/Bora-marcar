@@ -1,4 +1,7 @@
+import type { FactorId } from '../../activities/types';
 import type { HourlyConditions } from '../../forecast/types';
+import type { HourScore, ScoreLabel } from '../scoreHour';
+import type { VetoId } from '../vetoes';
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 
@@ -33,4 +36,22 @@ export function makeDay(
   return Array.from({ length: 24 }, (_, hour) =>
     makeHour({ date, hour, isDay: hour >= 6 && hour < 18, ...perHour(hour) }),
   );
+}
+
+const labelOf = (score: number): ScoreLabel =>
+  score >= 80 ? 'great' : score >= 65 ? 'good' : score >= 45 ? 'fair' : 'poor';
+
+/** `HourScore` de teste com conforto perfeito (1) em todos os fatores por padrão. */
+export function makeHourScore(
+  hour: number,
+  score: number,
+  overrides: { comforts?: Partial<Record<FactorId, number>>; veto?: VetoId | null } = {},
+): HourScore {
+  return {
+    hour: makeHour({ hour }),
+    score,
+    comforts: { thermal: 1, rain: 1, wind: 1, uv: 1, sun: 1, ...overrides.comforts },
+    veto: overrides.veto ?? null,
+    label: labelOf(score),
+  };
 }
