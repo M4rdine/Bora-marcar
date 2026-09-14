@@ -25,6 +25,7 @@ import type {
   ProgressRepository,
   ProviderError,
 } from '../ports';
+import { createAppServices, type AppPorts, type AppServices } from '../services';
 
 export const saoPaulo: City = {
   id: '3448439',
@@ -137,3 +138,17 @@ export const silentLogger = (): Logger => ({
   warn: () => undefined,
   error: () => undefined,
 });
+
+export const fakeServices = (overrides: Partial<AppPorts> = {}): AppServices =>
+  createAppServices({
+    geocoding: fakeGeocoding(),
+    forecast: fakeForecast(err({ code: 'network', message: 'sem forecast configurado' })),
+    location: fakeLocation(),
+    progress: memoryProgressRepository(),
+    config: fixedConfig(),
+    clock: fixedClock(Date.UTC(2026, 8, 13, 17, 0, 0)),
+    ids: sequentialIds(),
+    notifications: recordingScheduler(),
+    logger: silentLogger(),
+    ...overrides,
+  });
