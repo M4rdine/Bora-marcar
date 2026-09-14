@@ -186,7 +186,8 @@ Cada fator vira um conforto em [0, 1] por curva linear por partes:
 - **Térmico** (`apparent_temperature`): 1 dentro da faixa ideal; cai linearmente até 0
   nos limites de tolerância; 0 fora.
 - **Chuva**: probabilidade 0–20 % → 1; 20–50 % → 1 → 0,5; 50–80 % → 0,5 → 0,1;
-  ≥ 80 % → 0. Volume 0,2–1 mm multiplica por 0,6.
+  ≥ 80 % → 0. Volume ≥ 0,2 mm multiplica por 0,6 (acima de 1 mm o veto já limita o
+  score a 20).
 - **Vento** (`wind_speed_10m`): ≤ ok → 1; linear até 0 em máx. Rajadas > 1,3 × máx
   multiplicam por 0,7.
 - **UV**: ≤ ok → 1; linear até 0,3 em máx; piso 0,2 acima.
@@ -252,11 +253,14 @@ como ressalva ("Antes das 16h o UV está alto: melhor esperar.").
 
 ### 4.6 Config remota
 
-Perfis, curvas, limiares de descritores, limiares de ressalvas e constantes de XP vivem em
-`engine.json` (schema Zod em `packages/contracts`, campo `schemaVersion`). O app baixa
-de `${ASSETS_URL}/config/v1/engine.json` com cache de 24 h, valida, e guarda a última
-cópia válida. Sem rede ou schema inválido, usa a cópia embutida. O domínio recebe a
-config como parâmetro; nunca lê de rede nem de storage.
+O que é ajustável remotamente: perfis de atividade (faixas térmicas, limites de vento/UV,
+fator noturno, pesos), limiares de rótulo de score, regras de janela, limiares das dicas de
+preparo e regras de XP e níveis. Tudo isso vive em `engine.json` (schema Zod em
+`packages/contracts`, campo `schemaVersion`). As curvas de conforto, os descritores PT-BR,
+as ressalvas e as regras de badges são código — versionadas com o app —, por design, para
+manter o motor legível. O app baixa de `${ASSETS_URL}/config/v1/engine.json` com cache de
+24 h, valida, e guarda a última cópia válida. Sem rede ou schema inválido, usa a cópia
+embutida. O domínio recebe a config como parâmetro; nunca lê de rede nem de storage.
 
 ## 5. Gamificação (domínio)
 
@@ -527,8 +531,8 @@ Cobertura global mínima de 80 % imposta no CI.
   Open-Meteo, não mil. Respeita o uso justo da API e reduz latência para milissegundos.
 - **Desacoplamento do provedor**: o app fala com o BFF em um contrato próprio; trocar de
   provedor de clima muda o BFF, não o app.
-- **Config remota do motor**: pesos, curvas e regras de badges ajustáveis sem publicar
-  versão nova; o app cacheia a última cópia válida e funciona offline.
+- **Config remota do motor**: perfis, pesos, limiares e regras de XP/níveis ajustáveis
+  sem publicar versão nova; o app cacheia a última cópia válida e funciona offline.
 - **Fallback direto**: o mesmo port `ForecastProvider` com dois adapters; o avaliador roda
   sem infra nenhuma. Ports and adapters demonstrado com um caso real, não teórico.
 - **Motor no dispositivo**: funciona offline com a última previsão em cache, e a lógica
