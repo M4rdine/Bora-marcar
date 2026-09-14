@@ -23,11 +23,13 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [
-      "prettier --write",
-      "eslint --fix --no-warn-ignored"
+      "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
+    ],
+    "apps/mobile/**/*.{ts,tsx,js}": [
+      "pnpm --filter mobile exec eslint --fix --no-warn-ignored"
     ]
   },
   "pnpm": {

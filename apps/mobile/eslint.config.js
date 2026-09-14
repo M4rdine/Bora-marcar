@@ -23,23 +23,41 @@ module.exports = defineConfig([
     },
     rules: {
       'no-console': 'error',
-      'boundaries/element-types': [
+      // Single `dependencies` rule (current, non-deprecated API) governing both
+      // internal layer boundaries and external/core module access.
+      // `checkAllOrigins: true` makes it also evaluate external (npm) and core
+      // (Node builtin) imports, not just imports between internal elements —
+      // without it, `domain` importing an npm package would silently pass.
+      'boundaries/dependencies': [
         'error',
         {
           default: 'disallow',
-          rules: [
-            { from: 'domain', allow: ['domain'] },
-            { from: 'application', allow: ['domain', 'application'] },
-            { from: 'infrastructure', allow: ['domain', 'application', 'infrastructure'] },
-            { from: 'presentation', allow: ['domain', 'application', 'presentation'] },
+          checkAllOrigins: true,
+          policies: [
+            {
+              from: { element: { type: 'domain' } },
+              allow: { to: { element: { type: 'domain' } } },
+            },
+            {
+              from: { element: { type: 'application' } },
+              allow: { to: { element: { type: ['domain', 'application'] } } },
+            },
+            {
+              from: { element: { type: 'infrastructure' } },
+              allow: { to: { element: { type: ['domain', 'application', 'infrastructure'] } } },
+            },
+            {
+              from: { element: { type: 'presentation' } },
+              allow: { to: { element: { type: ['domain', 'application', 'presentation'] } } },
+            },
+            // Only non-domain layers may depend on external npm packages or
+            // Node core builtins; `domain` has no allow policy for external
+            // origins, so it falls through to `default: 'disallow'`.
+            {
+              from: { element: { type: ['application', 'infrastructure', 'presentation'] } },
+              allow: { to: { module: { origin: ['external', 'core'] } } },
+            },
           ],
-        },
-      ],
-      'boundaries/external': [
-        'error',
-        {
-          default: 'allow',
-          rules: [{ from: 'domain', disallow: ['*'] }],
         },
       ],
       'boundaries/no-unknown-files': 'off',
