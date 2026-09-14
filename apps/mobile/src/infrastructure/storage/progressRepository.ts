@@ -27,15 +27,29 @@ function parseStored(raw: string | null, logger: Logger): readonly GamificationE
 }
 
 export function createProgressRepository({ storage, clock, logger }: Deps): ProgressRepository {
-  const load = async (): Promise<readonly GamificationEvent[]> =>
-    parseStored(await storage.getItem(PROGRESS_KEY), logger);
+  const load = async (): Promise<readonly GamificationEvent[]> => {
+    try {
+      return parseStored(await storage.getItem(PROGRESS_KEY), logger);
+    } catch (e) {
+      logger.warn('Falha ao ler o progresso', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+      return [];
+    }
+  };
   return {
     load,
     async append(event) {
       const cutoff = clock.now() - RETENTION_DAYS * DAY_MS;
       const kept = (await load()).filter((e) => e.createdAt >= cutoff);
       const next: StoredProgress = { schemaVersion: 1, events: [...kept, event] };
-      await storage.setItem(PROGRESS_KEY, JSON.stringify(next));
+      try {
+        await storage.setItem(PROGRESS_KEY, JSON.stringify(next));
+      } catch (e) {
+        logger.error('Falha ao gravar o progresso', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
     },
   };
 }

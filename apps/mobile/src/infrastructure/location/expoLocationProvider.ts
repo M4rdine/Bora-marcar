@@ -20,9 +20,9 @@ function cityFrom(coords: Coordinates, place: Location.LocationGeocodedAddress |
 
 export const expoLocationProvider = (): LocationProvider => ({
   async current() {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (permission.status !== 'granted') return err({ code: 'denied' });
     try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== 'granted') return err({ code: 'denied' });
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });

@@ -1,8 +1,21 @@
+import type { KeyValueStorage } from '@/application/ports';
 import { silentLogger } from '@/application/testing/fakes';
 import type { GamificationEvent } from '@/domain';
 
 import { memoryKeyValue } from './memoryKeyValue';
 import { PROGRESS_KEY, createProgressRepository } from './progressRepository';
+
+const rejectingStorage = (): KeyValueStorage => ({
+  getItem: async () => {
+    throw new Error('getItem indisponível');
+  },
+  setItem: async () => {
+    throw new Error('setItem indisponível');
+  },
+  removeItem: async () => {
+    throw new Error('removeItem indisponível');
+  },
+});
 
 const NOW = Date.UTC(2026, 8, 13, 12, 0, 0);
 const DAY = 86_400_000;
@@ -67,5 +80,27 @@ describe('createProgressRepository', () => {
     await repo.append(logged('edge', NOW - 365 * DAY));
     await repo.append(logged('new', NOW));
     expect((await repo.load()).map((e) => e.id)).toEqual(['edge', 'new']);
+  });
+
+  it('load trata falha do storage como vazio, com aviso', async () => {
+    const storage = rejectingStorage();
+    const warnings: string[] = [];
+    const logger = { ...silentLogger(), warn: (m: string) => warnings.push(m) };
+    const repo = createProgressRepository({ storage, clock: { now: () => NOW }, logger });
+    expect(await repo.load()).toEqual([]);
+    expect(warnings).toHaveLength(1);
+  });
+
+  it('append tolera falha ao gravar e registra erro', async () => {
+    const storage = rejectingStorage();
+    const errors: string[] = [];
+    const logger = {
+      ...silentLogger(),
+      warn: () => undefined,
+      error: (m: string) => errors.push(m),
+    };
+    const repo = createProgressRepository({ storage, clock: { now: () => NOW }, logger });
+    await expect(repo.append(logged('a', NOW))).resolves.toBeUndefined();
+    expect(errors).toHaveLength(1);
   });
 });

@@ -25,7 +25,7 @@ Smoke manual no Expo Go pendente: ver roteiro em docs/superpowers/plans/2026-09-
 ## Arquitetura
 
 - `src/domain` — regras puras (motor de recomendação e gamificação), 100 % testadas.
-- `src/application` — ports (interfaces) e casos de uso que devolvem `Result`.
+- `src/application` — ports (interfaces) e casos de uso que devolvem `Result` (ou degradam com log quando o storage falha).
 - `src/infrastructure` — adapters: Open-Meteo (Zod), AsyncStorage, expo-location, expo-notifications, relógio, ids, logger; `container.ts` monta tudo.
-- `src/presentation` — TanStack Query, Zustand persistido, telas por feature; `src/app` só re-exporta telas para o Expo Router.
+- `src/presentation` — TanStack Query, Zustand persistido, telas por feature; `src/app` só re-exporta telas para o Expo Router; `_layout.tsx` compõe o container e configura notificações.
 - Documentação de design: `docs/superpowers/specs/2026-09-13-melhor-hora-design.md`.
