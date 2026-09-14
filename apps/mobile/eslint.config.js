@@ -10,6 +10,11 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'coverage/*', '.expo/*'],
   },
   {
+    rules: {
+      'no-console': 'error',
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     plugins: { boundaries },
     settings: {
@@ -22,7 +27,6 @@ module.exports = defineConfig([
       ],
     },
     rules: {
-      'no-console': 'error',
       // Single `dependencies` rule (current, non-deprecated API) governing both
       // internal layer boundaries and external/core module access.
       // `checkAllOrigins: true` makes it also evaluate external (npm) and core
