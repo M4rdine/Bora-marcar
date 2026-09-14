@@ -60,17 +60,17 @@ Cinco perfis, definidos como **dados** (não código), carregados da config remo
 embutida como fallback:
 
 | Atividade  | Emoji | Faixa ideal (sensação °C) | Tolerância (°C) | Vento ok / máx (km/h) | UV ok / máx | Fator noturno |
-|------------|-------|---------------------------|-----------------|------------------------|-------------|---------------|
-| Caminhada  | 🚶    | 17–26                     | 8–33            | 20 / 45                | 5 / 9       | 0,7           |
-| Corrida    | 🏃    | 12–21                     | 3–29            | 20 / 45                | 5 / 9       | 0,6           |
-| Ciclismo   | 🚴    | 15–25                     | 6–32            | 15 / 35                | 5 / 9       | 0,3           |
-| Praia      | 🏖    | 25–32                     | 20–38           | 15 / 35                | 6 / 10      | 0,0           |
-| Piquenique | 🧺    | 19–27                     | 12–33           | 15 / 40                | 5 / 9       | 0,2           |
+| ---------- | ----- | ------------------------- | --------------- | --------------------- | ----------- | ------------- |
+| Caminhada  | 🚶    | 17–26                     | 8–33            | 20 / 45               | 5 / 9       | 0,7           |
+| Corrida    | 🏃    | 12–21                     | 3–29            | 20 / 45               | 5 / 9       | 0,6           |
+| Ciclismo   | 🚴    | 15–25                     | 6–32            | 15 / 35               | 5 / 9       | 0,3           |
+| Praia      | 🏖     | 25–32                     | 20–38           | 15 / 35               | 6 / 10      | 0,0           |
+| Piquenique | 🧺    | 19–27                     | 12–33           | 15 / 40               | 5 / 9       | 0,2           |
 
 Pesos por fator (somam 1):
 
 | Atividade  | Térmico | Chuva | Vento | UV   | Sol  |
-|------------|---------|-------|-------|------|------|
+| ---------- | ------- | ----- | ----- | ---- | ---- |
 | Caminhada  | 0,40    | 0,30  | 0,15  | 0,10 | 0,05 |
 | Corrida    | 0,45    | 0,25  | 0,15  | 0,15 | 0,00 |
 | Ciclismo   | 0,30    | 0,30  | 0,30  | 0,10 | 0,00 |
@@ -126,14 +126,14 @@ localização". Sem onboarding em etapas.
 
 ### 3.3 Estados do cartão-herói
 
-| Estado | Quando | Conteúdo | Ação principal |
-|--------|--------|----------|----------------|
-| Planejar | Há janela boa hoje, sem plano | Rótulo + score, janela em numerais grandes, frase de explicação, 4 fatores (sensação, chuva %, vento km/h, UV), dicas de preparo | "Planejar {atividade} às {h}" com subtexto "+50 XP base · +25 se cumprir" |
-| Planejado | Plano ativo, antes da janela | Hora planejada, contagem regressiva, horário do lembrete, previsão para a hora e score | "Desfazer plano" (secundário) |
-| É agora | Plano ativo e agora dentro da janela (ou até 2 h depois do fim) | "Sua janela começou", score atual, condições atuais | "Confirmar que fui" (destaque) e link "Saí em outro horário" |
-| Concluído | Atividade confirmada ou registrada hoje | "Corrida concluída · 17h42", XP grande, recibo com parcelas, barra de nível, cartão de conquista se houve desbloqueio; abaixo, atalho "Planejar amanhã às 7h" | Secundário |
-| Sem janela boa | Melhor média do dia < 45 | "Sem janela boa", melhor score, motivo dominante, "Hoje não conta contra a sua sequência" | "Amanhã: 7h–9h, ótimo" (leva ao detalhe) |
-| Registrar sem plano | Sem plano e janela já passou ou usuário quer registrar | Seletor de hora em que saiu | "Registrar atividade" |
+| Estado              | Quando                                                          | Conteúdo                                                                                                                                                      | Ação principal                                                            |
+| ------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Planejar            | Há janela boa hoje, sem plano                                   | Rótulo + score, janela em numerais grandes, frase de explicação, 4 fatores (sensação, chuva %, vento km/h, UV), dicas de preparo                              | "Planejar {atividade} às {h}" com subtexto "+50 XP base · +25 se cumprir" |
+| Planejado           | Plano ativo, antes da janela                                    | Hora planejada, contagem regressiva, horário do lembrete, previsão para a hora e score                                                                        | "Desfazer plano" (secundário)                                             |
+| É agora             | Plano ativo e agora dentro da janela (ou até 2 h depois do fim) | "Sua janela começou", score atual, condições atuais                                                                                                           | "Confirmar que fui" (destaque) e link "Saí em outro horário"              |
+| Concluído           | Atividade confirmada ou registrada hoje                         | "Corrida concluída · 17h42", XP grande, recibo com parcelas, barra de nível, cartão de conquista se houve desbloqueio; abaixo, atalho "Planejar amanhã às 7h" | Secundário                                                                |
+| Sem janela boa      | Melhor média do dia < 45                                        | "Sem janela boa", melhor score, motivo dominante, "Hoje não conta contra a sua sequência"                                                                     | "Amanhã: 7h–9h, ótimo" (leva ao detalhe)                                  |
+| Registrar sem plano | Sem plano e janela já passou ou usuário quer registrar          | Seletor de hora em que saiu                                                                                                                                   | "Registrar atividade"                                                     |
 
 ### 3.4 Textos e tom
 
@@ -197,13 +197,13 @@ Cada fator vira um conforto em [0, 1] por curva linear por partes:
 
 **Vetos** (aplicados depois, o menor vence):
 
-| Condição | Efeito |
-|----------|--------|
-| `weather_code` 95–99 (trovoada) | score = 0 |
-| `precipitation_probability ≥ 80` ou `precipitation ≥ 1 mm` | score ≤ 20 |
-| Neve (71–77, 85, 86) | score ≤ 20 |
-| Sensação fora da faixa de tolerância | score ≤ 30 |
-| Nevoeiro (45, 48) e atividade Ciclismo | score × 0,6 |
+| Condição                                                   | Efeito      |
+| ---------------------------------------------------------- | ----------- |
+| `weather_code` 95–99 (trovoada)                            | score = 0   |
+| `precipitation_probability ≥ 80` ou `precipitation ≥ 1 mm` | score ≤ 20  |
+| Neve (71–77, 85, 86)                                       | score ≤ 20  |
+| Sensação fora da faixa de tolerância                       | score ≤ 30  |
+| Nevoeiro (45, 48) e atividade Ciclismo                     | score × 0,6 |
 
 Rótulos: Ótimo ≥ 80, Bom 65–79, Razoável 45–64, Ruim < 45.
 
@@ -267,11 +267,20 @@ estado derivado por função pura `deriveProgress(events, clock)`.
 
 ```ts
 type GamificationEvent =
-  | { type: 'planned'; id; cityId; activity; date; window: {startHour; endHour}; windowScore; createdAt }
+  | {
+      type: 'planned';
+      id;
+      cityId;
+      activity;
+      date;
+      window: { startHour; endHour };
+      windowScore;
+      createdAt;
+    }
   | { type: 'confirmed'; id; planId; date; hourLeft; hourScore; createdAt }
   | { type: 'logged'; id; cityId; activity; date; hourLeft; hourScore; createdAt }
   | { type: 'planCancelled'; id; planId; createdAt }
-  | { type: 'badWeatherDay'; id; cityId; date; bestScore; createdAt }
+  | { type: 'badWeatherDay'; id; cityId; date; bestScore; createdAt };
 ```
 
 `badWeatherDay` é gravado quando o app calcula "sem janela boa" para o dia atual da
@@ -283,12 +292,12 @@ aceita e documentada).
 Só um registro conta XP por dia (o primeiro). Planos não confirmados expiram no fim do
 dia sem penalidade.
 
-| Parcela | Valor |
-|---------|-------|
-| Atividade registrada | 50 |
-| Horário | `round(hourScore / 2)` (score 86 → +43) |
-| Plano cumprido (confirmou dentro da janela ou até 2 h depois) | +25 |
-| Sequência | `5 × min(streakAtualIncluindoHoje, 10)` (7 dias → +35, teto +50) |
+| Parcela                                                       | Valor                                                            |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Atividade registrada                                          | 50                                                               |
+| Horário                                                       | `round(hourScore / 2)` (score 86 → +43)                          |
+| Plano cumprido (confirmou dentro da janela ou até 2 h depois) | +25                                                              |
+| Sequência                                                     | `5 × min(streakAtualIncluindoHoje, 10)` (7 dias → +35, teto +50) |
 
 Total do exemplo: 50 + 43 + 25 + 35 = 153 XP. Os valores nos mockups são ilustrativos;
 esta tabela é a fonte de verdade.
@@ -297,16 +306,16 @@ esta tabela é a fonte de verdade.
 
 XP acumulado para atingir o nível N: `100 × (N − 1)²`.
 
-| Nível | XP  | Nome           |
-|-------|-----|----------------|
-| 1     | 0   | Brisa          |
-| 2     | 100 | Garoa          |
-| 3     | 400 | Sol            |
-| 4     | 900 | Ventania       |
-| 5     | 1600| Aurora         |
-| 6     | 2500| Tempestade     |
-| 7     | 3600| Furacão        |
-| 8     | 4900| Clima Perfeito |
+| Nível | XP   | Nome           |
+| ----- | ---- | -------------- |
+| 1     | 0    | Brisa          |
+| 2     | 100  | Garoa          |
+| 3     | 400  | Sol            |
+| 4     | 900  | Ventania       |
+| 5     | 1600 | Aurora         |
+| 6     | 2500 | Tempestade     |
+| 7     | 3600 | Furacão        |
+| 8     | 4900 | Clima Perfeito |
 
 ### 5.4 Streak
 
@@ -316,16 +325,16 @@ outro dia sem atividade zera.
 
 ### 5.5 Badges
 
-| Chave | Nome | Critério |
-|-------|------|----------|
-| first | Primeira saída | 1ª atividade |
-| early | Madrugador | atividade com `hourLeft` < 7 |
-| owl | Coruja | atividade com `hourLeft` ≥ 20 |
-| explorer | Explorador | 5 cidades distintas |
-| planner | Fiel ao plano | 10 planos cumpridos |
-| week | Semana cheia | streak 7 |
-| multi | Multiatleta | as 5 atividades |
-| perfect | Clima perfeito | atividade com `hourScore` ≥ 95 |
+| Chave    | Nome           | Critério                       |
+| -------- | -------------- | ------------------------------ |
+| first    | Primeira saída | 1ª atividade                   |
+| early    | Madrugador     | atividade com `hourLeft` < 7   |
+| owl      | Coruja         | atividade com `hourLeft` ≥ 20  |
+| explorer | Explorador     | 5 cidades distintas            |
+| planner  | Fiel ao plano  | 10 planos cumpridos            |
+| week     | Semana cheia   | streak 7                       |
+| multi    | Multiatleta    | as 5 atividades                |
+| perfect  | Clima perfeito | atividade com `hourScore` ≥ 95 |
 
 Badges bloqueadas expõem progresso quando contável (planner 7/10, multi 3/5, explorer 4/5).
 
@@ -429,11 +438,11 @@ pnpm workspaces, TypeScript project references, `pnpm -r lint|typecheck|test`.
 
 ### 7.2 BFF
 
-| Endpoint | Função | Cache Redis |
-|----------|--------|-------------|
-| `GET /v1/cities?q=&lang=pt` | Proxy do geocoding, resposta normalizada `CityDTO[]` | `geo:v1:{lang}:{q normalizado}` TTL 24 h |
+| Endpoint                     | Função                                                                         | Cache Redis                                    |
+| ---------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `GET /v1/cities?q=&lang=pt`  | Proxy do geocoding, resposta normalizada `CityDTO[]`                           | `geo:v1:{lang}:{q normalizado}` TTL 24 h       |
 | `GET /v1/forecast?lat=&lon=` | Proxy do forecast com os parâmetros fixos da seção 4.1, resposta `ForecastDTO` | `fc:v1:{lat 2 casas}:{lon 2 casas}` TTL 15 min |
-| `GET /health` | Estado do processo e do Redis | — |
+| `GET /health`                | Estado do processo e do Redis                                                  | —                                              |
 
 - Validação de query com Zod; resposta da Open-Meteo validada antes de cachear (nunca
   cachear lixo).
@@ -480,14 +489,14 @@ lint-staged (lint e prettier nos arquivos alterados) + commitlint (conventional 
 
 ### 8.2 Testes (TDD: teste antes da implementação)
 
-| Camada | Ferramenta | Cobertura alvo | O que cobre |
-|--------|------------|----------------|-------------|
-| domain | Jest | 100 % | curvas, vetos, janela, sem janela, descritores, frase, ressalvas, XP, níveis, streak com folga, badges, LocalDateTime em fusos diferentes |
-| application | Jest com ports falsos | ≥ 90 % | cada caso de uso, caminhos de erro, um registro por dia, expiração de plano |
-| infrastructure | Jest + MSW | ≥ 80 % | schemas Zod com fixtures reais da Open-Meteo, mappers, migrações de storage, seleção de adapter por env |
-| presentation | Jest + RNTL + MSW | ≥ 80 % | cada tela nos estados carregando, erro, vazio, sucesso; ciclo planejar → confirmar; busca com debounce; favoritas e recentes |
-| bff | Vitest + Redis em container | ≥ 85 % | cache hit/miss, TTLs, rate limit, validação, fallback sem Redis |
-| E2E | Maestro | 3 fluxos | buscar e escolher cidade; planejar e confirmar; ver perfil |
+| Camada         | Ferramenta                  | Cobertura alvo | O que cobre                                                                                                                               |
+| -------------- | --------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| domain         | Jest                        | 100 %          | curvas, vetos, janela, sem janela, descritores, frase, ressalvas, XP, níveis, streak com folga, badges, LocalDateTime em fusos diferentes |
+| application    | Jest com ports falsos       | ≥ 90 %         | cada caso de uso, caminhos de erro, um registro por dia, expiração de plano                                                               |
+| infrastructure | Jest + MSW                  | ≥ 80 %         | schemas Zod com fixtures reais da Open-Meteo, mappers, migrações de storage, seleção de adapter por env                                   |
+| presentation   | Jest + RNTL + MSW           | ≥ 80 %         | cada tela nos estados carregando, erro, vazio, sucesso; ciclo planejar → confirmar; busca com debounce; favoritas e recentes              |
+| bff            | Vitest + Redis em container | ≥ 85 %         | cache hit/miss, TTLs, rate limit, validação, fallback sem Redis                                                                           |
+| E2E            | Maestro                     | 3 fluxos       | buscar e escolher cidade; planejar e confirmar; ver perfil                                                                                |
 
 Cobertura global mínima de 80 % imposta no CI.
 
@@ -541,10 +550,10 @@ Cobertura global mínima de 80 % imposta no CI.
 
 ## 12. Riscos e mitigações
 
-| Risco | Mitigação |
-|-------|-----------|
-| Infra consumir tempo do app | Ordem do plano: motor e app em `direct` primeiro; BFF e infra depois; CDN por último |
-| Visual parecer genérico | Mockups aprovados como referência; revisão visual em dispositivo real a cada tela |
-| Expo Go sem algum módulo | Todos os módulos escolhidos (location, notifications, reanimated, async-storage) são suportados; verificar versões no plano |
-| Fuso horário errado | `LocalDateTime` no domínio com testes em três fusos |
-| Cobertura 80 % atrasar | TDD desde o domínio; cobertura sobe junto com o código, não no fim |
+| Risco                       | Mitigação                                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Infra consumir tempo do app | Ordem do plano: motor e app em `direct` primeiro; BFF e infra depois; CDN por último                                        |
+| Visual parecer genérico     | Mockups aprovados como referência; revisão visual em dispositivo real a cada tela                                           |
+| Expo Go sem algum módulo    | Todos os módulos escolhidos (location, notifications, reanimated, async-storage) são suportados; verificar versões no plano |
+| Fuso horário errado         | `LocalDateTime` no domínio com testes em três fusos                                                                         |
+| Cobertura 80 % atrasar      | TDD desde o domínio; cobertura sobe junto com o código, não no fim                                                          |

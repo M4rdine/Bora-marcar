@@ -75,9 +75,11 @@ Testes ficam ao lado de cada arquivo como `*.test.ts`.
 ### Task 1: Raiz do monorepo
 
 **Files:**
+
 - Create: `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `.editorconfig`, `.prettierrc`, `.prettierignore`, `commitlint.config.cjs`
 
 **Interfaces:**
+
 - Produces: scripts raiz `pnpm lint`, `pnpm typecheck`, `pnpm test` que delegam a todos os workspaces.
 
 - [ ] **Step 1: Criar `pnpm-workspace.yaml`**
@@ -132,6 +134,7 @@ Se `pnpm --version` local for diferente de 10.15.0, ajuste `packageManager` para
 - [ ] **Step 4: Criar `.editorconfig`, `.prettierrc`, `.prettierignore`**
 
 `.editorconfig`:
+
 ```
 root = true
 [*]
@@ -144,11 +147,13 @@ trim_trailing_whitespace = true
 ```
 
 `.prettierrc`:
+
 ```json
 { "semi": true, "singleQuote": true, "trailingComma": "all", "printWidth": 100 }
 ```
 
 `.prettierignore`:
+
 ```
 node_modules
 .expo
@@ -181,11 +186,13 @@ git commit -m "chore: raiz do monorepo pnpm com prettier e commitlint"
 ### Task 2: App Expo com TypeScript estrito e Jest
 
 **Files:**
+
 - Create: `apps/mobile/` via create-expo-app
 - Modify: `apps/mobile/package.json`, `apps/mobile/tsconfig.json`, `apps/mobile/App.tsx`
 - Create: `apps/mobile/src/domain/shared/result.ts`, `apps/mobile/src/domain/shared/result.test.ts`
 
 **Interfaces:**
+
 - Produces: `Result<T, E>`, `ok(value)`, `err(error)`, `isOk(r)`, `isErr(r)` em `@/domain/shared/result`.
 
 - [ ] **Step 1: Criar o app**
@@ -216,11 +223,7 @@ Deixe `name` como `mobile`, e garanta os scripts e a config de Jest abaixo (mant
     "preset": "jest-expo",
     "roots": ["<rootDir>/src"],
     "moduleNameMapper": { "^@/(.*)$": "<rootDir>/src/$1" },
-    "collectCoverageFrom": [
-      "src/**/*.{ts,tsx}",
-      "!src/**/*.test.{ts,tsx}",
-      "!src/**/index.ts"
-    ],
+    "collectCoverageFrom": ["src/**/*.{ts,tsx}", "!src/**/*.test.{ts,tsx}", "!src/**/index.ts"],
     "coverageThreshold": {
       "global": { "branches": 80, "functions": 80, "lines": 80, "statements": 80 },
       "./src/domain/": { "branches": 100, "functions": 100, "lines": 100, "statements": 100 }
@@ -260,6 +263,7 @@ Expected: `jest-expo`, `jest`, `@types/jest` em `devDependencies` de `apps/mobil
 - [ ] **Step 5: Escrever o teste do `Result`**
 
 `apps/mobile/src/domain/shared/result.test.ts`:
+
 ```ts
 import { err, isErr, isOk, ok } from './result';
 
@@ -288,6 +292,7 @@ Expected: FAIL com "Cannot find module './result'".
 - [ ] **Step 7: Implementar `result.ts`**
 
 `apps/mobile/src/domain/shared/result.ts`:
+
 ```ts
 export type Ok<T> = { readonly ok: true; readonly value: T };
 export type Err<E> = { readonly ok: false; readonly error: E };
@@ -307,6 +312,7 @@ Expected: PASS, 2 testes. A cobertura global vai falhar o threshold porque `App.
 - [ ] **Step 9: Typecheck e placeholder de App**
 
 `apps/mobile/App.tsx`:
+
 ```tsx
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
@@ -342,15 +348,18 @@ git commit -m "chore: app Expo SDK 57 com TypeScript estrito, Jest e Result type
 ### Task 3: ESLint com fronteiras de camada, Husky e lint-staged
 
 **Files:**
+
 - Create: `apps/mobile/eslint.config.js`, `.husky/pre-commit`, `.husky/commit-msg`
 - Create: `apps/mobile/src/application/.gitkeep`, `apps/mobile/src/infrastructure/.gitkeep`, `apps/mobile/src/presentation/.gitkeep`
 
 **Interfaces:**
+
 - Produces: `pnpm lint` falha se `domain` importar de fora de `domain`.
 
 - [ ] **Step 1: Instalar ESLint e plugins**
 
 Run:
+
 ```bash
 pnpm --filter mobile exec expo install eslint eslint-config-expo eslint-config-prettier eslint-plugin-prettier -- --dev
 pnpm --filter mobile add -D eslint-plugin-boundaries eslint-plugin-import
@@ -413,6 +422,7 @@ module.exports = defineConfig([
 - [ ] **Step 3: Instalar o resolver TypeScript e criar as pastas de camada**
 
 Run:
+
 ```bash
 pnpm --filter mobile add -D eslint-import-resolver-typescript
 mkdir -p apps/mobile/src/application apps/mobile/src/infrastructure apps/mobile/src/presentation
@@ -422,6 +432,7 @@ touch apps/mobile/src/application/.gitkeep apps/mobile/src/infrastructure/.gitke
 - [ ] **Step 4: Provar que a fronteira funciona**
 
 Crie temporariamente `apps/mobile/src/domain/shared/forbidden.ts`:
+
 ```ts
 import { View } from 'react-native';
 
@@ -441,11 +452,13 @@ Expected: sem erros.
 Run: `pnpm exec husky init`
 
 Substitua o conteúdo de `.husky/pre-commit` por:
+
 ```sh
 pnpm exec lint-staged
 ```
 
 Crie `.husky/commit-msg`:
+
 ```sh
 pnpm exec commitlint --edit "$1"
 ```
@@ -465,11 +478,13 @@ Expected: lint-staged roda e o commit passa.
 ### Task 4: Tipos de previsão e data/hora local
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/forecast/types.ts`
 - Create: `apps/mobile/src/domain/time/localDateTime.ts`, `apps/mobile/src/domain/time/localDateTime.test.ts`
 - Create: `apps/mobile/src/domain/time/dayPhase.ts`, `apps/mobile/src/domain/time/dayPhase.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `HourlyConditions`, `DailySummary`, `Forecast` (tipos)
   - `localNow(epochMs: number, utcOffsetSeconds: number): LocalDateTime`
@@ -518,6 +533,7 @@ export type Forecast = {
 - [ ] **Step 2: Teste de `localDateTime`**
 
 `apps/mobile/src/domain/time/localDateTime.test.ts`:
+
 ```ts
 import { addDays, localNow, minutesOfDay, parseLocalIso } from './localDateTime';
 
@@ -625,6 +641,7 @@ Expected: PASS, 7 testes.
 - [ ] **Step 6: Teste de `dayPhase`**
 
 `apps/mobile/src/domain/time/dayPhase.test.ts`:
+
 ```ts
 import { dayPhase } from './dayPhase';
 
@@ -662,12 +679,18 @@ export type DayPhase = 'dawn' | 'day' | 'dusk' | 'night';
 
 const TWILIGHT_MINUTES = 60;
 
-export function dayPhase(nowMinutes: number, sunriseMinutes: number, sunsetMinutes: number): DayPhase {
+export function dayPhase(
+  nowMinutes: number,
+  sunriseMinutes: number,
+  sunsetMinutes: number,
+): DayPhase {
   const inDawn =
-    nowMinutes >= sunriseMinutes - TWILIGHT_MINUTES && nowMinutes <= sunriseMinutes + TWILIGHT_MINUTES;
+    nowMinutes >= sunriseMinutes - TWILIGHT_MINUTES &&
+    nowMinutes <= sunriseMinutes + TWILIGHT_MINUTES;
   if (inDawn) return 'dawn';
   const inDusk =
-    nowMinutes >= sunsetMinutes - TWILIGHT_MINUTES && nowMinutes <= sunsetMinutes + TWILIGHT_MINUTES;
+    nowMinutes >= sunsetMinutes - TWILIGHT_MINUTES &&
+    nowMinutes <= sunsetMinutes + TWILIGHT_MINUTES;
   if (inDusk) return 'dusk';
   if (nowMinutes > sunriseMinutes && nowMinutes < sunsetMinutes) return 'day';
   return 'night';
@@ -689,11 +712,13 @@ git commit -m "feat(domain): tipos de previsão, data/hora local por fuso e fase
 ### Task 5: Perfis de atividade e config embutida do motor
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/activities/types.ts`
 - Create: `apps/mobile/src/domain/config/types.ts`
 - Create: `apps/mobile/src/domain/config/defaultEngineConfig.ts`, `apps/mobile/src/domain/config/defaultEngineConfig.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `ActivityId = 'walk' | 'run' | 'cycle' | 'beach' | 'picnic'`
   - `FactorId = 'thermal' | 'rain' | 'wind' | 'uv' | 'sun'`
@@ -780,6 +805,7 @@ export type EngineConfig = {
 - [ ] **Step 3: Teste da config embutida**
 
 `apps/mobile/src/domain/config/defaultEngineConfig.test.ts`:
+
 ```ts
 import { ACTIVITY_IDS, FACTOR_IDS } from '../activities/types';
 
@@ -791,7 +817,10 @@ describe('defaultEngineConfig', () => {
   });
 
   it.each(ACTIVITY_IDS)('pesos de %s somam 1', (id) => {
-    const sum = FACTOR_IDS.reduce((acc, f) => acc + defaultEngineConfig.activities[id].weights[f], 0);
+    const sum = FACTOR_IDS.reduce(
+      (acc, f) => acc + defaultEngineConfig.activities[id].weights[f],
+      0,
+    );
     expect(sum).toBeCloseTo(1, 5);
   });
 
@@ -882,7 +911,13 @@ export const defaultEngineConfig: EngineConfig = {
     },
   },
   scores: { great: 80, good: 65, fair: 45 },
-  window: { sizes: [1, 2, 3], minHourScore: 45, lengthBonus: 3, minRemainingMinutes: 30, graceHoursAfterEnd: 2 },
+  window: {
+    sizes: [1, 2, 3],
+    minHourScore: 45,
+    lengthBonus: 3,
+    minRemainingMinutes: 30,
+    graceHoursAfterEnd: 2,
+  },
   tips: { uvProtect: 6, waterApparent: 28, coolDropDeg: 4, rainNextPct: 40, coatApparent: 14 },
   xp: { base: 50, planBonus: 25, streakPerDay: 5, streakMaxDays: 10 },
   levels: [
@@ -913,12 +948,14 @@ git commit -m "feat(domain): perfis de atividade e config embutida do motor"
 ### Task 6: Curvas de conforto, vetos e score por hora
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/recommendation/comfort.ts`, `comfort.test.ts`
 - Create: `apps/mobile/src/domain/recommendation/vetoes.ts`, `vetoes.test.ts`
 - Create: `apps/mobile/src/domain/recommendation/scoreHour.ts`, `scoreHour.test.ts`
 - Create: `apps/mobile/src/domain/recommendation/testing/fixtures.ts` (fábrica de horas para testes)
 
 **Interfaces:**
+
 - Consumes: `HourlyConditions`, `ActivityProfile`, `EngineConfig`, `FactorId`.
 - Produces:
   - `piecewise(points: readonly [number, number][], x: number): number`
@@ -934,6 +971,7 @@ git commit -m "feat(domain): perfis de atividade e config embutida do motor"
 - [ ] **Step 1: Fixture de hora**
 
 `apps/mobile/src/domain/recommendation/testing/fixtures.ts`:
+
 ```ts
 import type { HourlyConditions } from '../../forecast/types';
 
@@ -976,8 +1014,16 @@ export function makeDay(
 - [ ] **Step 2: Teste das curvas**
 
 `apps/mobile/src/domain/recommendation/comfort.test.ts`:
+
 ```ts
-import { piecewise, rainComfort, sunComfort, thermalComfort, uvComfort, windComfort } from './comfort';
+import {
+  piecewise,
+  rainComfort,
+  sunComfort,
+  thermalComfort,
+  uvComfort,
+  windComfort,
+} from './comfort';
 
 describe('piecewise', () => {
   const pts: [number, number][] = [
@@ -1172,6 +1218,7 @@ Expected: PASS.
 - [ ] **Step 6: Teste dos vetos**
 
 `apps/mobile/src/domain/recommendation/vetoes.test.ts`:
+
 ```ts
 import { defaultEngineConfig } from '../config/defaultEngineConfig';
 
@@ -1187,7 +1234,10 @@ describe('applyVetoes', () => {
   });
 
   it.each([95, 96, 99])('trovoada (código %i) zera', (code) => {
-    expect(applyVetoes(makeHour({ weatherCode: code }), walk, 88)).toEqual({ score: 0, veto: 'storm' });
+    expect(applyVetoes(makeHour({ weatherCode: code }), walk, 88)).toEqual({
+      score: 0,
+      veto: 'storm',
+    });
   });
 
   it('chuva provável (>= 80%) limita a 20', () => {
@@ -1198,20 +1248,35 @@ describe('applyVetoes', () => {
   });
 
   it('volume >= 1 mm limita a 20', () => {
-    expect(applyVetoes(makeHour({ precipitationMm: 1 }), walk, 88)).toEqual({ score: 20, veto: 'rain' });
+    expect(applyVetoes(makeHour({ precipitationMm: 1 }), walk, 88)).toEqual({
+      score: 20,
+      veto: 'rain',
+    });
   });
 
   it.each([71, 75, 77, 85, 86])('neve (código %i) limita a 20', (code) => {
-    expect(applyVetoes(makeHour({ weatherCode: code }), walk, 88)).toEqual({ score: 20, veto: 'snow' });
+    expect(applyVetoes(makeHour({ weatherCode: code }), walk, 88)).toEqual({
+      score: 20,
+      veto: 'snow',
+    });
   });
 
   it('sensação fora da tolerância limita a 30', () => {
-    expect(applyVetoes(makeHour({ apparentTemperature: 7 }), walk, 88)).toEqual({ score: 30, veto: 'thermal' });
-    expect(applyVetoes(makeHour({ apparentTemperature: 34 }), walk, 88)).toEqual({ score: 30, veto: 'thermal' });
+    expect(applyVetoes(makeHour({ apparentTemperature: 7 }), walk, 88)).toEqual({
+      score: 30,
+      veto: 'thermal',
+    });
+    expect(applyVetoes(makeHour({ apparentTemperature: 34 }), walk, 88)).toEqual({
+      score: 30,
+      veto: 'thermal',
+    });
   });
 
   it('nevoeiro multiplica por 0,6 só para ciclismo, sem marcar veto', () => {
-    expect(applyVetoes(makeHour({ weatherCode: 45 }), cycle, 80)).toEqual({ score: 48, veto: null });
+    expect(applyVetoes(makeHour({ weatherCode: 45 }), cycle, 80)).toEqual({
+      score: 48,
+      veto: null,
+    });
     expect(applyVetoes(makeHour({ weatherCode: 48 }), walk, 80)).toEqual({ score: 80, veto: null });
   });
 
@@ -1221,7 +1286,10 @@ describe('applyVetoes', () => {
   });
 
   it('score base já abaixo do limite não sobe', () => {
-    expect(applyVetoes(makeHour({ precipitationMm: 2 }), walk, 10)).toEqual({ score: 10, veto: 'rain' });
+    expect(applyVetoes(makeHour({ precipitationMm: 2 }), walk, 10)).toEqual({
+      score: 10,
+      veto: 'rain',
+    });
   });
 });
 ```
@@ -1291,6 +1359,7 @@ Expected: PASS.
 - [ ] **Step 10: Teste de `scoreHour`**
 
 `apps/mobile/src/domain/recommendation/scoreHour.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -1333,7 +1402,9 @@ describe('scoreHour', () => {
 
   it('à noite multiplica pelo fator noturno', () => {
     expect(scoreHour(makeHour({ isDay: false }), walk, cfg).score).toBe(70);
-    expect(scoreHour(makeHour({ isDay: false, apparentTemperature: 28 }), beach, cfg).score).toBe(0);
+    expect(scoreHour(makeHour({ isDay: false, apparentTemperature: 28 }), beach, cfg).score).toBe(
+      0,
+    );
   });
 
   it('aplica vetos depois da média', () => {
@@ -1398,7 +1469,11 @@ export function comfortsFor(h: HourlyConditions, p: ActivityProfile): Record<Fac
   };
 }
 
-export function scoreHour(h: HourlyConditions, profile: ActivityProfile, cfg: EngineConfig): HourScore {
+export function scoreHour(
+  h: HourlyConditions,
+  profile: ActivityProfile,
+  cfg: EngineConfig,
+): HourScore {
   const comforts = comfortsFor(h, profile);
   const weighted = FACTOR_IDS.reduce((acc, f) => acc + profile.weights[f] * comforts[f], 0);
   const light = h.isDay ? 1 : profile.nightFactor;
@@ -1423,10 +1498,12 @@ git commit -m "feat(domain): curvas de conforto, vetos e score por hora"
 ### Task 7: Escolha da janela
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/recommendation/windows.ts`, `windows.test.ts`
 - Modify: `apps/mobile/src/domain/recommendation/testing/fixtures.ts` (adicionar `makeHourScore`)
 
 **Interfaces:**
+
 - Consumes: `HourScore`, `EngineConfig`, `FactorId`, `VetoId`.
 - Produces:
   - `type TimeWindow = { date: string; startHour: number; endHour: number }` (`endHour` exclusivo: 17–19h é `{ startHour: 17, endHour: 19 }`)
@@ -1467,6 +1544,7 @@ export function makeHourScore(
 - [ ] **Step 2: Teste de `windows`**
 
 `apps/mobile/src/domain/recommendation/windows.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -1497,7 +1575,9 @@ describe('candidateHours', () => {
 describe('findBestWindow', () => {
   it('escolhe a janela contígua de melhor ranking (média + 3 por hora extra)', () => {
     // 17,18,19 = 90,96,88 → média 91,3 + 6 = 97,3; 2h 17–18 = 93 + 3 = 96; 1h 18 = 96
-    const scores = Array.from({ length: 24 }, (_, h) => (h === 17 ? 90 : h === 18 ? 96 : h === 19 ? 88 : 60));
+    const scores = Array.from({ length: 24 }, (_, h) =>
+      h === 17 ? 90 : h === 18 ? 96 : h === 19 ? 88 : 60,
+    );
     const r = findBestWindow(flat(scores), cfg);
     expect(r.kind).toBe('window');
     if (r.kind !== 'window') return;
@@ -1534,7 +1614,9 @@ describe('findBestWindow', () => {
   });
 
   it('descarta janelas com alguma hora abaixo de 45', () => {
-    const scores = Array.from({ length: 24 }, (_, h) => (h === 17 ? 100 : h === 18 ? 44 : h === 19 ? 100 : 30));
+    const scores = Array.from({ length: 24 }, (_, h) =>
+      h === 17 ? 100 : h === 18 ? 44 : h === 19 ? 100 : 30,
+    );
     const r = findBestWindow(flat(scores), cfg);
     if (r.kind !== 'window') throw new Error('esperava janela');
     expect(r.window).toEqual({ date: '2026-09-13', startHour: 17, endHour: 18 });
@@ -1557,7 +1639,9 @@ describe('findBestWindow', () => {
 
 describe('dominantProblem', () => {
   it('veto tem prioridade sobre conforto', () => {
-    expect(dominantProblem(makeHourScore(8, 0, { veto: 'storm', comforts: { uv: 0 } }))).toBe('storm');
+    expect(dominantProblem(makeHourScore(8, 0, { veto: 'storm', comforts: { uv: 0 } }))).toBe(
+      'storm',
+    );
   });
   it('sem veto, é o fator de menor conforto', () => {
     expect(dominantProblem(makeHourScore(8, 50, { comforts: { rain: 0.4, uv: 0.3 } }))).toBe('uv');
@@ -1599,11 +1683,24 @@ export type TimeWindow = {
 };
 
 export type WindowResult =
-  | { readonly kind: 'window'; readonly window: TimeWindow; readonly hours: readonly HourScore[]; readonly score: number }
-  | { readonly kind: 'none'; readonly best: HourScore | null; readonly dominant: FactorId | VetoId | null };
+  | {
+      readonly kind: 'window';
+      readonly window: TimeWindow;
+      readonly hours: readonly HourScore[];
+      readonly score: number;
+    }
+  | {
+      readonly kind: 'none';
+      readonly best: HourScore | null;
+      readonly dominant: FactorId | VetoId | null;
+    };
 
 type Clock = { readonly hour: number; readonly minute: number };
-type Candidate = { readonly hours: readonly HourScore[]; readonly mean: number; readonly rank: number };
+type Candidate = {
+  readonly hours: readonly HourScore[];
+  readonly mean: number;
+  readonly rank: number;
+};
 
 const MINUTES_PER_HOUR = 60;
 
@@ -1649,7 +1746,10 @@ function better(candidate: Candidate, current: Candidate | null): boolean {
 
 export function dominantProblem(h: HourScore): FactorId | VetoId {
   if (h.veto !== null) return h.veto;
-  return FACTOR_IDS.reduce((worst, f) => (h.comforts[f] < h.comforts[worst] ? f : worst), 'thermal');
+  return FACTOR_IDS.reduce(
+    (worst, f) => (h.comforts[f] < h.comforts[worst] ? f : worst),
+    'thermal',
+  );
 }
 
 function noWindow(candidates: readonly HourScore[]): WindowResult {
@@ -1699,11 +1799,13 @@ git commit -m "feat(domain): escolha da melhor janela com desempate e caso sem j
 ### Task 8: Descritores, frase, ressalva e dicas de preparo
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/recommendation/descriptors.ts`, `descriptors.test.ts`
 - Create: `apps/mobile/src/domain/recommendation/sentence.ts`, `sentence.test.ts`
 - Create: `apps/mobile/src/domain/recommendation/tips.ts`, `tips.test.ts`
 
 **Interfaces:**
+
 - Consumes: `HourScore`, `HourlyConditions`, `ActivityProfile`, `TimeWindow`, `EngineConfig`, `FactorId`.
 - Produces:
   - `describeThermal(apparent)`, `describeRain(pct)`, `describeWind(kmh)`, `describeUv(uv)`, `describeSun(cloudPct)` → `string`
@@ -1717,6 +1819,7 @@ git commit -m "feat(domain): escolha da melhor janela com desempate e caso sem j
 - [ ] **Step 1: Teste dos descritores**
 
 `apps/mobile/src/domain/recommendation/descriptors.test.ts`:
+
 ```ts
 import {
   averageFactor,
@@ -1785,7 +1888,13 @@ describe('descritores PT-BR', () => {
 
 describe('factorValue e averageFactor', () => {
   it('lê o campo certo de cada fator', () => {
-    const h = makeHour({ apparentTemperature: 23, precipitationProbability: 5, windSpeedKmh: 9, uvIndex: 3, cloudCoverPct: 20 });
+    const h = makeHour({
+      apparentTemperature: 23,
+      precipitationProbability: 5,
+      windSpeedKmh: 9,
+      uvIndex: 3,
+      cloudCoverPct: 20,
+    });
     expect(factorValue('thermal', h)).toBe(23);
     expect(factorValue('rain', h)).toBe(5);
     expect(factorValue('wind', h)).toBe(9);
@@ -1901,6 +2010,7 @@ Expected: PASS.
 - [ ] **Step 5: Teste da frase e da ressalva**
 
 `apps/mobile/src/domain/recommendation/sentence.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -1925,7 +2035,10 @@ describe('buildSentence', () => {
   });
 
   it('corrida: sensação, chuva e um dos fatores de 0,15 (vento vem antes de UV)', () => {
-    const hours = scored([makeHour({ apparentTemperature: 18, precipitationProbability: 40, windSpeedKmh: 25 })], run);
+    const hours = scored(
+      [makeHour({ apparentTemperature: 18, precipitationProbability: 40, windSpeedKmh: 25 })],
+      run,
+    );
     expect(buildSentence(hours, run)).toBe('Sensação de 18°, chance de chuva e vento moderado.');
   });
 
@@ -1942,7 +2055,10 @@ describe('buildSentence', () => {
   });
 
   it('arredonda a sensação média', () => {
-    const hours = scored([makeHour({ apparentTemperature: 22.4 }), makeHour({ apparentTemperature: 23.4 })]);
+    const hours = scored([
+      makeHour({ apparentTemperature: 22.4 }),
+      makeHour({ apparentTemperature: 23.4 }),
+    ]);
     expect(buildSentence(hours, walk)).toMatch(/^Sensação de 23°/);
   });
 });
@@ -1952,23 +2068,37 @@ describe('buildCaveat', () => {
 
   it('avisa sobre UV alto nas 3 horas antes da janela', () => {
     const day = scored(
-      Array.from({ length: 24 }, (_, hour) => makeHour({ hour, uvIndex: hour >= 14 && hour < 17 ? 9 : 2 })),
+      Array.from({ length: 24 }, (_, hour) =>
+        makeHour({ hour, uvIndex: hour >= 14 && hour < 17 ? 9 : 2 }),
+      ),
     );
     expect(buildCaveat(day, window, walk)).toBe('Antes das 17h o UV está alto: melhor esperar.');
   });
 
   it('avisa sobre chuva antes da janela', () => {
-    const day = scored(Array.from({ length: 24 }, (_, hour) => makeHour({ hour, precipitationProbability: hour === 16 ? 70 : 0 })));
+    const day = scored(
+      Array.from({ length: 24 }, (_, hour) =>
+        makeHour({ hour, precipitationProbability: hour === 16 ? 70 : 0 }),
+      ),
+    );
     expect(buildCaveat(day, window, walk)).toBe('Antes das 17h há chance de chuva.');
   });
 
   it('avisa sobre calor antes da janela', () => {
-    const day = scored(Array.from({ length: 24 }, (_, hour) => makeHour({ hour, apparentTemperature: hour === 15 ? 31 : 22 })));
+    const day = scored(
+      Array.from({ length: 24 }, (_, hour) =>
+        makeHour({ hour, apparentTemperature: hour === 15 ? 31 : 22 }),
+      ),
+    );
     expect(buildCaveat(day, window, walk)).toBe('Antes das 17h a sensação térmica está quente.');
   });
 
   it('avisa sobre vento antes da janela', () => {
-    const day = scored(Array.from({ length: 24 }, (_, hour) => makeHour({ hour, windSpeedKmh: hour === 16 ? 40 : 5 })));
+    const day = scored(
+      Array.from({ length: 24 }, (_, hour) =>
+        makeHour({ hour, windSpeedKmh: hour === 16 ? 40 : 5 }),
+      ),
+    );
     expect(buildCaveat(day, window, walk)).toBe('Antes das 17h o vento está forte.');
   });
 
@@ -1979,7 +2109,9 @@ describe('buildCaveat', () => {
 
   it('ignora fatores com peso zero e nuvens', () => {
     const day = scored(
-      Array.from({ length: 24 }, (_, hour) => makeHour({ hour, cloudCoverPct: hour === 16 ? 100 : 0, uvIndex: hour === 16 ? 9 : 2 })),
+      Array.from({ length: 24 }, (_, hour) =>
+        makeHour({ hour, cloudCoverPct: hour === 16 ? 100 : 0, uvIndex: hour === 16 ? 9 : 2 }),
+      ),
       run,
     );
     // corrida: sun tem peso 0; UV tem peso e conforto < 0,5 → ressalva de UV
@@ -2003,7 +2135,14 @@ Expected: FAIL, módulo não encontrado.
 ```ts
 import { FACTOR_IDS, type ActivityProfile, type FactorId } from '../activities/types';
 
-import { averageFactor, describeRain, describeSun, describeThermal, describeUv, describeWind } from './descriptors';
+import {
+  averageFactor,
+  describeRain,
+  describeSun,
+  describeThermal,
+  describeUv,
+  describeWind,
+} from './descriptors';
 import type { HourScore } from './scoreHour';
 import type { TimeWindow } from './windows';
 
@@ -2015,7 +2154,10 @@ const CAVEAT_COMFORT = 0.5;
 function rankedFactors(profile: ActivityProfile): readonly FactorId[] {
   const sorted = [...FACTOR_IDS]
     .filter((f) => profile.weights[f] > 0)
-    .sort((a, b) => profile.weights[b] - profile.weights[a] || FACTOR_IDS.indexOf(a) - FACTOR_IDS.indexOf(b));
+    .sort(
+      (a, b) =>
+        profile.weights[b] - profile.weights[a] || FACTOR_IDS.indexOf(a) - FACTOR_IDS.indexOf(b),
+    );
   const top = sorted.slice(0, MAX_FACTORS);
   const third = top[2];
   return third !== undefined && profile.weights[third] < MIN_THIRD_WEIGHT ? top.slice(0, 2) : top;
@@ -2070,7 +2212,8 @@ export function buildCaveat(
   profile: ActivityProfile,
 ): string | null {
   const before = dayHours.filter(
-    (h) => h.hour.hour < window.startHour && h.hour.hour >= window.startHour - CAVEAT_LOOKBACK_HOURS,
+    (h) =>
+      h.hour.hour < window.startHour && h.hour.hour >= window.startHour - CAVEAT_LOOKBACK_HOURS,
   );
   if (before.length === 0) return null;
   const problems = FACTOR_IDS.filter((f) => f !== 'sun' && profile.weights[f] > 0)
@@ -2079,7 +2222,9 @@ export function buildCaveat(
     .sort((a, b) => a.comfort - b.comfort);
   const worst = problems[0];
   if (!worst) return null;
-  const worstHour = before.reduce((acc, h) => (h.comforts[worst.f] < acc.comforts[worst.f] ? h : acc));
+  const worstHour = before.reduce((acc, h) =>
+    h.comforts[worst.f] < acc.comforts[worst.f] ? h : acc,
+  );
   return caveatFor(worst.f, window.startHour, averageFactor(worst.f, [worstHour.hour]));
 }
 ```
@@ -2092,6 +2237,7 @@ Expected: PASS. Se o caso "corrida" falhar por ordem entre vento e UV (ambos 0,1
 - [ ] **Step 9: Teste das dicas**
 
 `apps/mobile/src/domain/recommendation/tips.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -2117,7 +2263,9 @@ describe('preparationTips', () => {
   });
 
   it('esfria quando cai >= 4° até 2h após o fim', () => {
-    const day = makeDay('2026-09-13', (h) => ({ apparentTemperature: h <= 18 ? 22 : h === 19 ? 20 : 17 }));
+    const day = makeDay('2026-09-13', (h) => ({
+      apparentTemperature: h <= 18 ? 22 : h === 19 ? 20 : 17,
+    }));
     expect(preparationTips(day, window, cfg)).toEqual([{ id: 'cooling', text: 'Esfria às 20h' }]);
   });
 
@@ -2137,12 +2285,19 @@ describe('preparationTips', () => {
       apparentTemperature: h <= 18 ? 29 : 20,
       precipitationProbability: h === 19 ? 50 : 0,
     }));
-    expect(ids(preparationTips(day, window, cfg))).toEqual(['sunscreen', 'water', 'cooling', 'rain']);
+    expect(ids(preparationTips(day, window, cfg))).toEqual([
+      'sunscreen',
+      'water',
+      'cooling',
+      'rain',
+    ]);
   });
 
   it('janela no fim do dia não quebra sem horas seguintes', () => {
     const day = makeDay('2026-09-13');
-    expect(preparationTips(day, { date: '2026-09-13', startHour: 23, endHour: 24 }, cfg)).toEqual([]);
+    expect(preparationTips(day, { date: '2026-09-13', startHour: 23, endHour: 24 }, cfg)).toEqual(
+      [],
+    );
   });
 });
 ```
@@ -2193,10 +2348,16 @@ export function preparationTips(
   const t = cfg.tips;
   const candidates: readonly (Tip | null)[] = [
     inside.some((h) => h.uvIndex >= t.uvProtect) ? { id: 'sunscreen', text: 'Use protetor' } : null,
-    inside.some((h) => h.apparentTemperature >= t.waterApparent) ? { id: 'water', text: 'Leve água' } : null,
+    inside.some((h) => h.apparentTemperature >= t.waterApparent)
+      ? { id: 'water', text: 'Leve água' }
+      : null,
     coolingTip(inside, following, t.coolDropDeg),
-    next && next.precipitationProbability > t.rainNextPct ? { id: 'rain', text: 'Leve capa' } : null,
-    inside.some((h) => h.apparentTemperature < t.coatApparent) ? { id: 'coat', text: 'Leve casaco' } : null,
+    next && next.precipitationProbability > t.rainNextPct
+      ? { id: 'rain', text: 'Leve capa' }
+      : null,
+    inside.some((h) => h.apparentTemperature < t.coatApparent)
+      ? { id: 'coat', text: 'Leve casaco' }
+      : null,
   ];
   return candidates.filter((c): c is Tip => c !== null);
 }
@@ -2217,11 +2378,13 @@ git commit -m "feat(domain): descritores PT-BR, frase de explicação, ressalva 
 ### Task 9: Recomendação do dia e visão geral (hoje, agora, próximos dias, comparativo)
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/recommendation/recommendDay.ts`, `recommendDay.test.ts`
 - Create: `apps/mobile/src/domain/recommendation/overview.ts`, `overview.test.ts`
 - Modify: `apps/mobile/src/domain/recommendation/testing/fixtures.ts` (adicionar `makeForecast`)
 
 **Interfaces:**
+
 - Consumes: tudo de Tasks 4–8, `LocalDateTime`.
 - Produces:
   - `type DayRecommendation = { date; activityId; hours: readonly HourScore[]; result: WindowResult; score: number | null; label: ScoreLabel | null; sentence: string | null; caveat: string | null; tips: readonly Tip[]; daily: DailySummary | null }`
@@ -2261,6 +2424,7 @@ export function makeForecast(
 - [ ] **Step 2: Teste de `recommendDay`**
 
 `apps/mobile/src/domain/recommendation/recommendDay.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -2275,7 +2439,11 @@ describe('recommendDay', () => {
     const r = recommendDay(makeForecast(DATES), walk, cfg, { date: '2026-09-13' });
     expect(r.hours).toHaveLength(24);
     expect(r.result.kind).toBe('window');
-    expect(r.result.kind === 'window' && r.result.window).toEqual({ date: '2026-09-13', startHour: 6, endHour: 9 });
+    expect(r.result.kind === 'window' && r.result.window).toEqual({
+      date: '2026-09-13',
+      startHour: 6,
+      endHour: 9,
+    });
     expect(r.score).toBe(100);
     expect(r.label).toBe('great');
     expect(r.sentence).toBe('Sensação de 22°, sem chuva e vento leve.');
@@ -2286,15 +2454,24 @@ describe('recommendDay', () => {
   });
 
   it('só considera as horas da data pedida', () => {
-    const f = makeForecast(DATES, (date) => (date === '2026-09-13' ? { precipitationProbability: 90 } : {}));
+    const f = makeForecast(DATES, (date) =>
+      date === '2026-09-13' ? { precipitationProbability: 90 } : {},
+    );
     const r = recommendDay(f, walk, cfg, { date: '2026-09-14' });
     expect(r.hours.every((h) => h.hour.date === '2026-09-14')).toBe(true);
     expect(r.result.kind).toBe('window');
   });
 
   it('respeita o "agora" ao escolher candidatas', () => {
-    const r = recommendDay(makeForecast(DATES), walk, cfg, { date: '2026-09-13', now: { hour: 14, minute: 0 } });
-    expect(r.result.kind === 'window' && r.result.window).toEqual({ date: '2026-09-13', startHour: 14, endHour: 17 });
+    const r = recommendDay(makeForecast(DATES), walk, cfg, {
+      date: '2026-09-13',
+      now: { hour: 14, minute: 0 },
+    });
+    expect(r.result.kind === 'window' && r.result.window).toEqual({
+      date: '2026-09-13',
+      startHour: 14,
+      endHour: 17,
+    });
   });
 
   it('dia de chuva: sem janela, melhor score isolado e sem frase', () => {
@@ -2403,6 +2580,7 @@ Expected: PASS.
 - [ ] **Step 6: Teste de `overview`**
 
 `apps/mobile/src/domain/recommendation/overview.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 import type { LocalDateTime } from '../time/localDateTime';
@@ -2426,7 +2604,9 @@ describe('recommendOverview', () => {
     const o = recommendOverview(makeForecast(DATES), walk, cfg, at(14));
     expect(o.today.result.kind === 'window' && o.today.result.window.startHour).toBe(14);
     expect(o.nextDays.map((d) => d.date)).toEqual(DATES.slice(1));
-    expect(o.nextDays[0]?.result.kind === 'window' && o.nextDays[0].result.window.startHour).toBe(6);
+    expect(o.nextDays[0]?.result.kind === 'window' && o.nextDays[0].result.window.startHour).toBe(
+      6,
+    );
   });
 
   it('score de agora é o da hora atual', () => {
@@ -2462,7 +2642,9 @@ describe('recommendOverview', () => {
   });
 
   it('hoje sem janela e amanhã com janela → amanhã melhor', () => {
-    const f = makeForecast(DATES, (date) => (date === '2026-09-13' ? { precipitationProbability: 95 } : {}));
+    const f = makeForecast(DATES, (date) =>
+      date === '2026-09-13' ? { precipitationProbability: 95 } : {},
+    );
     expect(recommendOverview(f, walk, cfg, at(8)).comparison).toBe('tomorrowBetter');
   });
 
@@ -2511,17 +2693,26 @@ const windowScore = (d: DayRecommendation): number | null =>
   d.result.kind === 'window' ? d.result.score : null;
 
 function pickBestDate(days: readonly DayRecommendation[]): string | null {
-  return days.reduce<{ date: string; score: number } | null>((acc, d) => {
-    const s = windowScore(d);
-    if (s === null) return acc;
-    return acc === null || s > acc.score ? { date: d.date, score: s } : acc;
-  }, null)?.date ?? null;
+  return (
+    days.reduce<{ date: string; score: number } | null>((acc, d) => {
+      const s = windowScore(d);
+      if (s === null) return acc;
+      return acc === null || s > acc.score ? { date: d.date, score: s } : acc;
+    }, null)?.date ?? null
+  );
 }
 
-function compare(today: DayRecommendation, tomorrow: DayRecommendation | undefined, bestDate: string | null): Comparison {
+function compare(
+  today: DayRecommendation,
+  tomorrow: DayRecommendation | undefined,
+  bestDate: string | null,
+): Comparison {
   const todayScore = windowScore(today);
   const tomorrowScore = tomorrow ? windowScore(tomorrow) : null;
-  if (tomorrowScore !== null && (todayScore === null || tomorrowScore - todayScore >= TOMORROW_BETTER_BY)) {
+  if (
+    tomorrowScore !== null &&
+    (todayScore === null || tomorrowScore - todayScore >= TOMORROW_BETTER_BY)
+  ) {
     return 'tomorrowBetter';
   }
   if (todayScore !== null && bestDate === today.date) return 'todayBestOfWeek';
@@ -2535,13 +2726,24 @@ export function recommendOverview(
   now: LocalDateTime,
 ): Overview {
   const today = recommendDay(forecast, profile, cfg, { date: now.date, now });
-  const futureDates = forecast.daily.map((d) => d.date).filter((d) => d > now.date).slice(0, NEXT_DAYS);
+  const futureDates = forecast.daily
+    .map((d) => d.date)
+    .filter((d) => d > now.date)
+    .slice(0, NEXT_DAYS);
   const nextDays = futureDates.map((date) => recommendDay(forecast, profile, cfg, { date }));
   const nowScore = today.hours.find((h) => h.hour.hour === now.hour) ?? null;
   const nowInWindow =
-    today.result.kind === 'window' && isWithinWindow(today.result.window, now, cfg.window.graceHoursAfterEnd);
+    today.result.kind === 'window' &&
+    isWithinWindow(today.result.window, now, cfg.window.graceHoursAfterEnd);
   const bestDate = pickBestDate([today, ...nextDays]);
-  return { today, nextDays, now: nowScore, nowInWindow, bestDate, comparison: compare(today, nextDays[0], bestDate) };
+  return {
+    today,
+    nextDays,
+    now: nowScore,
+    nowInWindow,
+    bestDate,
+    comparison: compare(today, nextDays[0], bestDate),
+  };
 }
 ```
 
@@ -2560,11 +2762,13 @@ git commit -m "feat(domain): recomendação do dia e visão geral com agora, pr�
 ### Task 10: Gamificação: eventos, XP e níveis
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/gamification/events.ts`
 - Create: `apps/mobile/src/domain/gamification/xp.ts`, `xp.test.ts`
 - Create: `apps/mobile/src/domain/gamification/levels.ts`, `levels.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ActivityId`, `TimeWindow`, `XpRules`, `LevelDef`.
 - Produces:
   - Tipos de evento (abaixo) e `GamificationEvent`
@@ -2617,16 +2821,13 @@ export type BadWeatherDayEvent = Base & {
 };
 
 export type GamificationEvent =
-  | PlannedEvent
-  | ConfirmedEvent
-  | LoggedEvent
-  | PlanCancelledEvent
-  | BadWeatherDayEvent;
+  PlannedEvent | ConfirmedEvent | LoggedEvent | PlanCancelledEvent | BadWeatherDayEvent;
 ```
 
 - [ ] **Step 2: Teste de `xp`**
 
 `apps/mobile/src/domain/gamification/xp.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -2654,11 +2855,15 @@ describe('computeXp', () => {
   });
 
   it('bônus de sequência tem teto em 10 dias', () => {
-    expect(computeXp({ hourScore: 0, planFulfilled: false, streakDays: 25 }, cfg.xp).streakBonus).toBe(50);
+    expect(
+      computeXp({ hourScore: 0, planFulfilled: false, streakDays: 25 }, cfg.xp).streakBonus,
+    ).toBe(50);
   });
 
   it('arredonda o bônus de horário', () => {
-    expect(computeXp({ hourScore: 85, planFulfilled: false, streakDays: 1 }, cfg.xp).hourBonus).toBe(43);
+    expect(
+      computeXp({ hourScore: 85, planFulfilled: false, streakDays: 1 }, cfg.xp).hourBonus,
+    ).toBe(43);
   });
 });
 ```
@@ -2692,13 +2897,20 @@ export function computeXp(input: XpInput, rules: XpRules): XpBreakdown {
   const hourBonus = Math.round(input.hourScore / 2);
   const planBonus = input.planFulfilled ? rules.planBonus : 0;
   const streakBonus = rules.streakPerDay * Math.min(input.streakDays, rules.streakMaxDays);
-  return { base, hourBonus, planBonus, streakBonus, total: base + hourBonus + planBonus + streakBonus };
+  return {
+    base,
+    hourBonus,
+    planBonus,
+    streakBonus,
+    total: base + hourBonus + planBonus + streakBonus,
+  };
 }
 ```
 
 - [ ] **Step 5: Teste de `levels`**
 
 `apps/mobile/src/domain/gamification/levels.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -2719,7 +2931,13 @@ describe('levelFor', () => {
 
   it('1358 XP é nível 4 Ventania com 242 para Aurora', () => {
     const l = levelFor(1358, cfg.levels);
-    expect(l).toMatchObject({ level: 4, name: 'Ventania', levelStartXp: 900, nextLevelXp: 1600, xpToNext: 242 });
+    expect(l).toMatchObject({
+      level: 4,
+      name: 'Ventania',
+      levelStartXp: 900,
+      nextLevelXp: 1600,
+      xpToNext: 242,
+    });
     expect(l.progress).toBeCloseTo((1358 - 900) / 700);
   });
 
@@ -2729,7 +2947,13 @@ describe('levelFor', () => {
   });
 
   it('último nível não tem próximo', () => {
-    expect(levelFor(10000, cfg.levels)).toMatchObject({ level: 8, name: 'Clima Perfeito', nextLevelXp: null, xpToNext: null, progress: 1 });
+    expect(levelFor(10000, cfg.levels)).toMatchObject({
+      level: 8,
+      name: 'Clima Perfeito',
+      nextLevelXp: null,
+      xpToNext: null,
+      progress: 1,
+    });
   });
 });
 ```
@@ -2787,6 +3011,7 @@ git commit -m "feat(domain): eventos de gamificação, cálculo de XP e níveis"
 ### Task 11: Gamificação: streak, badges e derivação do progresso
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/gamification/streak.ts`, `streak.test.ts`
 - Create: `apps/mobile/src/domain/gamification/records.ts`
 - Create: `apps/mobile/src/domain/gamification/badges.ts`, `badges.test.ts`
@@ -2794,6 +3019,7 @@ git commit -m "feat(domain): eventos de gamificação, cálculo de XP e níveis"
 - Create: `apps/mobile/src/domain/gamification/testing/fixtures.ts`
 
 **Interfaces:**
+
 - Consumes: Tasks 4, 5, 7, 10.
 - Produces:
   - `computeStreak(activeDates: ReadonlySet<string>, restDates: ReadonlySet<string>, today: string): number`
@@ -2810,6 +3036,7 @@ git commit -m "feat(domain): eventos de gamificação, cálculo de XP e níveis"
 - [ ] **Step 1: Teste de `streak`**
 
 `apps/mobile/src/domain/gamification/streak.test.ts`:
+
 ```ts
 import { computeStreak } from './streak';
 
@@ -2822,7 +3049,9 @@ describe('computeStreak', () => {
   });
 
   it('conta dias consecutivos terminando hoje', () => {
-    expect(computeStreak(set('2026-09-11', '2026-09-12', '2026-09-13'), none, '2026-09-13')).toBe(3);
+    expect(computeStreak(set('2026-09-11', '2026-09-12', '2026-09-13'), none, '2026-09-13')).toBe(
+      3,
+    );
   });
 
   it('hoje sem atividade ainda não quebra: conta a partir de ontem', () => {
@@ -2830,11 +3059,15 @@ describe('computeStreak', () => {
   });
 
   it('um dia perdido zera o que veio antes', () => {
-    expect(computeStreak(set('2026-09-10', '2026-09-12', '2026-09-13'), none, '2026-09-13')).toBe(2);
+    expect(computeStreak(set('2026-09-10', '2026-09-12', '2026-09-13'), none, '2026-09-13')).toBe(
+      2,
+    );
   });
 
   it('dia de folga por mau tempo não quebra nem conta', () => {
-    expect(computeStreak(set('2026-09-10', '2026-09-11', '2026-09-13'), set('2026-09-12'), '2026-09-13')).toBe(3);
+    expect(
+      computeStreak(set('2026-09-10', '2026-09-11', '2026-09-13'), set('2026-09-12'), '2026-09-13'),
+    ).toBe(3);
   });
 
   it('folga hoje e ontem sem atividade: streak preservado', () => {
@@ -2910,6 +3143,7 @@ export type ActivityRecord = {
 - [ ] **Step 6: Fixtures de eventos**
 
 `apps/mobile/src/domain/gamification/testing/fixtures.ts`:
+
 ```ts
 import type { ActivityId } from '../../activities/types';
 import type {
@@ -2922,11 +3156,19 @@ import type {
 
 let seq = 0;
 const nextId = (): string => `evt-${++seq}`;
-const at = (date: string, hour: number): number => Date.parse(`${date}T${String(hour).padStart(2, '0')}:00:00Z`);
+const at = (date: string, hour: number): number =>
+  Date.parse(`${date}T${String(hour).padStart(2, '0')}:00:00Z`);
 
 export function planned(
   date: string,
-  opts: { activity?: ActivityId; cityId?: string; startHour?: number; endHour?: number; windowScore?: number; id?: string } = {},
+  opts: {
+    activity?: ActivityId;
+    cityId?: string;
+    startHour?: number;
+    endHour?: number;
+    windowScore?: number;
+    id?: string;
+  } = {},
 ): PlannedEvent {
   const startHour = opts.startHour ?? 17;
   return {
@@ -2979,11 +3221,22 @@ export function cancelled(plan: PlannedEvent): PlanCancelledEvent {
 }
 
 export function badDay(date: string, cityId = 'sp'): BadWeatherDayEvent {
-  return { type: 'badWeatherDay', id: nextId(), cityId, date, bestScore: 22, createdAt: at(date, 7) };
+  return {
+    type: 'badWeatherDay',
+    id: nextId(),
+    cityId,
+    date,
+    bestScore: 22,
+    createdAt: at(date, 7),
+  };
 }
 
 /** Sequência de dias consecutivos com registro espontâneo, terminando em `lastDate`. */
-export function loggedRun(lastDate: string, days: number, opts: Parameters<typeof logged>[1] = {}): LoggedEvent[] {
+export function loggedRun(
+  lastDate: string,
+  days: number,
+  opts: Parameters<typeof logged>[1] = {},
+): LoggedEvent[] {
   const [y = 0, m = 1, d = 1] = lastDate.split('-').map(Number);
   return Array.from({ length: days }, (_, i) => {
     const dt = new Date(Date.UTC(y, m - 1, d - (days - 1 - i)));
@@ -2996,6 +3249,7 @@ export function loggedRun(lastDate: string, days: number, opts: Parameters<typeo
 - [ ] **Step 7: Teste de `badges`**
 
 `apps/mobile/src/domain/gamification/badges.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -3021,11 +3275,17 @@ describe('evaluateBadges', () => {
 
   it('primeira saída desbloqueia na data do primeiro registro', () => {
     const r = recordsOf([logged('2026-09-10'), logged('2026-09-12')], '2026-09-13');
-    expect(badge(evaluateBadges(r, new Set()), 'first')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-10' });
+    expect(badge(evaluateBadges(r, new Set()), 'first')).toMatchObject({
+      unlocked: true,
+      unlockedOn: '2026-09-10',
+    });
   });
 
   it('madrugador (< 7h) e coruja (>= 20h)', () => {
-    const r = recordsOf([logged('2026-09-10', { hourLeft: 6 }), logged('2026-09-11', { hourLeft: 20 })], '2026-09-13');
+    const r = recordsOf(
+      [logged('2026-09-10', { hourLeft: 6 }), logged('2026-09-11', { hourLeft: 20 })],
+      '2026-09-13',
+    );
     const b = evaluateBadges(r, new Set());
     expect(badge(b, 'early')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-10' });
     expect(badge(b, 'owl')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-11' });
@@ -3033,35 +3293,68 @@ describe('evaluateBadges', () => {
 
   it('explorador conta cidades distintas', () => {
     const cities = ['a', 'b', 'c', 'd', 'e'];
-    const r = recordsOf(cities.map((cityId, i) => logged(`2026-09-0${i + 1}`, { cityId })), '2026-09-13');
+    const r = recordsOf(
+      cities.map((cityId, i) => logged(`2026-09-0${i + 1}`, { cityId })),
+      '2026-09-13',
+    );
     const b = evaluateBadges(r, new Set());
-    expect(badge(b, 'explorer')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-05', progress: { current: 5, target: 5 } });
-    expect(badge(evaluateBadges(r.slice(0, 3), new Set()), 'explorer')).toMatchObject({ unlocked: false, progress: { current: 3, target: 5 } });
+    expect(badge(b, 'explorer')).toMatchObject({
+      unlocked: true,
+      unlockedOn: '2026-09-05',
+      progress: { current: 5, target: 5 },
+    });
+    expect(badge(evaluateBadges(r.slice(0, 3), new Set()), 'explorer')).toMatchObject({
+      unlocked: false,
+      progress: { current: 3, target: 5 },
+    });
   });
 
   it('multiatleta exige as cinco atividades', () => {
     const acts = ['walk', 'run', 'cycle', 'beach', 'picnic'] as const;
-    const r = recordsOf(acts.map((activity, i) => logged(`2026-09-0${i + 1}`, { activity })), '2026-09-13');
-    expect(badge(evaluateBadges(r, new Set()), 'multi')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-05' });
+    const r = recordsOf(
+      acts.map((activity, i) => logged(`2026-09-0${i + 1}`, { activity })),
+      '2026-09-13',
+    );
+    expect(badge(evaluateBadges(r, new Set()), 'multi')).toMatchObject({
+      unlocked: true,
+      unlockedOn: '2026-09-05',
+    });
   });
 
   it('clima perfeito com score >= 95', () => {
-    const r = recordsOf([logged('2026-09-10', { hourScore: 94 }), logged('2026-09-11', { hourScore: 95 })], '2026-09-13');
-    expect(badge(evaluateBadges(r, new Set()), 'perfect')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-11' });
+    const r = recordsOf(
+      [logged('2026-09-10', { hourScore: 94 }), logged('2026-09-11', { hourScore: 95 })],
+      '2026-09-13',
+    );
+    expect(badge(evaluateBadges(r, new Set()), 'perfect')).toMatchObject({
+      unlocked: true,
+      unlockedOn: '2026-09-11',
+    });
   });
 
   it('semana cheia com streak 7, respeitando folgas', () => {
-    const events = [...loggedRun('2026-09-09', 4), badDay('2026-09-10'), ...loggedRun('2026-09-13', 3)];
+    const events = [
+      ...loggedRun('2026-09-09', 4),
+      badDay('2026-09-10'),
+      ...loggedRun('2026-09-13', 3),
+    ];
     const r = recordsOf(events, '2026-09-13');
     const b = evaluateBadges(r, new Set(['2026-09-10']));
-    expect(badge(b, 'week')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-13', progress: { current: 7, target: 7 } });
+    expect(badge(b, 'week')).toMatchObject({
+      unlocked: true,
+      unlockedOn: '2026-09-13',
+      progress: { current: 7, target: 7 },
+    });
   });
 });
 
 describe('newlyUnlocked', () => {
   it('lista o que passou de bloqueado para desbloqueado', () => {
     const before = evaluateBadges([], new Set());
-    const after = evaluateBadges(recordsOf([logged('2026-09-13', { hourLeft: 6 })], '2026-09-13'), new Set());
+    const after = evaluateBadges(
+      recordsOf([logged('2026-09-13', { hourLeft: 6 })], '2026-09-13'),
+      new Set(),
+    );
     expect(newlyUnlocked(before, after)).toEqual(['first', 'early']);
     expect(newlyUnlocked(after, after)).toEqual([]);
   });
@@ -3071,6 +3364,7 @@ describe('newlyUnlocked', () => {
 - [ ] **Step 8: Teste de `deriveProgress`**
 
 `apps/mobile/src/domain/gamification/deriveProgress.test.ts`:
+
 ```ts
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
@@ -3082,31 +3376,64 @@ const TODAY = '2026-09-13';
 describe('deriveProgress', () => {
   it('vazio', () => {
     const p = deriveProgress([], cfg, TODAY);
-    expect(p).toMatchObject({ totalXp: 0, streak: 0, records: [], citiesCount: 0, activePlan: null, todayRecord: null });
+    expect(p).toMatchObject({
+      totalXp: 0,
+      streak: 0,
+      records: [],
+      citiesCount: 0,
+      activePlan: null,
+      todayRecord: null,
+    });
     expect(p.level.level).toBe(1);
     expect(p.badges).toHaveLength(8);
   });
 
   it('plano confirmado dentro da janela: plano cumprido, XP do exemplo do spec', () => {
     const plan = planned(TODAY, { startHour: 17 });
-    const events = [...loggedRun('2026-09-12', 6), plan, confirmed(plan, { hourLeft: 17, hourScore: 86 })];
+    const events = [
+      ...loggedRun('2026-09-12', 6),
+      plan,
+      confirmed(plan, { hourLeft: 17, hourScore: 86 }),
+    ];
     const p = deriveProgress(events, cfg, TODAY);
     expect(p.streak).toBe(7);
-    expect(p.todayRecord).toMatchObject({ planFulfilled: true, streakDays: 7, activity: 'run', cityId: 'sp' });
-    expect(p.todayRecord?.xp).toEqual({ base: 50, hourBonus: 43, planBonus: 25, streakBonus: 35, total: 153 });
+    expect(p.todayRecord).toMatchObject({
+      planFulfilled: true,
+      streakDays: 7,
+      activity: 'run',
+      cityId: 'sp',
+    });
+    expect(p.todayRecord?.xp).toEqual({
+      base: 50,
+      hourBonus: 43,
+      planBonus: 25,
+      streakBonus: 35,
+      total: 153,
+    });
     expect(p.activePlan).toBeNull();
   });
 
   it('confirmação até 2h após o fim ainda cumpre o plano; depois disso não', () => {
     const p1 = planned(TODAY, { startHour: 17, endHour: 19 });
     const p2 = planned('2026-09-12', { startHour: 17, endHour: 19 });
-    const p = deriveProgress([p1, confirmed(p1, { hourLeft: 20 }), p2, confirmed(p2, { hourLeft: 21 })], cfg, TODAY);
+    const p = deriveProgress(
+      [p1, confirmed(p1, { hourLeft: 20 }), p2, confirmed(p2, { hourLeft: 21 })],
+      cfg,
+      TODAY,
+    );
     expect(p.records.find((r) => r.date === TODAY)?.planFulfilled).toBe(true);
     expect(p.records.find((r) => r.date === '2026-09-12')?.planFulfilled).toBe(false);
   });
 
   it('só o primeiro registro do dia conta', () => {
-    const p = deriveProgress([logged(TODAY, { hourLeft: 8, hourScore: 60 }), logged(TODAY, { hourLeft: 18, hourScore: 100 })], cfg, TODAY);
+    const p = deriveProgress(
+      [
+        logged(TODAY, { hourLeft: 8, hourScore: 60 }),
+        logged(TODAY, { hourLeft: 18, hourScore: 100 }),
+      ],
+      cfg,
+      TODAY,
+    );
     expect(p.records).toHaveLength(1);
     expect(p.records[0]?.hourScore).toBe(60);
     expect(p.totalXp).toBe(50 + 30 + 5);
@@ -3114,7 +3441,11 @@ describe('deriveProgress', () => {
 
   it('plano ativo é o plano de hoje não cancelado e não confirmado', () => {
     const plan = planned(TODAY);
-    expect(deriveProgress([plan], cfg, TODAY).activePlan).toMatchObject({ planId: plan.id, date: TODAY, window: plan.window });
+    expect(deriveProgress([plan], cfg, TODAY).activePlan).toMatchObject({
+      planId: plan.id,
+      date: TODAY,
+      window: plan.window,
+    });
     expect(deriveProgress([plan, cancelled(plan)], cfg, TODAY).activePlan).toBeNull();
     expect(deriveProgress([planned('2026-09-12')], cfg, TODAY).activePlan).toBeNull();
   });
@@ -3123,7 +3454,9 @@ describe('deriveProgress', () => {
     const plan = planned(TODAY);
     const orphan = { ...confirmed(plan), planId: 'nao-existe' };
     expect(deriveProgress([orphan], cfg, TODAY).records).toEqual([]);
-    expect(deriveProgress([plan, cancelled(plan), confirmed(plan)], cfg, TODAY).records).toEqual([]);
+    expect(deriveProgress([plan, cancelled(plan), confirmed(plan)], cfg, TODAY).records).toEqual(
+      [],
+    );
   });
 
   it('folga por mau tempo entra em restDates e preserva o streak', () => {
@@ -3133,7 +3466,10 @@ describe('deriveProgress', () => {
   });
 
   it('XP acumula, nível deriva do total e cidades são contadas', () => {
-    const events = [logged('2026-09-10', { cityId: 'a', hourScore: 100 }), logged('2026-09-11', { cityId: 'b', hourScore: 100 })];
+    const events = [
+      logged('2026-09-10', { cityId: 'a', hourScore: 100 }),
+      logged('2026-09-11', { cityId: 'b', hourScore: 100 }),
+    ];
     const p = deriveProgress(events, cfg, TODAY);
     // dia 1: 50 + 50 + 5 = 105; dia 2: 50 + 50 + 10 = 110
     expect(p.totalXp).toBe(215);
@@ -3145,7 +3481,10 @@ describe('deriveProgress', () => {
   it('ordena por createdAt mesmo se os eventos vierem fora de ordem', () => {
     const a = logged('2026-09-10');
     const b = logged('2026-09-11');
-    expect(deriveProgress([b, a], cfg, TODAY).records.map((r) => r.date)).toEqual(['2026-09-10', '2026-09-11']);
+    expect(deriveProgress([b, a], cfg, TODAY).records.map((r) => r.date)).toEqual([
+      '2026-09-10',
+      '2026-09-11',
+    ]);
   });
 });
 ```
@@ -3163,7 +3502,16 @@ import { ACTIVITY_IDS } from '../activities/types';
 import type { ActivityRecord } from './records';
 import { computeStreak } from './streak';
 
-export const BADGE_IDS = ['first', 'early', 'owl', 'explorer', 'planner', 'week', 'multi', 'perfect'] as const;
+export const BADGE_IDS = [
+  'first',
+  'early',
+  'owl',
+  'explorer',
+  'planner',
+  'week',
+  'multi',
+  'perfect',
+] as const;
 export type BadgeId = (typeof BADGE_IDS)[number];
 
 export type BadgeState = {
@@ -3193,17 +3541,33 @@ const streakAt = (prefix: readonly ActivityRecord[], rest: ReadonlySet<string>):
 
 const RULES: readonly Rule[] = [
   { id: 'first', target: null, measure: (p) => (p.length > 0 ? 1 : 0) },
-  { id: 'early', target: null, measure: (p) => (p.some((r) => r.hourLeft < EARLY_BEFORE_HOUR) ? 1 : 0) },
+  {
+    id: 'early',
+    target: null,
+    measure: (p) => (p.some((r) => r.hourLeft < EARLY_BEFORE_HOUR) ? 1 : 0),
+  },
   { id: 'owl', target: null, measure: (p) => (p.some((r) => r.hourLeft >= OWL_FROM_HOUR) ? 1 : 0) },
   { id: 'explorer', target: TARGETS.explorer, measure: (p) => distinct(p.map((r) => r.cityId)) },
-  { id: 'planner', target: TARGETS.planner, measure: (p) => p.filter((r) => r.planFulfilled).length },
+  {
+    id: 'planner',
+    target: TARGETS.planner,
+    measure: (p) => p.filter((r) => r.planFulfilled).length,
+  },
   { id: 'week', target: TARGETS.week, measure: (p, rest) => streakAt(p, rest) },
   { id: 'multi', target: TARGETS.multi, measure: (p) => distinct(p.map((r) => r.activity)) },
-  { id: 'perfect', target: null, measure: (p) => (p.some((r) => r.hourScore >= PERFECT_SCORE) ? 1 : 0) },
+  {
+    id: 'perfect',
+    target: null,
+    measure: (p) => (p.some((r) => r.hourScore >= PERFECT_SCORE) ? 1 : 0),
+  },
 ];
 
 /** Avalia a medida em cada prefixo (uma vez por prefixo): desbloqueio = primeiro prefixo que atinge o alvo. */
-function evaluate(rule: Rule, records: readonly ActivityRecord[], rest: ReadonlySet<string>): BadgeState {
+function evaluate(
+  rule: Rule,
+  records: readonly ActivityRecord[],
+  rest: ReadonlySet<string>,
+): BadgeState {
   const target = rule.target ?? 1;
   const values = records.map((_, i) => rule.measure(records.slice(0, i + 1), rest));
   const unlockIndex = values.findIndex((v) => v >= target);
@@ -3224,7 +3588,10 @@ export function evaluateBadges(
   return RULES.map((rule) => evaluate(rule, sorted, restDates));
 }
 
-export function newlyUnlocked(before: readonly BadgeState[], after: readonly BadgeState[]): readonly BadgeId[] {
+export function newlyUnlocked(
+  before: readonly BadgeState[],
+  after: readonly BadgeState[],
+): readonly BadgeId[] {
   const wasUnlocked = new Set(before.filter((b) => b.unlocked).map((b) => b.id));
   return after.filter((b) => b.unlocked && !wasUnlocked.has(b.id)).map((b) => b.id);
 }
@@ -3277,7 +3644,8 @@ function draftFromConfirmed(
   const plan = plans.get(e.planId);
   if (!plan || cancelled.has(plan.id)) return null;
   const planFulfilled =
-    e.date === plan.date && isWithinWindow(plan.window, { hour: e.hourLeft, minute: 0 }, graceHours);
+    e.date === plan.date &&
+    isWithinWindow(plan.window, { hour: e.hourLeft, minute: 0 }, graceHours);
   return {
     id: e.id,
     date: e.date,
@@ -3306,7 +3674,9 @@ function buildRecords(
   cfg: EngineConfig,
   restDates: ReadonlySet<string>,
 ): readonly ActivityRecord[] {
-  const plans = new Map(sorted.filter((e): e is PlannedEvent => e.type === 'planned').map((p) => [p.id, p]));
+  const plans = new Map(
+    sorted.filter((e): e is PlannedEvent => e.type === 'planned').map((p) => [p.id, p]),
+  );
   const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
   const drafts = sorted.flatMap((e): Draft[] => {
     if (e.type === 'confirmed') {
@@ -3319,7 +3689,10 @@ function buildRecords(
     if (acc.some((r) => r.date === d.date)) return acc; // só o primeiro do dia conta
     const active = new Set([...acc.map((r) => r.date), d.date]);
     const streakDays = computeStreak(active, restDates, d.date);
-    const xp = computeXp({ hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays }, cfg.xp);
+    const xp = computeXp(
+      { hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays },
+      cfg.xp,
+    );
     return [...acc, { ...d, streakDays, xp }];
   }, []);
 }
@@ -3334,7 +3707,14 @@ function findActivePlan(sorted: readonly GamificationEvent[], today: string): Ac
         e.type === 'planned' && e.date === today && !cancelled.has(e.id) && !confirmedIds.has(e.id),
     );
   return plan
-    ? { planId: plan.id, cityId: plan.cityId, activity: plan.activity, date: plan.date, window: plan.window, windowScore: plan.windowScore }
+    ? {
+        planId: plan.id,
+        cityId: plan.cityId,
+        activity: plan.activity,
+        date: plan.date,
+        window: plan.window,
+        windowScore: plan.windowScore,
+      }
     : null;
 }
 
@@ -3378,11 +3758,13 @@ git commit -m "feat(domain): streak com folga por mau tempo, badges e derivaçã
 ### Task 12: Fechamento: índice público do domínio, cobertura e README inicial
 
 **Files:**
+
 - Create: `apps/mobile/src/domain/index.ts`
 - Create: `README.md`
 - Modify: `.gitignore` (adicionar `coverage/`, `.expo/`)
 
 **Interfaces:**
+
 - Produces: `@/domain` como único ponto de importação público do domínio para as camadas de cima (Plano 2).
 
 - [ ] **Step 1: Criar `apps/mobile/src/domain/index.ts`**
@@ -3433,7 +3815,7 @@ Expected: QR code no terminal; ao abrir no Expo Go, a tela mostra "Melhor Hora" 
 
 - [ ] **Step 5: `README.md` inicial**
 
-```markdown
+````markdown
 # Melhor Hora
 
 App React Native (Expo) que transforma a previsão da Open-Meteo em uma recomendação simples:
@@ -3452,26 +3834,29 @@ pnpm --filter mobile start   # QR code para o Expo Go
 pnpm test                    # testes com cobertura
 pnpm lint && pnpm typecheck
 ```
+````
 
 ## Estrutura
 
 - `apps/mobile/src/domain` — regras puras, sem React: `recommendation/` (score por hora,
   janela, frase, dicas) e `gamification/` (eventos, XP, níveis, streak, badges).
 - Documentação de design: `docs/superpowers/specs/2026-09-13-melhor-hora-design.md`.
-```
+
+````
 
 - [ ] **Step 6: Commit final do plano**
 
 ```bash
 git add -A
 git commit -m "chore: índice público do domínio, cobertura 100% e README inicial"
-```
+````
 
 ---
 
 ## Self-review (feito ao escrever o plano)
 
 **Cobertura do spec (seções atribuídas a este plano):**
+
 - 3.1 perfis → Task 5. 4.1 entrada e fuso → Tasks 4 e 9. 4.2 score e vetos → Task 6.
   4.3 janela, "é agora", candidatas com 30 min → Task 7 (+ regra do bônus por duração corrigida no spec).
   4.4 descritores, frase, ressalva, dicas → Task 8. 4.5 agora, próximos dias, comparativo, melhor da semana → Task 9.
