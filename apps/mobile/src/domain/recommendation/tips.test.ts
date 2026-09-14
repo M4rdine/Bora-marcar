@@ -62,4 +62,17 @@ describe('preparationTips', () => {
   it('sem horas no dia não gera dicas', () => {
     expect(preparationTips([], window, cfg)).toEqual([]);
   });
+
+  it('não gera dicas nos limites exclusivos de chuva, esfriamento e casaco', () => {
+    const rainDay = makeDay('2026-09-13', (h) => ({ precipitationProbability: h === 19 ? 40 : 0 }));
+    expect(ids(preparationTips(rainDay, window, cfg))).not.toContain('rain');
+
+    const coolingDay = makeDay('2026-09-13', (h) => ({
+      apparentTemperature: h <= 18 ? 22 : h === 19 ? 19 : 22,
+    }));
+    expect(ids(preparationTips(coolingDay, window, cfg))).not.toContain('cooling');
+
+    const coatDay = makeDay('2026-09-13', () => ({ apparentTemperature: 14 }));
+    expect(ids(preparationTips(coatDay, window, cfg))).not.toContain('coat');
+  });
 });

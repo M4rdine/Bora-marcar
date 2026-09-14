@@ -92,6 +92,14 @@ describe('findBestWindow', () => {
     expect(r.window).toEqual({ date: '2026-09-13', startHour: 17, endHour: 18 });
   });
 
+  it('hora com score exatamente 45 não é descartada', () => {
+    const scores = Array.from({ length: 24 }, (_, h) => (h >= 17 && h <= 19 ? 45 : 30));
+    const r = findBestWindow(flat(scores), cfg);
+    if (r.kind !== 'window') throw new Error('esperava janela');
+    expect(r.window).toEqual({ date: '2026-09-13', startHour: 17, endHour: 20 });
+    expect(r.score).toBe(45);
+  });
+
   it('sem hora >= 45 devolve none com a melhor hora e o problema dominante', () => {
     const hours = [
       makeHourScore(8, 20, { veto: 'rain' }),
