@@ -35,7 +35,7 @@ export type AppServices = {
   readonly ports: AppPorts;
   readonly searchCities: ReturnType<typeof searchCities>;
   readonly resolveMyLocation: ReturnType<typeof resolveMyLocation>;
-  readonly buildOverview: ReturnType<typeof buildOverview>;
+  readonly buildOverview: typeof buildOverview;
   readonly planActivity: ReturnType<typeof planActivity>;
   readonly confirmActivity: ReturnType<typeof confirmActivity>;
   readonly logActivity: ReturnType<typeof logActivity>;
@@ -49,7 +49,7 @@ export function createAppServices(ports: AppPorts): AppServices {
     ports,
     searchCities: searchCities(ports),
     resolveMyLocation: resolveMyLocation(ports),
-    buildOverview: buildOverview(ports),
+    buildOverview,
     planActivity: planActivity(ports),
     confirmActivity: confirmActivity(ports),
     logActivity: logActivity(ports),

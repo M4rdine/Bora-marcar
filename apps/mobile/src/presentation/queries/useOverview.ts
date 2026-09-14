@@ -22,13 +22,19 @@ export function useOverview(city: City | null, activity: ActivityId): OverviewSt
   const services = useServices();
   const forecast = useForecast(city);
   const config = useEngineConfig();
-  const tick = useNowTick();
+  // `services.ports.clock.now` é injetado no hook para que telas testadas com o relógio falso
+  // (fixedClock) computem um "agora" determinístico em vez do relógio real da máquina de teste.
+  const tick = useNowTick(services.ports.clock.now);
   const snapshot = useMemo(
     () =>
       forecast.data && config.data
-        ? services.buildOverview({ forecast: forecast.data, activity, config: config.data })
+        ? services.buildOverview({
+            forecast: forecast.data,
+            activity,
+            config: config.data,
+            nowEpochMs: tick,
+          })
         : null,
-    // tick força recomputar o "agora" a cada minuto
     [services, forecast.data, config.data, activity, tick],
   );
   const status =
