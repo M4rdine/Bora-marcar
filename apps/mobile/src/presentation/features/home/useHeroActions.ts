@@ -55,11 +55,15 @@ export type HeroActionsResult = {
   readonly errorMessage: string | null;
 };
 
-/** Move os handlers de plan/confirm/log/cancel para fora da tela, com o próprio estado de erro. */
-export function useHeroActions({ city, activity, snapshot, hero }: Input): HeroActionsResult {
-  const actions = useGamificationActions();
-  const { run, errorMessage } = useActionRunner();
+type Actions = ReturnType<typeof useGamificationActions>;
+type Handlers = Omit<HeroActionsResult, 'busy' | 'errorMessage'>;
 
+/** Pura: monta os quatro handlers a partir dos dados de entrada, do herói e das mutações. */
+function buildHeroHandlers(
+  { city, activity, snapshot, hero }: Input,
+  actions: Actions,
+  run: (fn: () => Promise<unknown>) => void,
+): Handlers {
   const onPlan = () => {
     if (hero.kind !== 'plan') return;
     run(() =>
@@ -103,11 +107,19 @@ export function useHeroActions({ city, activity, snapshot, hero }: Input): HeroA
     run(() => actions.log.mutateAsync(input));
   };
 
-  const busy =
-    actions.plan.isPending ||
-    actions.confirm.isPending ||
-    actions.log.isPending ||
-    actions.cancel.isPending;
+  return { onPlan, onCancel, onConfirm, onLogNow };
+}
 
-  return { onPlan, onCancel, onConfirm, onLogNow, busy, errorMessage };
+const isBusy = (actions: Actions): boolean =>
+  actions.plan.isPending ||
+  actions.confirm.isPending ||
+  actions.log.isPending ||
+  actions.cancel.isPending;
+
+/** Move os handlers de plan/confirm/log/cancel para fora da tela, com o próprio estado de erro. */
+export function useHeroActions(input: Input): HeroActionsResult {
+  const actions = useGamificationActions();
+  const { run, errorMessage } = useActionRunner();
+  const handlers = buildHeroHandlers(input, actions, run);
+  return { ...handlers, busy: isBusy(actions), errorMessage };
 }

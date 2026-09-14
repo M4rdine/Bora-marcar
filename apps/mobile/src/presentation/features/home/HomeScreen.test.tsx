@@ -84,6 +84,9 @@ describe('HomeScreen', () => {
     });
     // 08:00 em São Paulo, antes da janela 17h–19h → estado "planned"
     await screen.findByText('Planejado para as 17h');
+    // previsão da janela (17h–19h), fixture padrão: sensação 22°, chuva 5%.
+    expect(screen.getAllByText('22°').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('5%')).toBeTruthy();
     fireEvent.press(screen.getByText('Desfazer plano'));
     // após desfazer, o herói volta ao estado "plan" recalculado a partir das 08:00
     await screen.findByText(/Planejar Caminhada às \d+h/);

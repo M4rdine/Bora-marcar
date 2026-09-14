@@ -1,5 +1,5 @@
 import { REMINDER_MINUTES_BEFORE } from '@/application/useCases/planActivity';
-import type { BadgeState, LevelProgress, LocalDateTime } from '@/domain';
+import type { BadgeState, HourScore, LevelProgress, LocalDateTime } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
 import { AppText, LevelBar, Pill } from '../../../ui';
@@ -16,9 +16,17 @@ import { XpReceipt } from './XpReceipt';
 type Props = {
   readonly state: HeroState;
   readonly now: LocalDateTime;
+  readonly hours: readonly HourScore[];
   readonly level: LevelProgress;
   readonly unlockedToday: readonly BadgeState[];
 };
+
+/** Horas pontuadas dentro de `[startHour, endHour)`. */
+const hoursInWindow = (
+  hours: readonly HourScore[],
+  startHour: number,
+  endHour: number,
+): readonly HourScore[] => hours.filter((h) => h.hour.hour >= startHour && h.hour.hour < endHour);
 
 function PlanBody({ state }: { readonly state: Extract<HeroState, { kind: 'plan' }> }) {
   const hours = state.day.result.kind === 'window' ? state.day.result.hours : [];
@@ -45,14 +53,17 @@ function PlanBody({ state }: { readonly state: Extract<HeroState, { kind: 'plan'
 function PlannedBody({
   state,
   now,
+  hours,
 }: {
   readonly state: Extract<HeroState, { kind: 'planned' }>;
   readonly now: LocalDateTime;
+  readonly hours: readonly HourScore[];
 }) {
   const left = countdown(now, state.plan.window.startHour);
   const reminderTotal = state.plan.window.startHour * 60 - REMINDER_MINUTES_BEFORE;
   const reminderHour = Math.floor(reminderTotal / 60);
   const reminderMinute = reminderTotal % 60;
+  const windowHours = hoursInWindow(hours, state.plan.window.startHour, state.plan.window.endHour);
   return (
     <>
       <AppText variant="kicker">{t.home.plannedKicker}</AppText>
@@ -61,6 +72,7 @@ function PlannedBody({
       <AppText variant="small" tone="muted">
         {t.home.reminderAt(reminderHour, reminderMinute)}
       </AppText>
+      <FactsRow facts={windowFacts(windowHours)} />
     </>
   );
 }
@@ -134,12 +146,12 @@ function NoWindowBody({ state }: { readonly state: Extract<HeroState, { kind: 'n
   );
 }
 
-export function HeroBody({ state, now, level, unlockedToday }: Props) {
+export function HeroBody({ state, now, hours, level, unlockedToday }: Props) {
   switch (state.kind) {
     case 'plan':
       return <PlanBody state={state} />;
     case 'planned':
-      return <PlannedBody state={state} now={now} />;
+      return <PlannedBody state={state} now={now} hours={hours} />;
     case 'confirm':
       return <ConfirmBody state={state} />;
     case 'done':

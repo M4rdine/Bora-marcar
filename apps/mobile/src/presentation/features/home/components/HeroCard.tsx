@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import type { BadgeState, EngineConfig, LevelProgress, LocalDateTime } from '@/domain';
+import type { BadgeState, EngineConfig, HourScore, LevelProgress, LocalDateTime } from '@/domain';
 
 import { AppText, Surface, tokens } from '../../../ui';
 import type { HeroState } from '../heroState';
@@ -15,12 +15,23 @@ type Props = {
   readonly now: LocalDateTime;
   /** Score da hora atual, usado ao registrar fora de um plano (`onLogNow`). */
   readonly nowScore: number;
+  /** Horas pontuadas do dia de hoje (para a previsão da janela no estado `planned`). */
+  readonly hours: readonly HourScore[];
   readonly level: LevelProgress;
   readonly actions: HeroActionsResult;
   readonly unlockedToday: readonly BadgeState[];
 };
 
-export function HeroCard({ state, config, now, nowScore, level, actions, unlockedToday }: Props) {
+export function HeroCard({
+  state,
+  config,
+  now,
+  nowScore,
+  hours,
+  level,
+  actions,
+  unlockedToday,
+}: Props) {
   return (
     <Surface
       strength="strong"
@@ -31,7 +42,7 @@ export function HeroCard({ state, config, now, nowScore, level, actions, unlocke
       accessibilityLabel="hero"
     >
       <View pointerEvents="none" style={styles.glow} />
-      <HeroBody state={state} now={now} level={level} unlockedToday={unlockedToday} />
+      <HeroBody state={state} now={now} hours={hours} level={level} unlockedToday={unlockedToday} />
       <HeroActions
         state={state}
         config={config}
