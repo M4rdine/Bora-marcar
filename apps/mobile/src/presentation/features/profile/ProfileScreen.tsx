@@ -1,16 +1,24 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { defaultEngineConfig, localNow, type Progress } from '@/domain';
+import { defaultEngineConfig, localNow, type BadgeState, type Progress } from '@/domain';
 
 import { t } from '../../i18n/pt-BR';
 import { useProgress } from '../../queries/useProgress';
 import { useServices } from '../../services/ServicesProvider';
 
+function badgeProgress(b: BadgeState): string {
+  if (b.progress === null) return '';
+  if (b.id === 'week') return ` (${t.profile.bestStreak(b.progress.current, b.progress.target)})`;
+  return ` (${b.progress.current}/${b.progress.target})`;
+}
+
 function Level({ progress }: { progress: Progress }) {
   const l = progress.level;
   return (
     <View>
-      <Text style={styles.big}>{t.profile.level(l.level, l.name)}</Text>
+      <Text
+        style={styles.big}
+      >{`${t.profile.level(l.level, l.name)} · ${t.profile.xp(l.totalXp)}`}</Text>
       <Text>
         {l.nextLevelXp === null
           ? t.profile.maxLevel
@@ -39,9 +47,7 @@ export function ProfileScreen() {
       <Text>{`${t.profile.streak(p.streak)} · ${t.profile.activities(p.records.length)} · ${t.profile.cities(p.citiesCount)}`}</Text>
       <Text style={styles.section}>{t.profile.badges(unlocked, p.badges.length)}</Text>
       {p.badges.map((b) => (
-        <Text
-          key={b.id}
-        >{`${b.unlocked ? '🏅' : '🔒'} ${t.badges[b.id]}${b.progress ? ` (${b.progress.current}/${b.progress.target})` : ''}`}</Text>
+        <Text key={b.id}>{`${b.unlocked ? '🏅' : '🔒'} ${t.badges[b.id]}${badgeProgress(b)}`}</Text>
       ))}
       <Text style={styles.section}>{t.profile.history}</Text>
       {p.records.length === 0 ? <Text>{t.profile.empty}</Text> : null}

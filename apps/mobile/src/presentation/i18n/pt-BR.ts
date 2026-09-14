@@ -1,5 +1,5 @@
 import type { LocationError, ProviderErrorCode } from '@/application/ports';
-import type { ActivityId, BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
+import type { BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 
 type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
@@ -25,13 +25,6 @@ export const t = {
     storm: 'trovoada',
     snow: 'neve',
   } satisfies Record<FactorId | VetoId, string>,
-  activities: {
-    walk: 'walk',
-    run: 'run',
-    cycle: 'cycle',
-    beach: 'beach',
-    picnic: 'picnic',
-  } satisfies Record<ActivityId, string>,
   badges: {
     first: 'Primeira saída',
     early: 'Madrugador',
@@ -98,12 +91,14 @@ export const t = {
   profile: {
     title: 'Seu progresso',
     level: (n: number, name: string) => `Nível ${n} · ${name}`,
+    xp: (n: number) => `${n} XP`,
     xpToNext: (xp: number, name: string) => `${xp} XP para ${name}`,
     maxLevel: 'Nível máximo',
     streak: (n: number) => `${n} dias seguidos`,
     activities: (n: number) => `${n} atividades`,
     cities: (n: number) => `${n} cidades`,
     badges: (unlocked: number, total: number) => `Conquistas · ${unlocked} de ${total}`,
+    bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
     history: 'Histórico',
     empty: 'Nenhuma atividade ainda.',
   },

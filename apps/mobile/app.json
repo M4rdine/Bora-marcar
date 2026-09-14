@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Melhor Hora",
+    "slug": "melhor-hora",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

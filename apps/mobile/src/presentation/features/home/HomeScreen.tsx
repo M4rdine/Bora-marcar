@@ -2,8 +2,6 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { ProviderErrorCode } from '@/application/ports';
-
 import { t } from '../../i18n/pt-BR';
 import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useGamificationActions } from '../../queries/useGamificationActions';
@@ -119,7 +117,7 @@ export function HomeScreen() {
 
       {overview.status === 'error' && overview.error ? (
         <View>
-          <Text style={styles.error}>{t.errors[overview.error.code as ProviderErrorCode]}</Text>
+          <Text style={styles.error}>{t.errors[overview.error.code]}</Text>
           <Pressable accessibilityRole="button" style={styles.button} onPress={overview.refetch}>
             <Text style={styles.buttonText}>{t.home.retry}</Text>
           </Pressable>

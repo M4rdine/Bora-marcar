@@ -22,6 +22,20 @@ module.exports = defineConfig([
     languageOptions: { globals: { ...globals.node, ...globals.jest } },
   },
   {
+    // `domain` and `application` are pure layers: no React/React Native/Expo/TanStack/storage
+    // imports, so they stay testable and runtime-agnostic.
+    files: ['src/domain/**/*.{ts,tsx}', 'src/application/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['react', 'react-native'],
+          patterns: ['expo*', '@tanstack/*', '@react-native-async-storage/*'],
+        },
+      ],
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     plugins: { boundaries },
     settings: {

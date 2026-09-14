@@ -96,6 +96,7 @@ export function CitiesScreen() {
         <Text style={styles.buttonText}>{t.home.useLocation}</Text>
       </Pressable>
       {locationError ? <Text style={styles.error}>{locationError}</Text> : null}
+      {!search.isActive ? <Text>{t.cities.hint}</Text> : null}
       {search.isSearching ? <Text>{t.cities.searching}</Text> : null}
       {search.error ? <Text style={styles.error}>{t.errors[search.error.code]}</Text> : null}
       {search.isActive && !search.isSearching && !search.error && search.results.length === 0 ? (

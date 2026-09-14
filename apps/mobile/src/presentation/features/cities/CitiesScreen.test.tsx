@@ -24,9 +24,11 @@ describe('CitiesScreen', () => {
   it('busca depois de 2 letras, mostra resultado e seleciona a cidade', async () => {
     const geocoding = fakeGeocoding(ok([saoPaulo]));
     renderWithProviders(<CitiesScreen />, { services: fakeServices({ geocoding }) });
+    expect(screen.getByText('Pelo menos 2 letras')).toBeTruthy();
     fireEvent.changeText(screen.getByLabelText('Digite o nome da cidade'), 'São');
     await screen.findByText('São Paulo, São Paulo, Brasil', {}, { timeout: 2000 });
     expect(geocoding.calls).toEqual(['São']);
+    expect(screen.queryByText('Pelo menos 2 letras')).toBeNull();
     await flushListBatching();
     fireEvent.press(screen.getByText('São Paulo, São Paulo, Brasil'));
     expect(usePreferences.getState().city?.id).toBe(saoPaulo.id);

@@ -33,7 +33,7 @@ describe('ProfileScreen', () => {
       },
     ]);
     renderWithProviders(<ProfileScreen />, { services: fakeServices({ progress }) });
-    await screen.findByText('Nível 2 · Garoa');
+    await screen.findByText(/Nível 2 · Garoa · \d+ XP/);
     expect(screen.getByText(/2 dias seguidos · 2 atividades · 2 cidades/)).toBeTruthy();
     expect(screen.getByText(/🏅 Primeira saída/)).toBeTruthy();
     expect(screen.getByText(/🏅 Madrugador/)).toBeTruthy();
