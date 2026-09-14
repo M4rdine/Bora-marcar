@@ -57,7 +57,7 @@ describe('deriveProgress', () => {
     expect(p.records.find((r) => r.date === '2026-09-12')?.planFulfilled).toBe(false);
   });
 
-  it('só o primeiro registro do dia conta', () => {
+  it('só o primeiro registro do dia rende XP; o segundo fica no histórico com XP zero', () => {
     const p = deriveProgress(
       [
         logged(TODAY, { hourLeft: 8, hourScore: 60 }),
@@ -66,9 +66,18 @@ describe('deriveProgress', () => {
       cfg,
       TODAY,
     );
-    expect(p.records).toHaveLength(1);
+    expect(p.records).toHaveLength(2);
     expect(p.records[0]?.hourScore).toBe(60);
-    expect(p.totalXp).toBe(50 + 30 + 5);
+    expect(p.records[0]?.xp.total).toBe(50 + 30 + 5);
+    expect(p.records[1]?.xp).toEqual({
+      base: 0,
+      hourBonus: 0,
+      planBonus: 0,
+      streakBonus: 0,
+      total: 0,
+    });
+    expect(p.totalXp).toBe(85);
+    expect(p.todayRecord?.hourScore).toBe(60);
   });
 
   it('plano ativo é o plano de hoje não cancelado e não confirmado', () => {

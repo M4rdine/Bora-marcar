@@ -84,13 +84,13 @@ function buildRecords(
     return e.type === 'logged' ? [draftFromLogged(e)] : [];
   });
   return drafts.reduce<readonly ActivityRecord[]>((acc, d) => {
-    if (acc.some((r) => r.date === d.date)) return acc; // só o primeiro do dia conta
+    // só o primeiro registro do dia rende XP; os demais entram no histórico com XP zero
+    const isFirstOfDay = !acc.some((r) => r.date === d.date);
     const active = new Set([...acc.map((r) => r.date), d.date]);
     const streakDays = computeStreak(active, restDates, d.date);
-    const xp = computeXp(
-      { hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays },
-      cfg.xp,
-    );
+    const xp = isFirstOfDay
+      ? computeXp({ hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays }, cfg.xp)
+      : { base: 0, hourBonus: 0, planBonus: 0, streakBonus: 0, total: 0 };
     return [...acc, { ...d, streakDays, xp }];
   }, []);
 }
