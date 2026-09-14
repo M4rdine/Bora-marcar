@@ -67,10 +67,19 @@ function slidingCandidates(
 
 const EPSILON = 1e-9;
 
-/** Ranking maior vence; empate exato mantém o atual (que é mais curto ou mais cedo). */
+/**
+ * Ranking maior vence; em empate exato (dentro de EPSILON) vence quem começa mais cedo;
+ * se o início também empatar, vence a candidata mais longa.
+ */
 function better(candidate: Candidate, current: Candidate | null): boolean {
   if (current === null) return true;
-  return candidate.rank > current.rank + EPSILON;
+  if (candidate.rank > current.rank + EPSILON) return true;
+  if (candidate.rank < current.rank - EPSILON) return false;
+  // hours[0] sempre existe: slidingCandidates exige slice.length === size e sizes não contém 0
+  const candidateStart = (candidate.hours[0] as HourScore).hour.hour;
+  const currentStart = (current.hours[0] as HourScore).hour.hour;
+  if (candidateStart !== currentStart) return candidateStart < currentStart;
+  return candidate.hours.length > current.hours.length;
 }
 
 export function dominantProblem(h: HourScore): FactorId | VetoId {
@@ -91,7 +100,7 @@ function noWindow(candidates: readonly HourScore[]): WindowResult {
 
 export function findBestWindow(candidates: readonly HourScore[], cfg: EngineConfig): WindowResult {
   const all = cfg.window.sizes.flatMap((size) => slidingCandidates(candidates, size, cfg.window));
-  // sizes e starts crescentes: em empate exato de ranking fica a primeira encontrada (mais cedo)
+  // em empate exato de ranking, better() decide pela mais cedo (e, se também empatar, a mais longa)
   const winner = all.reduce<Candidate | null>((acc, c) => (better(c, acc) ? c : acc), null);
   if (winner === null) return noWindow(candidates);
   // winner.hours nunca é vazio: slidingCandidates exige slice.length === size e sizes não contém 0

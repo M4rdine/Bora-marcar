@@ -58,6 +58,24 @@ describe('findBestWindow', () => {
     expect(r.window.startHour).toBe(7);
   });
 
+  it('em empate de ranking entre tamanhos diferentes, prefere a mais cedo', () => {
+    // 6–7 = 87 (2h, rank 90) vs 18 = 90 (1h, rank 90) → mais cedo vence
+    const scores = Array.from({ length: 24 }, (_, h) =>
+      h === 6 || h === 7 ? 87 : h === 18 ? 90 : 40,
+    );
+    const r = findBestWindow(flat(scores), cfg);
+    if (r.kind !== 'window') throw new Error('esperava janela');
+    expect(r.window).toEqual({ date: '2026-09-13', startHour: 6, endHour: 8 });
+  });
+
+  it('em empate de ranking e início, prefere a candidata mais longa', () => {
+    // 10 = 90 (1h, rank 90) vs 10–11 = 87 (2h, rank 90), mesmo início → mais longa vence
+    const scores = Array.from({ length: 24 }, (_, h) => (h === 10 ? 90 : h === 11 ? 84 : 30));
+    const r = findBestWindow(flat(scores), cfg);
+    if (r.kind !== 'window') throw new Error('esperava janela');
+    expect(r.window).toEqual({ date: '2026-09-13', startHour: 10, endHour: 12 });
+  });
+
   it('não atravessa horas não contíguas', () => {
     const hours = [makeHourScore(7, 80), makeHourScore(9, 80)];
     const r = findBestWindow(hours, cfg);
