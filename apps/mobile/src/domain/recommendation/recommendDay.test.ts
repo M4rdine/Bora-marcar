@@ -23,6 +23,16 @@ describe('recommendDay', () => {
     expect(r.tips).toEqual([]);
     expect(r.daily?.sunrise).toBe('2026-09-13T06:12');
     expect(r.activityId).toBe('walk');
+    expect(r.bestScoreOfDay).toBe(100);
+  });
+
+  it('bestScoreOfDay olha o dia inteiro, mesmo quando o "agora" não deixa janela', () => {
+    const r = recommendDay(makeForecast(DATES), cfg.activities.beach, cfg, {
+      date: '2026-09-13',
+      now: { hour: 20, minute: 0 },
+    });
+    expect(r.result.kind).toBe('none');
+    expect(r.bestScoreOfDay).toBeGreaterThanOrEqual(80);
   });
 
   it('só considera as horas da data pedida', () => {
@@ -54,6 +64,7 @@ describe('recommendDay', () => {
     expect(r.label).toBe('poor');
     expect(r.sentence).toBeNull();
     expect(r.tips).toEqual([]);
+    expect(r.bestScoreOfDay).toBe(20);
   });
 
   it('data sem previsão devolve vazio sem quebrar', () => {
@@ -63,6 +74,7 @@ describe('recommendDay', () => {
     expect(r.score).toBeNull();
     expect(r.label).toBeNull();
     expect(r.daily).toBeNull();
+    expect(r.bestScoreOfDay).toBeNull();
   });
 
   it('gera ressalva e dicas quando cabem', () => {

@@ -24,13 +24,21 @@ const today = (now: LocalDateTime, rainy = false) =>
     cfg,
     { date: now.date, now },
   );
+const beachToday = (now: LocalDateTime) =>
+  recommendDay(makeForecast(DATES), cfg.activities.beach, cfg, { date: now.date, now });
 const progressOf = (events: Parameters<typeof deriveProgress>[0]) =>
   deriveProgress(events, cfg, '2026-09-13');
 
 describe('deriveHeroState', () => {
   it('sem plano e com janela → plan', () => {
     const now = at(8);
-    const s = deriveHeroState({ today: today(now), now, progress: progressOf([]), graceHours: 2 });
+    const s = deriveHeroState({
+      today: today(now),
+      now,
+      progress: progressOf([]),
+      graceHours: 2,
+      fairThreshold: cfg.scores.fair,
+    });
     expect(s.kind).toBe('plan');
     expect(s.kind === 'plan' && s.window.startHour).toBe(8);
   });
@@ -38,14 +46,21 @@ describe('deriveHeroState', () => {
   it('plano ativo antes da janela → planned; dentro da janela → confirm com score de agora', () => {
     const plan = planned('2026-09-13', { startHour: 17, endHour: 19 });
     const progress = progressOf([plan]);
-    expect(deriveHeroState({ today: today(at(8)), now: at(8), progress, graceHours: 2 }).kind).toBe(
-      'planned',
-    );
+    expect(
+      deriveHeroState({
+        today: today(at(8)),
+        now: at(8),
+        progress,
+        graceHours: 2,
+        fairThreshold: cfg.scores.fair,
+      }).kind,
+    ).toBe('planned');
     const s = deriveHeroState({
       today: today(at(17, 30)),
       now: at(17, 30),
       progress,
       graceHours: 2,
+      fairThreshold: cfg.scores.fair,
     });
     expect(s).toMatchObject({ kind: 'confirm', nowScore: 100 });
   });
@@ -57,6 +72,7 @@ describe('deriveHeroState', () => {
       now: at(20),
       progress: progressOf([plan, confirmed(plan)]),
       graceHours: 2,
+      fairThreshold: cfg.scores.fair,
     });
     expect(s.kind === 'done' && s.record.planFulfilled).toBe(true);
   });
@@ -67,8 +83,35 @@ describe('deriveHeroState', () => {
       now: at(8),
       progress: progressOf([badDay('2026-09-13')]),
       graceHours: 2,
+      fairThreshold: cfg.scores.fair,
     });
     expect(s.kind).toBe('noWindow');
+  });
+
+  it('plano cuja janela (com tolerância) já passou → logNoPlan com o plano expirado', () => {
+    const plan = planned('2026-09-13', { startHour: 7, endHour: 9 });
+    const s = deriveHeroState({
+      today: today(at(15)),
+      now: at(15),
+      progress: progressOf([plan]),
+      graceHours: 2,
+      fairThreshold: cfg.scores.fair,
+    });
+    expect(s.kind).toBe('logNoPlan');
+    expect(s.kind === 'logNoPlan' && s.expiredPlan?.window.startHour).toBe(7);
+  });
+
+  it('dia bom cujas horas boas já passaram → logNoPlan sem plano', () => {
+    const now = at(20);
+    const s = deriveHeroState({
+      today: beachToday(now),
+      now,
+      progress: progressOf([]),
+      graceHours: 2,
+      fairThreshold: cfg.scores.fair,
+    });
+    expect(s.kind).toBe('logNoPlan');
+    expect(s.kind === 'logNoPlan' && s.expiredPlan).toBeNull();
   });
 
   it('registro espontâneo também é done', () => {
@@ -77,6 +120,7 @@ describe('deriveHeroState', () => {
       now: at(20),
       progress: progressOf([logged('2026-09-13')]),
       graceHours: 2,
+      fairThreshold: cfg.scores.fair,
     });
     expect(s.kind).toBe('done');
   });

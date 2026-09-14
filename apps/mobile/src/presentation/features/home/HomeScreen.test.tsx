@@ -79,10 +79,12 @@ describe('HomeScreen', () => {
     await screen.findByText(/Planejar Caminhada às \d+h/);
   });
 
-  it('dia sem janela boa mostra o motivo e permite registrar', async () => {
+  it('dia sem janela boa mostra o motivo, permite registrar e marca o dia de folga', async () => {
     usePreferences.setState({ city: saoPaulo });
+    const progress = memoryProgressRepository();
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
+        progress,
         forecast: fakeForecast(
           ok(makeForecast(DATES, () => ({ precipitationProbability: 95, precipitationMm: 2 }))),
         ),
@@ -90,8 +92,28 @@ describe('HomeScreen', () => {
     });
     await screen.findByText('Sem janela boa hoje');
     expect(screen.getByText('Motivo principal: chuva.')).toBeTruthy();
+    await waitFor(() =>
+      expect(progress.events().filter((e) => e.type === 'badWeatherDay')).toHaveLength(1),
+    );
     fireEvent.press(screen.getByText('Saí em outro horário'));
     await screen.findByText(/Concluído às 14h00/);
     expect(screen.getByText(/\+\d+ XP/)).toBeTruthy();
+  });
+
+  it('dia bom cujas horas boas já passaram convida a registrar, sem marcar folga', async () => {
+    usePreferences.setState({ city: saoPaulo, activity: 'beach' });
+    const progress = memoryProgressRepository();
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        progress,
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        // 2026-09-13T23:00Z = 20:00 em São Paulo: as horas boas de praia já passaram.
+        clock: fixedClock(Date.UTC(2026, 8, 13, 23, 0, 0)),
+      }),
+    });
+    await screen.findByText('Sua janela de hoje já passou');
+    fireEvent.press(screen.getByText('Registrar atividade'));
+    await screen.findByText(/Concluído às 20h00/);
+    expect(progress.events().some((e) => e.type === 'badWeatherDay')).toBe(false);
   });
 });

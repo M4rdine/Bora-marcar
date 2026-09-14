@@ -16,7 +16,7 @@ import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
 import { HourlyList } from './components/HourlyList';
 import { NextDaysList } from './components/NextDaysList';
-import { deriveHeroState } from './heroState';
+import { deriveHeroState, type HeroState } from './heroState';
 import { useBadWeatherRecorder } from './useBadWeatherRecorder';
 
 type ActionErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
@@ -25,6 +25,13 @@ const isActionError = (e: unknown): e is { code: ActionErrorCode } =>
   e !== null &&
   'code' in e &&
   typeof (e as { code: unknown }).code === 'string';
+
+/** Único plano que o herói ainda permite desfazer: o planejado ou o que expirou sem registro. */
+const cancellablePlanId = (state: HeroState): string | null => {
+  if (state.kind === 'planned') return state.plan.planId;
+  if (state.kind === 'logNoPlan') return state.expiredPlan?.planId ?? null;
+  return null;
+};
 
 function Welcome() {
   const router = useRouter();
@@ -70,7 +77,9 @@ export function HomeScreen() {
   const progress = useProgress(overview.snapshot?.now.date ?? null);
   const actions = useGamificationActions();
   const [actionError, setActionError] = useState<string | null>(null);
-  useBadWeatherRecorder(city?.id ?? null, today);
+  // `fairThreshold` fica nulo enquanto a config não carregou; o hook (que não pode ser
+  // condicional) simplesmente não dispara nesse intervalo.
+  useBadWeatherRecorder(city?.id ?? null, today, config.data?.scores.fair ?? null);
 
   if (city === null) return <Welcome />;
   if (!config.data) return <Text style={styles.container}>{t.home.loading}</Text>;
@@ -92,6 +101,7 @@ export function HomeScreen() {
           now: snapshot.now,
           progress: progress.data,
           graceHours: config.data.window.graceHoursAfterEnd,
+          fairThreshold: config.data.scores.fair,
         })
       : null;
   const busy =
@@ -122,7 +132,6 @@ export function HomeScreen() {
           <HeroCard
             state={hero}
             config={config.data}
-            now={snapshot.now}
             busy={busy}
             errorMessage={actionError}
             onPlan={() =>
@@ -137,10 +146,10 @@ export function HomeScreen() {
                 }),
               )
             }
-            onCancel={() =>
-              (hero.kind === 'planned' || hero.kind === 'confirm') &&
-              void run(() => actions.cancel.mutateAsync(hero.plan.planId))
-            }
+            onCancel={() => {
+              const planId = cancellablePlanId(hero);
+              if (planId !== null) void run(() => actions.cancel.mutateAsync(planId));
+            }}
             onConfirm={() =>
               hero.kind === 'confirm' &&
               void run(() =>

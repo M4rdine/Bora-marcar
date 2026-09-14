@@ -18,6 +18,8 @@ export type DayRecommendation = {
   readonly caveat: string | null;
   readonly tips: readonly Tip[];
   readonly daily: DailySummary | null;
+  /** Maior score entre TODAS as horas do dia (ignora o "agora"); `null` se não há horas. */
+  readonly bestScoreOfDay: number | null;
 };
 
 type Options = { readonly date: string; readonly now?: { hour: number; minute: number } | null };
@@ -32,7 +34,11 @@ export function recommendDay(
   const hours = raw.map((h) => scoreHour(h, profile, cfg));
   const result = findBestWindow(candidateHours(hours, opts.now ?? null, cfg), cfg);
   const daily = forecast.daily.find((d) => d.date === opts.date) ?? null;
-  const base = { date: opts.date, activityId: profile.id, hours, result, daily };
+  const bestScoreOfDay = hours.reduce<number | null>(
+    (acc, h) => (acc === null || h.score > acc ? h.score : acc),
+    null,
+  );
+  const base = { date: opts.date, activityId: profile.id, hours, result, daily, bestScoreOfDay };
 
   if (result.kind === 'window') {
     return {

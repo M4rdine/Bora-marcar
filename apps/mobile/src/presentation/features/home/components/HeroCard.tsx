@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { EngineConfig, LocalDateTime } from '@/domain';
+import type { EngineConfig } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
 import type { HeroState } from '../heroState';
@@ -8,7 +8,6 @@ import type { HeroState } from '../heroState';
 type Props = {
   readonly state: HeroState;
   readonly config: EngineConfig;
-  readonly now: LocalDateTime;
   readonly busy: boolean;
   readonly errorMessage: string | null;
   readonly onPlan: () => void;
@@ -50,6 +49,15 @@ function Body({ state }: Pick<Props, 'state'>) {
           <Text>{t.home.xpEarned(state.record.xp.total)}</Text>
         </>
       );
+    case 'logNoPlan':
+      return (
+        <>
+          <Text style={styles.kicker}>{t.home.windowPassed}</Text>
+          {state.expiredPlan ? (
+            <Text style={styles.big}>{t.home.planExpired(state.expiredPlan.window.startHour)}</Text>
+          ) : null}
+        </>
+      );
     case 'noWindow': {
       const dominant = state.day.result.kind === 'none' ? state.day.result.dominant : null;
       return (
@@ -70,7 +78,7 @@ function Actions({
   onCancel,
   onConfirm,
   onLogNow,
-}: Omit<Props, 'now' | 'errorMessage'>) {
+}: Omit<Props, 'errorMessage'>) {
   const button = (label: string, onPress: () => void) => (
     <Pressable accessibilityRole="button" onPress={onPress} disabled={busy} style={styles.button}>
       <Text style={styles.buttonText}>{label}</Text>
@@ -89,6 +97,13 @@ function Actions({
         <>
           {button(t.home.confirm, onConfirm)}
           {button(t.home.logOther, onLogNow)}
+        </>
+      );
+    case 'logNoPlan':
+      return (
+        <>
+          {button(t.home.logNow, onLogNow)}
+          {state.expiredPlan ? button(t.home.cancelPlan, onCancel) : null}
         </>
       );
     case 'noWindow':
