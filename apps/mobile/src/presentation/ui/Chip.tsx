@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   scorePill: {
     backgroundColor: tokens.color.mint,
     borderRadius: tokens.radius.pill,
-    paddingVertical: 2,
+    paddingVertical: tokens.space[1],
     paddingHorizontal: tokens.space[1],
   },
   scoreText: { color: tokens.color.mintInk },

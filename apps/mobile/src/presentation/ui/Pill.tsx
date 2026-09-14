@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   base: {
     alignSelf: 'flex-start',
     borderRadius: tokens.radius.pill,
-    paddingVertical: 4,
+    paddingVertical: tokens.space[1],
     paddingHorizontal: tokens.space[2],
   },
 });

@@ -7,6 +7,12 @@
     "icon": "./assets/icon.png",
     "scheme": "melhorhora",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#2C2C5E",
+    "splash": {
+      "backgroundColor": "#2C2C5E",
+      "resizeMode": "contain",
+      "image": "./assets/splash-icon.png"
+    },
     "ios": {
       "supportsTablet": true
     },

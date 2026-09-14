@@ -41,6 +41,15 @@ describe('Surface', () => {
     );
     expect(getByText(`conteúdo ${strength}`)).toBeTruthy();
   });
+
+  it('aplica padding e gap quando informados', () => {
+    const { getByText } = render(
+      <Surface padding={4} gap={2}>
+        <AppText>conteúdo com espaçamento</AppText>
+      </Surface>,
+    );
+    expect(getByText('conteúdo com espaçamento')).toBeTruthy();
+  });
 });
 
 describe('Button', () => {
