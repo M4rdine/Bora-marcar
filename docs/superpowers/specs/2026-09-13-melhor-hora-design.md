@@ -1,7 +1,7 @@
 # Melhor Hora — Design do produto e da arquitetura
 
 Data: 2026-09-13
-Status: aprovado em brainstorming, aguardando revisão final do spec
+Status: aprovado (spec revisado em 2026-09-13); implementação dividida em 3 planos em `docs/superpowers/plans/`
 Origem: Teste Técnico React Native (PDF em `~/Downloads/Teste Técnico React Native.pdf`)
 
 ## 1. Contexto e objetivo

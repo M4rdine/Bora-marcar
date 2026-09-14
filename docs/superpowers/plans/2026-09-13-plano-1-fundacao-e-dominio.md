@@ -2213,3 +2213,1275 @@ git commit -m "feat(domain): descritores PT-BR, frase de explicação, ressalva 
 ```
 
 ---
+
+### Task 9: Recomendação do dia e visão geral (hoje, agora, próximos dias, comparativo)
+
+**Files:**
+- Create: `apps/mobile/src/domain/recommendation/recommendDay.ts`, `recommendDay.test.ts`
+- Create: `apps/mobile/src/domain/recommendation/overview.ts`, `overview.test.ts`
+- Modify: `apps/mobile/src/domain/recommendation/testing/fixtures.ts` (adicionar `makeForecast`)
+
+**Interfaces:**
+- Consumes: tudo de Tasks 4–8, `LocalDateTime`.
+- Produces:
+  - `type DayRecommendation = { date; activityId; hours: readonly HourScore[]; result: WindowResult; score: number | null; label: ScoreLabel | null; sentence: string | null; caveat: string | null; tips: readonly Tip[]; daily: DailySummary | null }`
+  - `recommendDay(forecast, profile, cfg, opts: { date: string; now?: { hour; minute } | null }): DayRecommendation`
+  - `type Comparison = 'tomorrowBetter' | 'todayBestOfWeek' | null`
+  - `type Overview = { today: DayRecommendation; nextDays: readonly DayRecommendation[]; now: HourScore | null; nowInWindow: boolean; bestDate: string | null; comparison: Comparison }`
+  - `recommendOverview(forecast, profile, cfg, now: LocalDateTime): Overview`
+  - fixture `makeForecast(dates: readonly string[], perHour?: (date, hour) => Partial<HourlyConditions>): Forecast`
+
+- [ ] **Step 1: Adicionar `makeForecast` ao fim de `testing/fixtures.ts`**
+
+```ts
+import type { Forecast } from '../../forecast/types';
+
+export function makeForecast(
+  dates: readonly string[],
+  perHour: (date: string, hour: number) => Partial<HourlyConditions> = () => ({}),
+): Forecast {
+  return {
+    timezone: 'America/Sao_Paulo',
+    utcOffsetSeconds: -10800,
+    hourly: dates.flatMap((date) => makeDay(date, (hour) => perHour(date, hour))),
+    daily: dates.map((date) => ({
+      date,
+      sunrise: `${date}T06:12`,
+      sunset: `${date}T18:04`,
+      weatherCode: 1,
+      tempMax: 26,
+      tempMin: 16,
+    })),
+  };
+}
+```
+
+(Junte o import de `Forecast` ao import já existente de `HourlyConditions`.)
+
+- [ ] **Step 2: Teste de `recommendDay`**
+
+`apps/mobile/src/domain/recommendation/recommendDay.test.ts`:
+```ts
+import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
+
+import { recommendDay } from './recommendDay';
+import { makeForecast } from './testing/fixtures';
+
+const walk = cfg.activities.walk;
+const DATES = ['2026-09-13', '2026-09-14'];
+
+describe('recommendDay', () => {
+  it('dia bom: janela, frase, sem ressalva, sem dicas, com resumo diário', () => {
+    const r = recommendDay(makeForecast(DATES), walk, cfg, { date: '2026-09-13' });
+    expect(r.hours).toHaveLength(24);
+    expect(r.result.kind).toBe('window');
+    expect(r.result.kind === 'window' && r.result.window).toEqual({ date: '2026-09-13', startHour: 6, endHour: 9 });
+    expect(r.score).toBe(100);
+    expect(r.label).toBe('great');
+    expect(r.sentence).toBe('Sensação de 22°, sem chuva e vento leve.');
+    expect(r.caveat).toBeNull();
+    expect(r.tips).toEqual([]);
+    expect(r.daily?.sunrise).toBe('2026-09-13T06:12');
+    expect(r.activityId).toBe('walk');
+  });
+
+  it('só considera as horas da data pedida', () => {
+    const f = makeForecast(DATES, (date) => (date === '2026-09-13' ? { precipitationProbability: 90 } : {}));
+    const r = recommendDay(f, walk, cfg, { date: '2026-09-14' });
+    expect(r.hours.every((h) => h.hour.date === '2026-09-14')).toBe(true);
+    expect(r.result.kind).toBe('window');
+  });
+
+  it('respeita o "agora" ao escolher candidatas', () => {
+    const r = recommendDay(makeForecast(DATES), walk, cfg, { date: '2026-09-13', now: { hour: 14, minute: 0 } });
+    expect(r.result.kind === 'window' && r.result.window).toEqual({ date: '2026-09-13', startHour: 14, endHour: 17 });
+  });
+
+  it('dia de chuva: sem janela, melhor score isolado e sem frase', () => {
+    const f = makeForecast(DATES, () => ({ precipitationProbability: 90, precipitationMm: 2 }));
+    const r = recommendDay(f, walk, cfg, { date: '2026-09-13' });
+    expect(r.result).toMatchObject({ kind: 'none', dominant: 'rain' });
+    expect(r.score).toBe(20);
+    expect(r.label).toBe('poor');
+    expect(r.sentence).toBeNull();
+    expect(r.tips).toEqual([]);
+  });
+
+  it('data sem previsão devolve vazio sem quebrar', () => {
+    const r = recommendDay(makeForecast(DATES), walk, cfg, { date: '2030-01-01' });
+    expect(r.hours).toEqual([]);
+    expect(r.result).toEqual({ kind: 'none', best: null, dominant: null });
+    expect(r.score).toBeNull();
+    expect(r.label).toBeNull();
+    expect(r.daily).toBeNull();
+  });
+
+  it('gera ressalva e dicas quando cabem', () => {
+    const f = makeForecast(DATES, (_, hour) => ({
+      uvIndex: hour >= 11 && hour < 14 ? 9 : hour >= 14 ? 6 : 1,
+      apparentTemperature: hour < 14 ? 34 : 22,
+    }));
+    const r = recommendDay(f, walk, cfg, { date: '2026-09-13' });
+    expect(r.result.kind === 'window' && r.result.window.startHour).toBe(14);
+    expect(r.caveat).toBe('Antes das 14h a sensação térmica está muito quente.');
+    expect(r.tips.map((t) => t.id)).toEqual(['sunscreen']);
+  });
+});
+```
+
+- [ ] **Step 3: Rodar e ver falhar**
+
+Run: `pnpm --filter mobile test -- recommendDay`
+Expected: FAIL, módulo não encontrado.
+
+- [ ] **Step 4: Implementar `recommendDay.ts`**
+
+```ts
+import type { ActivityId, ActivityProfile } from '../activities/types';
+import type { EngineConfig } from '../config/types';
+import type { DailySummary, Forecast } from '../forecast/types';
+
+import { labelFor, scoreHour, type HourScore, type ScoreLabel } from './scoreHour';
+import { buildCaveat, buildSentence } from './sentence';
+import { preparationTips, type Tip } from './tips';
+import { candidateHours, findBestWindow, type WindowResult } from './windows';
+
+export type DayRecommendation = {
+  readonly date: string;
+  readonly activityId: ActivityId;
+  readonly hours: readonly HourScore[];
+  readonly result: WindowResult;
+  readonly score: number | null;
+  readonly label: ScoreLabel | null;
+  readonly sentence: string | null;
+  readonly caveat: string | null;
+  readonly tips: readonly Tip[];
+  readonly daily: DailySummary | null;
+};
+
+type Options = { readonly date: string; readonly now?: { hour: number; minute: number } | null };
+
+export function recommendDay(
+  forecast: Forecast,
+  profile: ActivityProfile,
+  cfg: EngineConfig,
+  opts: Options,
+): DayRecommendation {
+  const raw = forecast.hourly.filter((h) => h.date === opts.date);
+  const hours = raw.map((h) => scoreHour(h, profile, cfg));
+  const result = findBestWindow(candidateHours(hours, opts.now ?? null, cfg), cfg);
+  const daily = forecast.daily.find((d) => d.date === opts.date) ?? null;
+  const base = { date: opts.date, activityId: profile.id, hours, result, daily };
+
+  if (result.kind === 'window') {
+    return {
+      ...base,
+      score: result.score,
+      label: labelFor(result.score, cfg),
+      sentence: buildSentence(result.hours, profile),
+      caveat: buildCaveat(hours, result.window, profile),
+      tips: preparationTips(raw, result.window, cfg),
+    };
+  }
+  const score = result.best?.score ?? null;
+  return {
+    ...base,
+    score,
+    label: score === null ? null : labelFor(score, cfg),
+    sentence: null,
+    caveat: null,
+    tips: [],
+  };
+}
+```
+
+- [ ] **Step 5: Rodar e ver passar**
+
+Run: `pnpm --filter mobile test -- recommendDay`
+Expected: PASS.
+
+- [ ] **Step 6: Teste de `overview`**
+
+`apps/mobile/src/domain/recommendation/overview.test.ts`:
+```ts
+import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
+import type { LocalDateTime } from '../time/localDateTime';
+
+import { recommendOverview } from './overview';
+import { makeForecast } from './testing/fixtures';
+
+const walk = cfg.activities.walk;
+const DATES = ['2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'];
+const at = (hour: number, minute = 0): LocalDateTime => ({
+  date: '2026-09-13',
+  hour,
+  minute,
+  epochMs: 0,
+  utcOffsetSeconds: -10800,
+});
+const rainy = { precipitationProbability: 50 }; // caminhada → 85 de dia
+
+describe('recommendOverview', () => {
+  it('hoje usa o "agora"; próximos dias são os 4 seguintes inteiros', () => {
+    const o = recommendOverview(makeForecast(DATES), walk, cfg, at(14));
+    expect(o.today.result.kind === 'window' && o.today.result.window.startHour).toBe(14);
+    expect(o.nextDays.map((d) => d.date)).toEqual(DATES.slice(1));
+    expect(o.nextDays[0]?.result.kind === 'window' && o.nextDays[0].result.window.startHour).toBe(6);
+  });
+
+  it('score de agora é o da hora atual', () => {
+    const o = recommendOverview(makeForecast(DATES), walk, cfg, at(20, 15));
+    expect(o.now?.hour.hour).toBe(20);
+    expect(o.now?.score).toBe(70);
+  });
+
+  it('nowInWindow reflete a janela de hoje', () => {
+    const f = makeForecast(DATES, (_, hour) => (hour < 17 || hour > 18 ? rainy : {}));
+    expect(recommendOverview(f, walk, cfg, at(17, 30)).nowInWindow).toBe(true);
+    expect(recommendOverview(f, walk, cfg, at(9)).nowInWindow).toBe(false);
+  });
+
+  it('comparativo: amanhã melhor que hoje por 10+ pontos', () => {
+    const f = makeForecast(DATES, (date) => (date === '2026-09-13' ? rainy : {}));
+    const o = recommendOverview(f, walk, cfg, at(8));
+    expect(o.comparison).toBe('tomorrowBetter');
+    expect(o.bestDate).toBe('2026-09-14');
+  });
+
+  it('comparativo: hoje é o melhor da semana (empate resolve para o mais cedo)', () => {
+    const o = recommendOverview(makeForecast(DATES), walk, cfg, at(8));
+    expect(o.comparison).toBe('todayBestOfWeek');
+    expect(o.bestDate).toBe('2026-09-13');
+  });
+
+  it('comparativo nulo quando nem hoje é o melhor nem amanhã é bem melhor', () => {
+    const f = makeForecast(DATES, (date) => (date === '2026-09-15' ? {} : rainy));
+    const o = recommendOverview(f, walk, cfg, at(8));
+    expect(o.comparison).toBeNull();
+    expect(o.bestDate).toBe('2026-09-15');
+  });
+
+  it('hoje sem janela e amanhã com janela → amanhã melhor', () => {
+    const f = makeForecast(DATES, (date) => (date === '2026-09-13' ? { precipitationProbability: 95 } : {}));
+    expect(recommendOverview(f, walk, cfg, at(8)).comparison).toBe('tomorrowBetter');
+  });
+
+  it('nenhum dia com janela → sem melhor data', () => {
+    const f = makeForecast(DATES, () => ({ precipitationProbability: 95 }));
+    const o = recommendOverview(f, walk, cfg, at(8));
+    expect(o.bestDate).toBeNull();
+    expect(o.comparison).toBeNull();
+    expect(o.nowInWindow).toBe(false);
+  });
+});
+```
+
+- [ ] **Step 7: Rodar e ver falhar**
+
+Run: `pnpm --filter mobile test -- overview`
+Expected: FAIL, módulo não encontrado.
+
+- [ ] **Step 8: Implementar `overview.ts`**
+
+```ts
+import type { ActivityProfile } from '../activities/types';
+import type { EngineConfig } from '../config/types';
+import type { Forecast } from '../forecast/types';
+import type { LocalDateTime } from '../time/localDateTime';
+
+import { recommendDay, type DayRecommendation } from './recommendDay';
+import type { HourScore } from './scoreHour';
+import { isWithinWindow } from './windows';
+
+export type Comparison = 'tomorrowBetter' | 'todayBestOfWeek' | null;
+
+export type Overview = {
+  readonly today: DayRecommendation;
+  readonly nextDays: readonly DayRecommendation[];
+  readonly now: HourScore | null;
+  readonly nowInWindow: boolean;
+  readonly bestDate: string | null;
+  readonly comparison: Comparison;
+};
+
+const NEXT_DAYS = 4;
+const TOMORROW_BETTER_BY = 10;
+
+const windowScore = (d: DayRecommendation): number | null =>
+  d.result.kind === 'window' ? d.result.score : null;
+
+function pickBestDate(days: readonly DayRecommendation[]): string | null {
+  return days.reduce<{ date: string; score: number } | null>((acc, d) => {
+    const s = windowScore(d);
+    if (s === null) return acc;
+    return acc === null || s > acc.score ? { date: d.date, score: s } : acc;
+  }, null)?.date ?? null;
+}
+
+function compare(today: DayRecommendation, tomorrow: DayRecommendation | undefined, bestDate: string | null): Comparison {
+  const todayScore = windowScore(today);
+  const tomorrowScore = tomorrow ? windowScore(tomorrow) : null;
+  if (tomorrowScore !== null && (todayScore === null || tomorrowScore - todayScore >= TOMORROW_BETTER_BY)) {
+    return 'tomorrowBetter';
+  }
+  if (todayScore !== null && bestDate === today.date) return 'todayBestOfWeek';
+  return null;
+}
+
+export function recommendOverview(
+  forecast: Forecast,
+  profile: ActivityProfile,
+  cfg: EngineConfig,
+  now: LocalDateTime,
+): Overview {
+  const today = recommendDay(forecast, profile, cfg, { date: now.date, now });
+  const futureDates = forecast.daily.map((d) => d.date).filter((d) => d > now.date).slice(0, NEXT_DAYS);
+  const nextDays = futureDates.map((date) => recommendDay(forecast, profile, cfg, { date }));
+  const nowScore = today.hours.find((h) => h.hour.hour === now.hour) ?? null;
+  const nowInWindow =
+    today.result.kind === 'window' && isWithinWindow(today.result.window, now, cfg.window.graceHoursAfterEnd);
+  const bestDate = pickBestDate([today, ...nextDays]);
+  return { today, nextDays, now: nowScore, nowInWindow, bestDate, comparison: compare(today, nextDays[0], bestDate) };
+}
+```
+
+- [ ] **Step 9: Rodar, lint, commit**
+
+Run: `pnpm --filter mobile test -- recommendation && pnpm --filter mobile lint && pnpm --filter mobile typecheck`
+Expected: PASS, cobertura de `domain` 100 %.
+
+```bash
+git add apps/mobile/src/domain/recommendation
+git commit -m "feat(domain): recomendação do dia e visão geral com agora, próximos dias e comparativo"
+```
+
+---
+
+### Task 10: Gamificação: eventos, XP e níveis
+
+**Files:**
+- Create: `apps/mobile/src/domain/gamification/events.ts`
+- Create: `apps/mobile/src/domain/gamification/xp.ts`, `xp.test.ts`
+- Create: `apps/mobile/src/domain/gamification/levels.ts`, `levels.test.ts`
+
+**Interfaces:**
+- Consumes: `ActivityId`, `TimeWindow`, `XpRules`, `LevelDef`.
+- Produces:
+  - Tipos de evento (abaixo) e `GamificationEvent`
+  - `type XpBreakdown = { base; hourBonus; planBonus; streakBonus; total }`
+  - `computeXp(input: { hourScore: number; planFulfilled: boolean; streakDays: number }, rules: XpRules): XpBreakdown`
+  - `type LevelProgress = { level; name; totalXp; levelStartXp; nextLevelXp: number | null; xpToNext: number | null; progress: number }`
+  - `levelFor(totalXp: number, levels: readonly LevelDef[]): LevelProgress`
+
+- [ ] **Step 1: `events.ts`** (só tipos)
+
+```ts
+import type { ActivityId } from '../activities/types';
+import type { TimeWindow } from '../recommendation/windows';
+
+type Base = { readonly id: string; readonly createdAt: number }; // epoch ms
+
+export type PlannedEvent = Base & {
+  readonly type: 'planned';
+  readonly cityId: string;
+  readonly activity: ActivityId;
+  readonly date: string;
+  readonly window: TimeWindow;
+  readonly windowScore: number;
+};
+
+export type ConfirmedEvent = Base & {
+  readonly type: 'confirmed';
+  readonly planId: string;
+  readonly date: string;
+  readonly hourLeft: number;
+  readonly hourScore: number;
+};
+
+export type LoggedEvent = Base & {
+  readonly type: 'logged';
+  readonly cityId: string;
+  readonly activity: ActivityId;
+  readonly date: string;
+  readonly hourLeft: number;
+  readonly hourScore: number;
+};
+
+export type PlanCancelledEvent = Base & { readonly type: 'planCancelled'; readonly planId: string };
+
+export type BadWeatherDayEvent = Base & {
+  readonly type: 'badWeatherDay';
+  readonly cityId: string;
+  readonly date: string;
+  readonly bestScore: number;
+};
+
+export type GamificationEvent =
+  | PlannedEvent
+  | ConfirmedEvent
+  | LoggedEvent
+  | PlanCancelledEvent
+  | BadWeatherDayEvent;
+```
+
+- [ ] **Step 2: Teste de `xp`**
+
+`apps/mobile/src/domain/gamification/xp.test.ts`:
+```ts
+import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
+
+import { computeXp } from './xp';
+
+describe('computeXp', () => {
+  it('exemplo do spec: score 86, plano cumprido, 7 dias → 153', () => {
+    expect(computeXp({ hourScore: 86, planFulfilled: true, streakDays: 7 }, cfg.xp)).toEqual({
+      base: 50,
+      hourBonus: 43,
+      planBonus: 25,
+      streakBonus: 35,
+      total: 153,
+    });
+  });
+
+  it('sem plano e primeiro dia', () => {
+    expect(computeXp({ hourScore: 30, planFulfilled: false, streakDays: 1 }, cfg.xp)).toEqual({
+      base: 50,
+      hourBonus: 15,
+      planBonus: 0,
+      streakBonus: 5,
+      total: 70,
+    });
+  });
+
+  it('bônus de sequência tem teto em 10 dias', () => {
+    expect(computeXp({ hourScore: 0, planFulfilled: false, streakDays: 25 }, cfg.xp).streakBonus).toBe(50);
+  });
+
+  it('arredonda o bônus de horário', () => {
+    expect(computeXp({ hourScore: 85, planFulfilled: false, streakDays: 1 }, cfg.xp).hourBonus).toBe(43);
+  });
+});
+```
+
+- [ ] **Step 3: Rodar e ver falhar**
+
+Run: `pnpm --filter mobile test -- gamification/xp`
+Expected: FAIL, módulo não encontrado.
+
+- [ ] **Step 4: Implementar `xp.ts`**
+
+```ts
+import type { XpRules } from '../config/types';
+
+export type XpBreakdown = {
+  readonly base: number;
+  readonly hourBonus: number;
+  readonly planBonus: number;
+  readonly streakBonus: number;
+  readonly total: number;
+};
+
+export type XpInput = {
+  readonly hourScore: number;
+  readonly planFulfilled: boolean;
+  readonly streakDays: number;
+};
+
+export function computeXp(input: XpInput, rules: XpRules): XpBreakdown {
+  const base = rules.base;
+  const hourBonus = Math.round(input.hourScore / 2);
+  const planBonus = input.planFulfilled ? rules.planBonus : 0;
+  const streakBonus = rules.streakPerDay * Math.min(input.streakDays, rules.streakMaxDays);
+  return { base, hourBonus, planBonus, streakBonus, total: base + hourBonus + planBonus + streakBonus };
+}
+```
+
+- [ ] **Step 5: Teste de `levels`**
+
+`apps/mobile/src/domain/gamification/levels.test.ts`:
+```ts
+import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
+
+import { levelFor } from './levels';
+
+describe('levelFor', () => {
+  it('0 XP é nível 1 Brisa, faltam 100 para o 2', () => {
+    expect(levelFor(0, cfg.levels)).toEqual({
+      level: 1,
+      name: 'Brisa',
+      totalXp: 0,
+      levelStartXp: 0,
+      nextLevelXp: 100,
+      xpToNext: 100,
+      progress: 0,
+    });
+  });
+
+  it('1358 XP é nível 4 Ventania com 242 para Aurora', () => {
+    const l = levelFor(1358, cfg.levels);
+    expect(l).toMatchObject({ level: 4, name: 'Ventania', levelStartXp: 900, nextLevelXp: 1600, xpToNext: 242 });
+    expect(l.progress).toBeCloseTo((1358 - 900) / 700);
+  });
+
+  it('exatamente no limiar sobe de nível', () => {
+    expect(levelFor(900, cfg.levels).level).toBe(4);
+    expect(levelFor(899, cfg.levels).level).toBe(3);
+  });
+
+  it('último nível não tem próximo', () => {
+    expect(levelFor(10000, cfg.levels)).toMatchObject({ level: 8, name: 'Clima Perfeito', nextLevelXp: null, xpToNext: null, progress: 1 });
+  });
+});
+```
+
+- [ ] **Step 6: Rodar e ver falhar**
+
+Run: `pnpm --filter mobile test -- gamification/levels`
+Expected: FAIL, módulo não encontrado.
+
+- [ ] **Step 7: Implementar `levels.ts`**
+
+```ts
+import type { LevelDef } from '../config/types';
+
+export type LevelProgress = {
+  readonly level: number;
+  readonly name: string;
+  readonly totalXp: number;
+  readonly levelStartXp: number;
+  readonly nextLevelXp: number | null;
+  readonly xpToNext: number | null;
+  readonly progress: number; // 0–1
+};
+
+export function levelFor(totalXp: number, levels: readonly LevelDef[]): LevelProgress {
+  const sorted = [...levels].sort((a, b) => a.xp - b.xp);
+  const idx = sorted.reduce((acc, l, i) => (totalXp >= l.xp ? i : acc), 0);
+  const current = sorted[idx] ?? { level: 1, xp: 0, name: '' };
+  const next = sorted[idx + 1] ?? null;
+  const span = next === null ? 0 : next.xp - current.xp;
+  return {
+    level: current.level,
+    name: current.name,
+    totalXp,
+    levelStartXp: current.xp,
+    nextLevelXp: next === null ? null : next.xp,
+    xpToNext: next === null ? null : next.xp - totalXp,
+    progress: next === null ? 1 : (totalXp - current.xp) / span,
+  };
+}
+```
+
+- [ ] **Step 8: Rodar, lint, commit**
+
+Run: `pnpm --filter mobile test -- gamification && pnpm --filter mobile lint && pnpm --filter mobile typecheck`
+Expected: PASS. Se a cobertura acusar o fallback `?? { level: 1, xp: 0, name: '' }`, adicione um teste com `levelFor(50, [])` esperando `{ level: 1, name: '', progress: 1, nextLevelXp: null }`.
+
+```bash
+git add apps/mobile/src/domain/gamification
+git commit -m "feat(domain): eventos de gamificação, cálculo de XP e níveis"
+```
+
+---
+
+### Task 11: Gamificação: streak, badges e derivação do progresso
+
+**Files:**
+- Create: `apps/mobile/src/domain/gamification/streak.ts`, `streak.test.ts`
+- Create: `apps/mobile/src/domain/gamification/records.ts`
+- Create: `apps/mobile/src/domain/gamification/badges.ts`, `badges.test.ts`
+- Create: `apps/mobile/src/domain/gamification/deriveProgress.ts`, `deriveProgress.test.ts`
+- Create: `apps/mobile/src/domain/gamification/testing/fixtures.ts`
+
+**Interfaces:**
+- Consumes: Tasks 4, 5, 7, 10.
+- Produces:
+  - `computeStreak(activeDates: ReadonlySet<string>, restDates: ReadonlySet<string>, today: string): number`
+  - `type ActivityRecord = { id; date; cityId; activity; hourLeft; hourScore; planFulfilled; streakDays; xp: XpBreakdown; createdAt }`
+  - `type BadgeId = 'first' | 'early' | 'owl' | 'explorer' | 'planner' | 'week' | 'multi' | 'perfect'`; `BADGE_IDS`
+  - `type BadgeState = { id: BadgeId; unlocked: boolean; unlockedOn: string | null; progress: { current: number; target: number } | null }`
+  - `evaluateBadges(records: readonly ActivityRecord[], restDates: ReadonlySet<string>): readonly BadgeState[]`
+  - `newlyUnlocked(before: readonly BadgeState[], after: readonly BadgeState[]): readonly BadgeId[]`
+  - `type ActivePlan = { planId; cityId; activity; date; window; windowScore }`
+  - `type Progress = { totalXp; level: LevelProgress; streak; records; badges; activeDates; restDates; citiesCount; activePlan: ActivePlan | null; todayRecord: ActivityRecord | null }`
+  - `deriveProgress(events: readonly GamificationEvent[], cfg: EngineConfig, today: string): Progress`
+  - fixtures `planned(...)`, `confirmed(...)`, `logged(...)`, `badDay(...)`, `cancelled(...)`
+
+- [ ] **Step 1: Teste de `streak`**
+
+`apps/mobile/src/domain/gamification/streak.test.ts`:
+```ts
+import { computeStreak } from './streak';
+
+const set = (...d: string[]) => new Set(d);
+const none = new Set<string>();
+
+describe('computeStreak', () => {
+  it('sem atividades é 0', () => {
+    expect(computeStreak(none, none, '2026-09-13')).toBe(0);
+  });
+
+  it('conta dias consecutivos terminando hoje', () => {
+    expect(computeStreak(set('2026-09-11', '2026-09-12', '2026-09-13'), none, '2026-09-13')).toBe(3);
+  });
+
+  it('hoje sem atividade ainda não quebra: conta a partir de ontem', () => {
+    expect(computeStreak(set('2026-09-11', '2026-09-12'), none, '2026-09-13')).toBe(2);
+  });
+
+  it('um dia perdido zera o que veio antes', () => {
+    expect(computeStreak(set('2026-09-10', '2026-09-12', '2026-09-13'), none, '2026-09-13')).toBe(2);
+  });
+
+  it('dia de folga por mau tempo não quebra nem conta', () => {
+    expect(computeStreak(set('2026-09-10', '2026-09-11', '2026-09-13'), set('2026-09-12'), '2026-09-13')).toBe(3);
+  });
+
+  it('folga hoje e ontem sem atividade: streak preservado', () => {
+    expect(computeStreak(set('2026-09-11'), set('2026-09-12', '2026-09-13'), '2026-09-13')).toBe(1);
+  });
+
+  it('atividade em dia marcado como folga conta normalmente', () => {
+    expect(computeStreak(set('2026-09-12', '2026-09-13'), set('2026-09-13'), '2026-09-13')).toBe(2);
+  });
+
+  it('dois dias perdidos seguidos zeram', () => {
+    expect(computeStreak(set('2026-09-09', '2026-09-10'), none, '2026-09-13')).toBe(0);
+  });
+});
+```
+
+- [ ] **Step 2: Rodar e ver falhar**
+
+Run: `pnpm --filter mobile test -- streak`
+Expected: FAIL, módulo não encontrado.
+
+- [ ] **Step 3: Implementar `streak.ts`**
+
+```ts
+import { addDays } from '../time/localDateTime';
+
+const MAX_LOOKBACK_DAYS = 400;
+
+/**
+ * Dias consecutivos com atividade, olhando de hoje para trás.
+ * Hoje sem atividade não quebra (o dia ainda não acabou).
+ * Dias em restDates (folga por mau tempo) são pulados sem contar nem quebrar.
+ */
+export function computeStreak(
+  activeDates: ReadonlySet<string>,
+  restDates: ReadonlySet<string>,
+  today: string,
+): number {
+  const start = activeDates.has(today) ? today : addDays(today, -1);
+  const dates = Array.from({ length: MAX_LOOKBACK_DAYS }, (_, i) => addDays(start, -i));
+  const firstMiss = dates.findIndex((d) => !activeDates.has(d) && !restDates.has(d));
+  const run = firstMiss === -1 ? dates : dates.slice(0, firstMiss);
+  return run.filter((d) => activeDates.has(d)).length;
+}
+```
+
+- [ ] **Step 4: Rodar e ver passar**
+
+Run: `pnpm --filter mobile test -- streak`
+Expected: PASS, 8 testes.
+
+- [ ] **Step 5: `records.ts`** (tipo compartilhado por badges e deriveProgress)
+
+```ts
+import type { ActivityId } from '../activities/types';
+
+import type { XpBreakdown } from './xp';
+
+export type ActivityRecord = {
+  readonly id: string;
+  readonly date: string;
+  readonly cityId: string;
+  readonly activity: ActivityId;
+  readonly hourLeft: number;
+  readonly hourScore: number;
+  readonly planFulfilled: boolean;
+  readonly streakDays: number; // streak no momento do registro, incluindo o dia
+  readonly xp: XpBreakdown;
+  readonly createdAt: number;
+};
+```
+
+- [ ] **Step 6: Fixtures de eventos**
+
+`apps/mobile/src/domain/gamification/testing/fixtures.ts`:
+```ts
+import type { ActivityId } from '../../activities/types';
+import type {
+  BadWeatherDayEvent,
+  ConfirmedEvent,
+  LoggedEvent,
+  PlanCancelledEvent,
+  PlannedEvent,
+} from '../events';
+
+let seq = 0;
+const nextId = (): string => `evt-${++seq}`;
+const at = (date: string, hour: number): number => Date.parse(`${date}T${String(hour).padStart(2, '0')}:00:00Z`);
+
+export function planned(
+  date: string,
+  opts: { activity?: ActivityId; cityId?: string; startHour?: number; endHour?: number; windowScore?: number; id?: string } = {},
+): PlannedEvent {
+  const startHour = opts.startHour ?? 17;
+  return {
+    type: 'planned',
+    id: opts.id ?? nextId(),
+    cityId: opts.cityId ?? 'sp',
+    activity: opts.activity ?? 'run',
+    date,
+    window: { date, startHour, endHour: opts.endHour ?? startHour + 2 },
+    windowScore: opts.windowScore ?? 84,
+    createdAt: at(date, 8),
+  };
+}
+
+export function confirmed(
+  plan: PlannedEvent,
+  opts: { hourLeft?: number; hourScore?: number } = {},
+): ConfirmedEvent {
+  const hourLeft = opts.hourLeft ?? plan.window.startHour;
+  return {
+    type: 'confirmed',
+    id: nextId(),
+    planId: plan.id,
+    date: plan.date,
+    hourLeft,
+    hourScore: opts.hourScore ?? 86,
+    createdAt: at(plan.date, hourLeft) + 1,
+  };
+}
+
+export function logged(
+  date: string,
+  opts: { activity?: ActivityId; cityId?: string; hourLeft?: number; hourScore?: number } = {},
+): LoggedEvent {
+  const hourLeft = opts.hourLeft ?? 18;
+  return {
+    type: 'logged',
+    id: nextId(),
+    cityId: opts.cityId ?? 'sp',
+    activity: opts.activity ?? 'walk',
+    date,
+    hourLeft,
+    hourScore: opts.hourScore ?? 70,
+    createdAt: at(date, hourLeft) + 1,
+  };
+}
+
+export function cancelled(plan: PlannedEvent): PlanCancelledEvent {
+  return { type: 'planCancelled', id: nextId(), planId: plan.id, createdAt: plan.createdAt + 1 };
+}
+
+export function badDay(date: string, cityId = 'sp'): BadWeatherDayEvent {
+  return { type: 'badWeatherDay', id: nextId(), cityId, date, bestScore: 22, createdAt: at(date, 7) };
+}
+
+/** Sequência de dias consecutivos com registro espontâneo, terminando em `lastDate`. */
+export function loggedRun(lastDate: string, days: number, opts: Parameters<typeof logged>[1] = {}): LoggedEvent[] {
+  const [y = 0, m = 1, d = 1] = lastDate.split('-').map(Number);
+  return Array.from({ length: days }, (_, i) => {
+    const dt = new Date(Date.UTC(y, m - 1, d - (days - 1 - i)));
+    const date = dt.toISOString().slice(0, 10);
+    return logged(date, opts);
+  });
+}
+```
+
+- [ ] **Step 7: Teste de `badges`**
+
+`apps/mobile/src/domain/gamification/badges.test.ts`:
+```ts
+import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
+
+import { evaluateBadges, newlyUnlocked, type BadgeState } from './badges';
+import { deriveProgress } from './deriveProgress';
+import { badDay, logged, loggedRun } from './testing/fixtures';
+
+const badge = (states: readonly BadgeState[], id: string) => states.find((b) => b.id === id);
+const recordsOf = (events: Parameters<typeof deriveProgress>[0], today: string) =>
+  deriveProgress(events, cfg, today).records;
+
+describe('evaluateBadges', () => {
+  it('sem registros: tudo bloqueado, progresso zerado onde contável', () => {
+    const b = evaluateBadges([], new Set());
+    expect(b).toHaveLength(8);
+    expect(b.every((x) => !x.unlocked)).toBe(true);
+    expect(badge(b, 'explorer')?.progress).toEqual({ current: 0, target: 5 });
+    expect(badge(b, 'planner')?.progress).toEqual({ current: 0, target: 10 });
+    expect(badge(b, 'multi')?.progress).toEqual({ current: 0, target: 5 });
+    expect(badge(b, 'week')?.progress).toEqual({ current: 0, target: 7 });
+    expect(badge(b, 'first')?.progress).toBeNull();
+  });
+
+  it('primeira saída desbloqueia na data do primeiro registro', () => {
+    const r = recordsOf([logged('2026-09-10'), logged('2026-09-12')], '2026-09-13');
+    expect(badge(evaluateBadges(r, new Set()), 'first')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-10' });
+  });
+
+  it('madrugador (< 7h) e coruja (>= 20h)', () => {
+    const r = recordsOf([logged('2026-09-10', { hourLeft: 6 }), logged('2026-09-11', { hourLeft: 20 })], '2026-09-13');
+    const b = evaluateBadges(r, new Set());
+    expect(badge(b, 'early')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-10' });
+    expect(badge(b, 'owl')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-11' });
+  });
+
+  it('explorador conta cidades distintas', () => {
+    const cities = ['a', 'b', 'c', 'd', 'e'];
+    const r = recordsOf(cities.map((cityId, i) => logged(`2026-09-0${i + 1}`, { cityId })), '2026-09-13');
+    const b = evaluateBadges(r, new Set());
+    expect(badge(b, 'explorer')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-05', progress: { current: 5, target: 5 } });
+    expect(badge(evaluateBadges(r.slice(0, 3), new Set()), 'explorer')).toMatchObject({ unlocked: false, progress: { current: 3, target: 5 } });
+  });
+
+  it('multiatleta exige as cinco atividades', () => {
+    const acts = ['walk', 'run', 'cycle', 'beach', 'picnic'] as const;
+    const r = recordsOf(acts.map((activity, i) => logged(`2026-09-0${i + 1}`, { activity })), '2026-09-13');
+    expect(badge(evaluateBadges(r, new Set()), 'multi')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-05' });
+  });
+
+  it('clima perfeito com score >= 95', () => {
+    const r = recordsOf([logged('2026-09-10', { hourScore: 94 }), logged('2026-09-11', { hourScore: 95 })], '2026-09-13');
+    expect(badge(evaluateBadges(r, new Set()), 'perfect')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-11' });
+  });
+
+  it('semana cheia com streak 7, respeitando folgas', () => {
+    const events = [...loggedRun('2026-09-09', 4), badDay('2026-09-10'), ...loggedRun('2026-09-13', 3)];
+    const r = recordsOf(events, '2026-09-13');
+    const b = evaluateBadges(r, new Set(['2026-09-10']));
+    expect(badge(b, 'week')).toMatchObject({ unlocked: true, unlockedOn: '2026-09-13', progress: { current: 7, target: 7 } });
+  });
+});
+
+describe('newlyUnlocked', () => {
+  it('lista o que passou de bloqueado para desbloqueado', () => {
+    const before = evaluateBadges([], new Set());
+    const after = evaluateBadges(recordsOf([logged('2026-09-13', { hourLeft: 6 })], '2026-09-13'), new Set());
+    expect(newlyUnlocked(before, after)).toEqual(['first', 'early']);
+    expect(newlyUnlocked(after, after)).toEqual([]);
+  });
+});
+```
+
+- [ ] **Step 8: Teste de `deriveProgress`**
+
+`apps/mobile/src/domain/gamification/deriveProgress.test.ts`:
+```ts
+import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
+
+import { deriveProgress } from './deriveProgress';
+import { badDay, cancelled, confirmed, logged, loggedRun, planned } from './testing/fixtures';
+
+const TODAY = '2026-09-13';
+
+describe('deriveProgress', () => {
+  it('vazio', () => {
+    const p = deriveProgress([], cfg, TODAY);
+    expect(p).toMatchObject({ totalXp: 0, streak: 0, records: [], citiesCount: 0, activePlan: null, todayRecord: null });
+    expect(p.level.level).toBe(1);
+    expect(p.badges).toHaveLength(8);
+  });
+
+  it('plano confirmado dentro da janela: plano cumprido, XP do exemplo do spec', () => {
+    const plan = planned(TODAY, { startHour: 17 });
+    const events = [...loggedRun('2026-09-12', 6), plan, confirmed(plan, { hourLeft: 17, hourScore: 86 })];
+    const p = deriveProgress(events, cfg, TODAY);
+    expect(p.streak).toBe(7);
+    expect(p.todayRecord).toMatchObject({ planFulfilled: true, streakDays: 7, activity: 'run', cityId: 'sp' });
+    expect(p.todayRecord?.xp).toEqual({ base: 50, hourBonus: 43, planBonus: 25, streakBonus: 35, total: 153 });
+    expect(p.activePlan).toBeNull();
+  });
+
+  it('confirmação até 2h após o fim ainda cumpre o plano; depois disso não', () => {
+    const p1 = planned(TODAY, { startHour: 17, endHour: 19 });
+    const p2 = planned('2026-09-12', { startHour: 17, endHour: 19 });
+    const p = deriveProgress([p1, confirmed(p1, { hourLeft: 20 }), p2, confirmed(p2, { hourLeft: 21 })], cfg, TODAY);
+    expect(p.records.find((r) => r.date === TODAY)?.planFulfilled).toBe(true);
+    expect(p.records.find((r) => r.date === '2026-09-12')?.planFulfilled).toBe(false);
+  });
+
+  it('só o primeiro registro do dia conta', () => {
+    const p = deriveProgress([logged(TODAY, { hourLeft: 8, hourScore: 60 }), logged(TODAY, { hourLeft: 18, hourScore: 100 })], cfg, TODAY);
+    expect(p.records).toHaveLength(1);
+    expect(p.records[0]?.hourScore).toBe(60);
+    expect(p.totalXp).toBe(50 + 30 + 5);
+  });
+
+  it('plano ativo é o plano de hoje não cancelado e não confirmado', () => {
+    const plan = planned(TODAY);
+    expect(deriveProgress([plan], cfg, TODAY).activePlan).toMatchObject({ planId: plan.id, date: TODAY, window: plan.window });
+    expect(deriveProgress([plan, cancelled(plan)], cfg, TODAY).activePlan).toBeNull();
+    expect(deriveProgress([planned('2026-09-12')], cfg, TODAY).activePlan).toBeNull();
+  });
+
+  it('confirmação de plano inexistente ou cancelado é ignorada', () => {
+    const plan = planned(TODAY);
+    const orphan = { ...confirmed(plan), planId: 'nao-existe' };
+    expect(deriveProgress([orphan], cfg, TODAY).records).toEqual([]);
+    expect(deriveProgress([plan, cancelled(plan), confirmed(plan)], cfg, TODAY).records).toEqual([]);
+  });
+
+  it('folga por mau tempo entra em restDates e preserva o streak', () => {
+    const p = deriveProgress([...loggedRun('2026-09-11', 2), badDay('2026-09-12')], cfg, TODAY);
+    expect(p.restDates.has('2026-09-12')).toBe(true);
+    expect(p.streak).toBe(2);
+  });
+
+  it('XP acumula, nível deriva do total e cidades são contadas', () => {
+    const events = [logged('2026-09-10', { cityId: 'a', hourScore: 100 }), logged('2026-09-11', { cityId: 'b', hourScore: 100 })];
+    const p = deriveProgress(events, cfg, TODAY);
+    // dia 1: 50 + 50 + 5 = 105; dia 2: 50 + 50 + 10 = 110
+    expect(p.totalXp).toBe(215);
+    expect(p.level).toMatchObject({ level: 2, name: 'Garoa' });
+    expect(p.citiesCount).toBe(2);
+    expect([...p.activeDates].sort()).toEqual(['2026-09-10', '2026-09-11']);
+  });
+
+  it('ordena por createdAt mesmo se os eventos vierem fora de ordem', () => {
+    const a = logged('2026-09-10');
+    const b = logged('2026-09-11');
+    expect(deriveProgress([b, a], cfg, TODAY).records.map((r) => r.date)).toEqual(['2026-09-10', '2026-09-11']);
+  });
+});
+```
+
+- [ ] **Step 9: Rodar e ver falhar**
+
+Run: `pnpm --filter mobile test -- gamification`
+Expected: FAIL em `badges` e `deriveProgress` (módulos não encontrados).
+
+- [ ] **Step 10: Implementar `badges.ts`**
+
+```ts
+import { ACTIVITY_IDS } from '../activities/types';
+
+import type { ActivityRecord } from './records';
+import { computeStreak } from './streak';
+
+export const BADGE_IDS = ['first', 'early', 'owl', 'explorer', 'planner', 'week', 'multi', 'perfect'] as const;
+export type BadgeId = (typeof BADGE_IDS)[number];
+
+export type BadgeState = {
+  readonly id: BadgeId;
+  readonly unlocked: boolean;
+  readonly unlockedOn: string | null;
+  readonly progress: { readonly current: number; readonly target: number } | null;
+};
+
+const TARGETS = { explorer: 5, planner: 10, week: 7, multi: ACTIVITY_IDS.length } as const;
+const EARLY_BEFORE_HOUR = 7;
+const OWL_FROM_HOUR = 20;
+const PERFECT_SCORE = 95;
+
+type Rule = {
+  readonly id: BadgeId;
+  readonly target: number | null;
+  /** valor acumulado até o prefixo de registros (inclusive) */
+  readonly measure: (prefix: readonly ActivityRecord[], restDates: ReadonlySet<string>) => number;
+};
+
+const distinct = <T>(xs: readonly T[]): number => new Set(xs).size;
+const streakAt = (prefix: readonly ActivityRecord[], rest: ReadonlySet<string>): number => {
+  const last = prefix[prefix.length - 1];
+  return last ? computeStreak(new Set(prefix.map((r) => r.date)), rest, last.date) : 0;
+};
+
+const RULES: readonly Rule[] = [
+  { id: 'first', target: null, measure: (p) => (p.length > 0 ? 1 : 0) },
+  { id: 'early', target: null, measure: (p) => (p.some((r) => r.hourLeft < EARLY_BEFORE_HOUR) ? 1 : 0) },
+  { id: 'owl', target: null, measure: (p) => (p.some((r) => r.hourLeft >= OWL_FROM_HOUR) ? 1 : 0) },
+  { id: 'explorer', target: TARGETS.explorer, measure: (p) => distinct(p.map((r) => r.cityId)) },
+  { id: 'planner', target: TARGETS.planner, measure: (p) => p.filter((r) => r.planFulfilled).length },
+  { id: 'week', target: TARGETS.week, measure: (p, rest) => streakAt(p, rest) },
+  { id: 'multi', target: TARGETS.multi, measure: (p) => distinct(p.map((r) => r.activity)) },
+  { id: 'perfect', target: null, measure: (p) => (p.some((r) => r.hourScore >= PERFECT_SCORE) ? 1 : 0) },
+];
+
+/** Avalia a medida em cada prefixo (uma vez por prefixo): desbloqueio = primeiro prefixo que atinge o alvo. */
+function evaluate(rule: Rule, records: readonly ActivityRecord[], rest: ReadonlySet<string>): BadgeState {
+  const target = rule.target ?? 1;
+  const values = records.map((_, i) => rule.measure(records.slice(0, i + 1), rest));
+  const unlockIndex = values.findIndex((v) => v >= target);
+  const peak = Math.min(Math.max(0, ...values), target);
+  return {
+    id: rule.id,
+    unlocked: unlockIndex !== -1,
+    unlockedOn: records[unlockIndex]?.date ?? null,
+    progress: rule.target === null ? null : { current: peak, target },
+  };
+}
+
+export function evaluateBadges(
+  records: readonly ActivityRecord[],
+  restDates: ReadonlySet<string>,
+): readonly BadgeState[] {
+  const sorted = [...records].sort((a, b) => a.createdAt - b.createdAt);
+  return RULES.map((rule) => evaluate(rule, sorted, restDates));
+}
+
+export function newlyUnlocked(before: readonly BadgeState[], after: readonly BadgeState[]): readonly BadgeId[] {
+  const wasUnlocked = new Set(before.filter((b) => b.unlocked).map((b) => b.id));
+  return after.filter((b) => b.unlocked && !wasUnlocked.has(b.id)).map((b) => b.id);
+}
+```
+
+- [ ] **Step 11: Implementar `deriveProgress.ts`**
+
+```ts
+import type { ActivityId } from '../activities/types';
+import type { EngineConfig } from '../config/types';
+import { isWithinWindow, type TimeWindow } from '../recommendation/windows';
+
+import { evaluateBadges, type BadgeState } from './badges';
+import type { ConfirmedEvent, GamificationEvent, LoggedEvent, PlannedEvent } from './events';
+import { levelFor, type LevelProgress } from './levels';
+import type { ActivityRecord } from './records';
+import { computeStreak } from './streak';
+import { computeXp } from './xp';
+
+export type ActivePlan = {
+  readonly planId: string;
+  readonly cityId: string;
+  readonly activity: ActivityId;
+  readonly date: string;
+  readonly window: TimeWindow;
+  readonly windowScore: number;
+};
+
+export type Progress = {
+  readonly totalXp: number;
+  readonly level: LevelProgress;
+  readonly streak: number;
+  readonly records: readonly ActivityRecord[];
+  readonly badges: readonly BadgeState[];
+  readonly activeDates: ReadonlySet<string>;
+  readonly restDates: ReadonlySet<string>;
+  readonly citiesCount: number;
+  readonly activePlan: ActivePlan | null;
+  readonly todayRecord: ActivityRecord | null;
+};
+
+type Draft = Omit<ActivityRecord, 'streakDays' | 'xp'>;
+
+function draftFromConfirmed(
+  e: ConfirmedEvent,
+  plans: ReadonlyMap<string, PlannedEvent>,
+  cancelled: ReadonlySet<string>,
+  graceHours: number,
+): Draft | null {
+  const plan = plans.get(e.planId);
+  if (!plan || cancelled.has(plan.id)) return null;
+  const planFulfilled =
+    e.date === plan.date && isWithinWindow(plan.window, { hour: e.hourLeft, minute: 0 }, graceHours);
+  return {
+    id: e.id,
+    date: e.date,
+    cityId: plan.cityId,
+    activity: plan.activity,
+    hourLeft: e.hourLeft,
+    hourScore: e.hourScore,
+    planFulfilled,
+    createdAt: e.createdAt,
+  };
+}
+
+const draftFromLogged = (e: LoggedEvent): Draft => ({
+  id: e.id,
+  date: e.date,
+  cityId: e.cityId,
+  activity: e.activity,
+  hourLeft: e.hourLeft,
+  hourScore: e.hourScore,
+  planFulfilled: false,
+  createdAt: e.createdAt,
+});
+
+function buildRecords(
+  sorted: readonly GamificationEvent[],
+  cfg: EngineConfig,
+  restDates: ReadonlySet<string>,
+): readonly ActivityRecord[] {
+  const plans = new Map(sorted.filter((e): e is PlannedEvent => e.type === 'planned').map((p) => [p.id, p]));
+  const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
+  const drafts = sorted.flatMap((e): Draft[] => {
+    if (e.type === 'confirmed') {
+      const d = draftFromConfirmed(e, plans, cancelled, cfg.window.graceHoursAfterEnd);
+      return d ? [d] : [];
+    }
+    return e.type === 'logged' ? [draftFromLogged(e)] : [];
+  });
+  return drafts.reduce<readonly ActivityRecord[]>((acc, d) => {
+    if (acc.some((r) => r.date === d.date)) return acc; // só o primeiro do dia conta
+    const active = new Set([...acc.map((r) => r.date), d.date]);
+    const streakDays = computeStreak(active, restDates, d.date);
+    const xp = computeXp({ hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays }, cfg.xp);
+    return [...acc, { ...d, streakDays, xp }];
+  }, []);
+}
+
+function findActivePlan(sorted: readonly GamificationEvent[], today: string): ActivePlan | null {
+  const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
+  const confirmedIds = new Set(sorted.flatMap((e) => (e.type === 'confirmed' ? [e.planId] : [])));
+  const plan = [...sorted]
+    .reverse()
+    .find(
+      (e): e is PlannedEvent =>
+        e.type === 'planned' && e.date === today && !cancelled.has(e.id) && !confirmedIds.has(e.id),
+    );
+  return plan
+    ? { planId: plan.id, cityId: plan.cityId, activity: plan.activity, date: plan.date, window: plan.window, windowScore: plan.windowScore }
+    : null;
+}
+
+export function deriveProgress(
+  events: readonly GamificationEvent[],
+  cfg: EngineConfig,
+  today: string,
+): Progress {
+  const sorted = [...events].sort((a, b) => a.createdAt - b.createdAt);
+  const restDates = new Set(sorted.flatMap((e) => (e.type === 'badWeatherDay' ? [e.date] : [])));
+  const records = buildRecords(sorted, cfg, restDates);
+  const activeDates = new Set(records.map((r) => r.date));
+  const totalXp = records.reduce((acc, r) => acc + r.xp.total, 0);
+  return {
+    totalXp,
+    level: levelFor(totalXp, cfg.levels),
+    streak: computeStreak(activeDates, restDates, today),
+    records,
+    badges: evaluateBadges(records, restDates),
+    activeDates,
+    restDates,
+    citiesCount: new Set(records.map((r) => r.cityId)).size,
+    activePlan: findActivePlan(sorted, today),
+    todayRecord: records.find((r) => r.date === today) ?? null,
+  };
+}
+```
+
+- [ ] **Step 12: Rodar, lint, commit**
+
+Run: `pnpm --filter mobile test -- gamification && pnpm --filter mobile lint && pnpm --filter mobile typecheck`
+Expected: PASS em `streak`, `badges`, `deriveProgress`; cobertura de `domain` 100 %. Se `deriveProgress.ts` passar de 300 linhas, extraia `findActivePlan` para `activePlan.ts` mantendo a assinatura.
+
+```bash
+git add apps/mobile/src/domain/gamification
+git commit -m "feat(domain): streak com folga por mau tempo, badges e derivação do progresso"
+```
+
+---
+
+### Task 12: Fechamento: índice público do domínio, cobertura e README inicial
+
+**Files:**
+- Create: `apps/mobile/src/domain/index.ts`
+- Create: `README.md`
+- Modify: `.gitignore` (adicionar `coverage/`, `.expo/`)
+
+**Interfaces:**
+- Produces: `@/domain` como único ponto de importação público do domínio para as camadas de cima (Plano 2).
+
+- [ ] **Step 1: Criar `apps/mobile/src/domain/index.ts`**
+
+```ts
+export * from './shared/result';
+export * from './forecast/types';
+export * from './time/localDateTime';
+export * from './time/dayPhase';
+export * from './activities/types';
+export * from './config/types';
+export { defaultEngineConfig } from './config/defaultEngineConfig';
+export * from './recommendation/scoreHour';
+export * from './recommendation/windows';
+export * from './recommendation/tips';
+export * from './recommendation/recommendDay';
+export * from './recommendation/overview';
+export * from './gamification/events';
+export * from './gamification/xp';
+export * from './gamification/levels';
+export * from './gamification/records';
+export * from './gamification/badges';
+export * from './gamification/streak';
+export * from './gamification/deriveProgress';
+```
+
+- [ ] **Step 2: Atualizar `.gitignore`** (raiz), acrescentando:
+
+```
+coverage/
+.expo/
+*.orig.*
+web-build/
+```
+
+- [ ] **Step 3: Rodar a suíte completa com cobertura**
+
+Run: `pnpm --filter mobile test`
+Expected: todos os testes passam; a tabela de cobertura mostra `src/domain` em 100 % nas quatro colunas e nenhum aviso de threshold. Se algum arquivo do domínio ficar abaixo de 100 %, adicione o teste que cobre a linha apontada (não use `istanbul ignore` fora dos casos já autorizados nas tarefas 7 e 10).
+
+Run: `pnpm lint && pnpm typecheck`
+Expected: sem erros.
+
+- [ ] **Step 4: Smoke do app no Expo Go**
+
+Run: `pnpm --filter mobile start`
+Expected: QR code no terminal; ao abrir no Expo Go, a tela mostra "Melhor Hora" e "Domínio em construção". Encerre com Ctrl+C.
+
+- [ ] **Step 5: `README.md` inicial**
+
+```markdown
+# Melhor Hora
+
+App React Native (Expo) que transforma a previsão da Open-Meteo em uma recomendação simples:
+o melhor horário do dia para uma atividade ao ar livre, com gamificação para criar o hábito.
+
+## Estado
+
+Plano 1 concluído: monorepo, tooling e domínio (motor de recomendação e gamificação) com
+100 % de cobertura. As telas, a integração com a API e o BFF vêm nos próximos planos.
+
+## Rodar
+
+```bash
+pnpm install
+pnpm --filter mobile start   # QR code para o Expo Go
+pnpm test                    # testes com cobertura
+pnpm lint && pnpm typecheck
+```
+
+## Estrutura
+
+- `apps/mobile/src/domain` — regras puras, sem React: `recommendation/` (score por hora,
+  janela, frase, dicas) e `gamification/` (eventos, XP, níveis, streak, badges).
+- Documentação de design: `docs/superpowers/specs/2026-09-13-melhor-hora-design.md`.
+```
+
+- [ ] **Step 6: Commit final do plano**
+
+```bash
+git add -A
+git commit -m "chore: índice público do domínio, cobertura 100% e README inicial"
+```
+
+---
+
+## Self-review (feito ao escrever o plano)
+
+**Cobertura do spec (seções atribuídas a este plano):**
+- 3.1 perfis → Task 5. 4.1 entrada e fuso → Tasks 4 e 9. 4.2 score e vetos → Task 6.
+  4.3 janela, "é agora", candidatas com 30 min → Task 7 (+ regra do bônus por duração corrigida no spec).
+  4.4 descritores, frase, ressalva, dicas → Task 8. 4.5 agora, próximos dias, comparativo, melhor da semana → Task 9.
+  4.6 config como parâmetro com cópia embutida → Task 5 (o download remoto é do Plano 3).
+  5.1 eventos → Task 10. 5.2 XP → Task 10. 5.3 níveis → Task 10. 5.4 streak → Task 11. 5.5 badges → Task 11.
+  5.6 notificação → Plano 2 (infra). 6.1/6.2 camadas, boundaries, Result, imutabilidade → Tasks 2, 3.
+  8.1 tooling → Tasks 1–3. 8.2 cobertura domain 100 % → Tasks 2 e 12.
+- Fora deste plano, de propósito: application, infrastructure, presentation, BFF, CI (Planos 2 e 3).
+
+**Consistência de nomes entre tarefas:** `HourScore`, `ScoreLabel`, `labelFor`, `scoreHour` (T6) usados em T7–T9;
+`TimeWindow`, `WindowResult`, `isWithinWindow`, `candidateHours`, `findBestWindow` (T7) usados em T8–T11;
+`Tip` (T8) em T9; `XpBreakdown`, `computeXp` (T10) em T11; `LevelProgress`, `levelFor` (T10) em T11;
+`ActivityRecord` (T11 `records.ts`) em `badges.ts` e `deriveProgress.ts`; `EngineConfig.window.lengthBonus` (T5) em T7.
