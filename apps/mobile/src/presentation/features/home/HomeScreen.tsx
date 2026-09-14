@@ -155,6 +155,7 @@ export function HomeScreen() {
                   planId: hero.plan.planId,
                   date: snapshot.now.date,
                   hourLeft: snapshot.now.hour,
+                  minuteLeft: snapshot.now.minute,
                   hourScore: hero.nowScore ?? 0,
                 }),
               )
@@ -166,6 +167,7 @@ export function HomeScreen() {
                   activity,
                   date: snapshot.now.date,
                   hourLeft: snapshot.now.hour,
+                  minuteLeft: snapshot.now.minute,
                   hourScore: snapshot.overview.now?.score ?? 0,
                 }),
               )

@@ -136,4 +136,35 @@ describe('deriveProgress', () => {
     expect(p.records[0]?.planFulfilled).toBe(false);
     expect(p.records[0]?.date).toBe(TODAY);
   });
+
+  it('plansByDate expõe o plano ativo de cada data e activePlan é o de hoje', () => {
+    const today = planned(TODAY, { startHour: 17 });
+    const tomorrow = planned('2026-09-14', { startHour: 7 });
+    const cancelledPlan = planned('2026-09-15', { startHour: 9 });
+    const p = deriveProgress(
+      [today, tomorrow, cancelledPlan, cancelled(cancelledPlan)],
+      cfg,
+      TODAY,
+    );
+    expect([...p.plansByDate.keys()].sort()).toEqual([TODAY, '2026-09-14']);
+    expect(p.plansByDate.get('2026-09-14')?.window.startHour).toBe(7);
+    expect(p.activePlan?.planId).toBe(today.id);
+  });
+
+  it('plano confirmado sai de plansByDate', () => {
+    const plan = planned(TODAY, { startHour: 17 });
+    const p = deriveProgress([plan, confirmed(plan)], cfg, TODAY);
+    expect(p.plansByDate.size).toBe(0);
+  });
+
+  it('minuteLeft entra no registro e vale 0 quando ausente', () => {
+    const plan = planned(TODAY, { startHour: 17 });
+    const p = deriveProgress(
+      [plan, confirmed(plan, { hourLeft: 17, minuteLeft: 42 }), logged('2026-09-12')],
+      cfg,
+      TODAY,
+    );
+    expect(p.records.find((r) => r.date === TODAY)?.minuteLeft).toBe(42);
+    expect(p.records.find((r) => r.date === '2026-09-12')?.minuteLeft).toBe(0);
+  });
 });

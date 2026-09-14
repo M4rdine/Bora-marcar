@@ -38,7 +38,7 @@ export function planned(
 
 export function confirmed(
   plan: PlannedEvent,
-  opts: { hourLeft?: number; hourScore?: number } = {},
+  opts: { hourLeft?: number; hourScore?: number; minuteLeft?: number } = {},
 ): ConfirmedEvent {
   const hourLeft = opts.hourLeft ?? plan.window.startHour;
   return {
@@ -48,13 +48,20 @@ export function confirmed(
     date: plan.date,
     hourLeft,
     hourScore: opts.hourScore ?? 86,
+    ...(opts.minuteLeft === undefined ? {} : { minuteLeft: opts.minuteLeft }),
     createdAt: at(plan.date, hourLeft) + 1,
   };
 }
 
 export function logged(
   date: string,
-  opts: { activity?: ActivityId; cityId?: string; hourLeft?: number; hourScore?: number } = {},
+  opts: {
+    activity?: ActivityId;
+    cityId?: string;
+    hourLeft?: number;
+    hourScore?: number;
+    minuteLeft?: number;
+  } = {},
 ): LoggedEvent {
   const hourLeft = opts.hourLeft ?? 18;
   return {
@@ -65,6 +72,7 @@ export function logged(
     date,
     hourLeft,
     hourScore: opts.hourScore ?? 70,
+    ...(opts.minuteLeft === undefined ? {} : { minuteLeft: opts.minuteLeft }),
     createdAt: at(date, hourLeft) + 1,
   };
 }

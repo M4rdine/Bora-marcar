@@ -1,6 +1,6 @@
 import type { KeyValueStorage } from '@/application/ports';
 import { silentLogger } from '@/application/testing/fakes';
-import type { GamificationEvent } from '@/domain';
+import type { LoggedEvent } from '@/domain';
 
 import { memoryKeyValue } from './memoryKeyValue';
 import { PROGRESS_KEY, createProgressRepository } from './progressRepository';
@@ -19,13 +19,14 @@ const rejectingStorage = (): KeyValueStorage => ({
 
 const NOW = Date.UTC(2026, 8, 13, 12, 0, 0);
 const DAY = 86_400_000;
-const logged = (id: string, createdAt: number): GamificationEvent => ({
+const logged = (id: string, createdAt: number, minuteLeft?: number): LoggedEvent => ({
   type: 'logged',
   id,
   cityId: 'sp',
   activity: 'walk',
   date: '2026-09-13',
   hourLeft: 8,
+  ...(minuteLeft === undefined ? {} : { minuteLeft }),
   hourScore: 70,
   createdAt,
 });
@@ -58,6 +59,15 @@ describe('createProgressRepository', () => {
     expect(JSON.parse((await storage.getItem(PROGRESS_KEY)) ?? '')).toMatchObject({
       schemaVersion: 1,
     });
+  });
+
+  it('round-trip de minuteLeft, com e sem o campo', async () => {
+    const { repo } = make();
+    const withMinute = logged('a', NOW, 7);
+    const withoutMinute = logged('b', NOW + 1);
+    await repo.append(withMinute);
+    await repo.append(withoutMinute);
+    expect(await repo.load()).toEqual([withMinute, withoutMinute]);
   });
 
   it('JSON corrompido é tratado como vazio, com aviso', async () => {

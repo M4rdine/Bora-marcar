@@ -45,7 +45,9 @@ function Body({ state }: Pick<Props, 'state'>) {
     case 'done':
       return (
         <>
-          <Text style={styles.big}>{t.home.done(state.record.hourLeft, 0)}</Text>
+          <Text style={styles.big}>
+            {t.home.done(state.record.hourLeft, state.record.minuteLeft)}
+          </Text>
           <Text>{t.home.xpEarned(state.record.xp.total)}</Text>
         </>
       );

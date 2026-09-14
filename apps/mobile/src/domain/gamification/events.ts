@@ -17,6 +17,7 @@ export type ConfirmedEvent = Base & {
   readonly planId: string;
   readonly date: string;
   readonly hourLeft: number;
+  readonly minuteLeft?: number;
   readonly hourScore: number;
 };
 
@@ -26,6 +27,7 @@ export type LoggedEvent = Base & {
   readonly activity: ActivityId;
   readonly date: string;
   readonly hourLeft: number;
+  readonly minuteLeft?: number;
   readonly hourScore: number;
 };
 

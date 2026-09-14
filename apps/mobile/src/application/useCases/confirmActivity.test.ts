@@ -37,6 +37,30 @@ describe('confirmActivity', () => {
   it('grava confirmed e cancela o lembrete', async () => {
     const { progress, notifications, run } = setup([plan]);
     expect(
+      await run({
+        planId: 'plan-1',
+        date: '2026-09-13',
+        hourLeft: 17,
+        minuteLeft: 42,
+        hourScore: 86,
+      }),
+    ).toEqual(ok({ eventId: 'evt-1' }));
+    expect(progress.events()[1]).toEqual({
+      type: 'confirmed',
+      id: 'evt-1',
+      planId: 'plan-1',
+      date: '2026-09-13',
+      hourLeft: 17,
+      minuteLeft: 42,
+      hourScore: 86,
+      createdAt: NOW,
+    });
+    expect(notifications.cancelled).toEqual(['plan-1']);
+  });
+
+  it('grava confirmed sem minuteLeft quando não informado', async () => {
+    const { progress, run } = setup([plan]);
+    expect(
       await run({ planId: 'plan-1', date: '2026-09-13', hourLeft: 17, hourScore: 86 }),
     ).toEqual(ok({ eventId: 'evt-1' }));
     expect(progress.events()[1]).toEqual({
@@ -48,7 +72,6 @@ describe('confirmActivity', () => {
       hourScore: 86,
       createdAt: NOW,
     });
-    expect(notifications.cancelled).toEqual(['plan-1']);
   });
 
   it('plano inexistente ou cancelado', async () => {

@@ -8,6 +8,7 @@ export type ActivityRecord = {
   readonly cityId: string;
   readonly activity: ActivityId;
   readonly hourLeft: number;
+  readonly minuteLeft: number;
   readonly hourScore: number;
   readonly planFulfilled: boolean;
   readonly streakDays: number; // streak no momento do registro, incluindo o dia

@@ -15,6 +15,7 @@ export type LogInput = {
   readonly activity: ActivityId;
   readonly date: string;
   readonly hourLeft: number;
+  readonly minuteLeft?: number;
   readonly hourScore: number;
 };
 type Deps = {
@@ -40,6 +41,7 @@ export const logActivity =
       activity: input.activity,
       date: input.date,
       hourLeft: input.hourLeft,
+      ...(input.minuteLeft === undefined ? {} : { minuteLeft: input.minuteLeft }),
       hourScore: input.hourScore,
       createdAt: clock.now(),
     });

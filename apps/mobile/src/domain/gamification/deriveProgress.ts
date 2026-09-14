@@ -27,6 +27,7 @@ export type Progress = {
   readonly activeDates: ReadonlySet<string>;
   readonly restDates: ReadonlySet<string>;
   readonly citiesCount: number;
+  readonly plansByDate: ReadonlyMap<string, ActivePlan>;
   readonly activePlan: ActivePlan | null;
   readonly todayRecord: ActivityRecord | null;
 };
@@ -50,6 +51,7 @@ function draftFromConfirmed(
     cityId: plan.cityId,
     activity: plan.activity,
     hourLeft: e.hourLeft,
+    minuteLeft: e.minuteLeft ?? 0,
     hourScore: e.hourScore,
     planFulfilled,
     createdAt: e.createdAt,
@@ -62,6 +64,7 @@ const draftFromLogged = (e: LoggedEvent): Draft => ({
   cityId: e.cityId,
   activity: e.activity,
   hourLeft: e.hourLeft,
+  minuteLeft: e.minuteLeft ?? 0,
   hourScore: e.hourScore,
   planFulfilled: false,
   createdAt: e.createdAt,
@@ -95,25 +98,28 @@ function buildRecords(
   }, []);
 }
 
-function findActivePlan(sorted: readonly GamificationEvent[], today: string): ActivePlan | null {
+const toActivePlan = (plan: PlannedEvent): ActivePlan => ({
+  planId: plan.id,
+  cityId: plan.cityId,
+  activity: plan.activity,
+  date: plan.date,
+  window: plan.window,
+  windowScore: plan.windowScore,
+});
+
+/** Último plano não cancelado e não confirmado de cada data. */
+function buildPlansByDate(sorted: readonly GamificationEvent[]): ReadonlyMap<string, ActivePlan> {
   const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
   const confirmedIds = new Set(sorted.flatMap((e) => (e.type === 'confirmed' ? [e.planId] : [])));
-  const plan = [...sorted]
-    .reverse()
-    .find(
+  return sorted
+    .filter(
       (e): e is PlannedEvent =>
-        e.type === 'planned' && e.date === today && !cancelled.has(e.id) && !confirmedIds.has(e.id),
+        e.type === 'planned' && !cancelled.has(e.id) && !confirmedIds.has(e.id),
+    )
+    .reduce(
+      (map, plan) => new Map(map).set(plan.date, toActivePlan(plan)),
+      new Map<string, ActivePlan>(),
     );
-  return plan
-    ? {
-        planId: plan.id,
-        cityId: plan.cityId,
-        activity: plan.activity,
-        date: plan.date,
-        window: plan.window,
-        windowScore: plan.windowScore,
-      }
-    : null;
 }
 
 export function deriveProgress(
@@ -126,6 +132,7 @@ export function deriveProgress(
   const records = buildRecords(sorted, cfg, restDates);
   const activeDates = new Set(records.map((r) => r.date));
   const totalXp = records.reduce((acc, r) => acc + r.xp.total, 0);
+  const plansByDate = buildPlansByDate(sorted);
   return {
     totalXp,
     level: levelFor(totalXp, cfg.levels),
@@ -135,7 +142,8 @@ export function deriveProgress(
     activeDates,
     restDates,
     citiesCount: new Set(records.map((r) => r.cityId)).size,
-    activePlan: findActivePlan(sorted, today),
+    plansByDate,
+    activePlan: plansByDate.get(today) ?? null,
     todayRecord: records.find((r) => r.date === today) ?? null,
   };
 }

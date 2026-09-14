@@ -7,6 +7,7 @@ export type ConfirmInput = {
   readonly planId: string;
   readonly date: string;
   readonly hourLeft: number;
+  readonly minuteLeft?: number;
   readonly hourScore: number;
 };
 type Deps = {
@@ -32,6 +33,7 @@ export const confirmActivity =
       planId: input.planId,
       date: input.date,
       hourLeft: input.hourLeft,
+      ...(input.minuteLeft === undefined ? {} : { minuteLeft: input.minuteLeft }),
       hourScore: input.hourScore,
       createdAt: clock.now(),
     });

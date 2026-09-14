@@ -26,6 +26,7 @@ export const gamificationEventSchema = z.discriminatedUnion('type', [
     planId: z.string(),
     date: z.string(),
     hourLeft: z.number().int(),
+    minuteLeft: z.number().int().min(0).max(59).optional(),
     hourScore: z.number(),
   }),
   z.object({
@@ -35,6 +36,7 @@ export const gamificationEventSchema = z.discriminatedUnion('type', [
     activity,
     date: z.string(),
     hourLeft: z.number().int(),
+    minuteLeft: z.number().int().min(0).max(59).optional(),
     hourScore: z.number(),
   }),
   z.object({ ...base, type: z.literal('planCancelled'), planId: z.string() }),
@@ -53,3 +55,4 @@ export const storedProgressSchema = z.object({
 });
 
 export type StoredProgress = z.infer<typeof storedProgressSchema>;
+export type StoredEvent = z.infer<typeof gamificationEventSchema>;

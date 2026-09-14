@@ -33,6 +33,25 @@ const setup = (initial: readonly GamificationEvent[] = []) => {
 describe('logActivity', () => {
   it('grava logged', async () => {
     const { progress, notifications, run } = setup();
+    expect(await run({ ...input, minuteLeft: 42 })).toEqual(ok({ eventId: 'evt-1' }));
+    expect(progress.events()).toEqual([
+      {
+        type: 'logged',
+        id: 'evt-1',
+        cityId: saoPaulo.id,
+        activity: 'walk',
+        date: '2026-09-13',
+        hourLeft: 18,
+        minuteLeft: 42,
+        hourScore: 72,
+        createdAt: NOW,
+      },
+    ]);
+    expect(notifications.cancelled).toEqual([]);
+  });
+
+  it('grava logged sem minuteLeft quando não informado', async () => {
+    const { progress, run } = setup();
     expect(await run(input)).toEqual(ok({ eventId: 'evt-1' }));
     expect(progress.events()).toEqual([
       {
@@ -46,7 +65,6 @@ describe('logActivity', () => {
         createdAt: NOW,
       },
     ]);
-    expect(notifications.cancelled).toEqual([]);
   });
 
   it('recusa segundo registro no mesmo dia', async () => {
