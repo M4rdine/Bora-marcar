@@ -76,6 +76,32 @@ describe('planActivity', () => {
     expect(await run(base)).toEqual(err({ code: 'alreadyDoneToday' }));
   });
 
+  it('recusa com alreadyDoneToday mesmo havendo um plano pendente para o mesmo dia', async () => {
+    const { run } = setup([
+      {
+        type: 'planned',
+        id: 'p0',
+        cityId: saoPaulo.id,
+        activity: 'run',
+        date: '2026-09-13',
+        window,
+        windowScore: 80,
+        createdAt: NOW - 2000,
+      },
+      {
+        type: 'logged',
+        id: 'l1',
+        cityId: saoPaulo.id,
+        activity: 'walk',
+        date: '2026-09-13',
+        hourLeft: 7,
+        hourScore: 70,
+        createdAt: NOW - 1000,
+      },
+    ]);
+    expect(await run(base)).toEqual(err({ code: 'alreadyDoneToday' }));
+  });
+
   it('permite planejar depois de cancelar', async () => {
     const { run, progress } = setup();
     const first = await run(base);

@@ -51,4 +51,43 @@ describe('cancelPlan', () => {
     });
     expect(await run('x')).toEqual(err({ code: 'planNotFound' }));
   });
+
+  it('plano já confirmado não pode ser cancelado', async () => {
+    const confirmed: GamificationEvent = {
+      type: 'confirmed',
+      id: 'evt-0',
+      planId: 'plan-1',
+      date: '2026-09-13',
+      hourLeft: 17,
+      hourScore: 86,
+      createdAt: NOW - 500,
+    };
+    const progress = memoryProgressRepository([plan, confirmed]);
+    const notifications = recordingScheduler();
+    const run = cancelPlan({
+      progress,
+      notifications,
+      clock: fixedClock(NOW),
+      ids: sequentialIds('evt'),
+    });
+    expect(await run('plan-1')).toEqual(err({ code: 'alreadyConfirmed' }));
+    expect(progress.events()).toEqual([plan, confirmed]);
+    expect(notifications.cancelled).toEqual([]);
+  });
+
+  it('plano já cancelado devolve planNotFound', async () => {
+    const cancelled: GamificationEvent = {
+      type: 'planCancelled',
+      id: 'c1',
+      planId: 'plan-1',
+      createdAt: NOW - 500,
+    };
+    const run = cancelPlan({
+      progress: memoryProgressRepository([plan, cancelled]),
+      notifications: recordingScheduler(),
+      clock: fixedClock(NOW),
+      ids: sequentialIds('evt'),
+    });
+    expect(await run('plan-1')).toEqual(err({ code: 'planNotFound' }));
+  });
 });

@@ -41,6 +41,8 @@ export const planActivity =
     // defaultEngineConfig: deriveProgress só usa xp/levels/window.graceHoursAfterEnd aqui;
     // quando a config remota existir (Plano 4), este caso de uso receberá `config` por dependência.
     const current = deriveProgress(events, defaultEngineConfig, input.window.date);
+    // Precedência intencional: registro do dia é estado terminal, então prevalece mesmo
+    // havendo um plano pendente para o mesmo dia.
     if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });
     if (current.activePlan !== null) return err({ code: 'alreadyPlanned' });
 

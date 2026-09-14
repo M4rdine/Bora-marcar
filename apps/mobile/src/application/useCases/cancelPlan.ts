@@ -2,7 +2,7 @@ import { err, ok, type Result } from '@/domain';
 
 import type { Clock, IdGenerator, NotificationScheduler, ProgressRepository } from '../ports';
 
-export type CancelError = { readonly code: 'planNotFound' };
+export type CancelError = { readonly code: 'planNotFound' | 'alreadyConfirmed' };
 type Deps = {
   readonly progress: ProgressRepository;
   readonly notifications: NotificationScheduler;
@@ -15,7 +15,10 @@ export const cancelPlan =
   async (planId: string): Promise<Result<void, CancelError>> => {
     const events = await progress.load();
     const exists = events.some((e) => e.type === 'planned' && e.id === planId);
-    if (!exists) return err({ code: 'planNotFound' });
+    const alreadyCancelled = events.some((e) => e.type === 'planCancelled' && e.planId === planId);
+    if (!exists || alreadyCancelled) return err({ code: 'planNotFound' });
+    const alreadyConfirmed = events.some((e) => e.type === 'confirmed' && e.planId === planId);
+    if (alreadyConfirmed) return err({ code: 'alreadyConfirmed' });
     await progress.append({
       type: 'planCancelled',
       id: ids.next(),
