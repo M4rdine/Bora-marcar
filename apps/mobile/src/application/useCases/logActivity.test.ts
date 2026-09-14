@@ -1,6 +1,12 @@
-import { err, ok } from '@/domain';
+import { err, ok, type GamificationEvent } from '@/domain';
 
-import { fixedClock, memoryProgressRepository, saoPaulo, sequentialIds } from '../testing/fakes';
+import {
+  fixedClock,
+  memoryProgressRepository,
+  recordingScheduler,
+  saoPaulo,
+  sequentialIds,
+} from '../testing/fakes';
 
 import { logActivity } from './logActivity';
 
@@ -12,11 +18,21 @@ const input = {
   hourLeft: 18,
   hourScore: 72,
 };
+const setup = (initial: readonly GamificationEvent[] = []) => {
+  const progress = memoryProgressRepository(initial);
+  const notifications = recordingScheduler();
+  const run = logActivity({
+    progress,
+    notifications,
+    clock: fixedClock(NOW),
+    ids: sequentialIds('evt'),
+  });
+  return { progress, notifications, run };
+};
 
 describe('logActivity', () => {
   it('grava logged', async () => {
-    const progress = memoryProgressRepository();
-    const run = logActivity({ progress, clock: fixedClock(NOW), ids: sequentialIds('evt') });
+    const { progress, notifications, run } = setup();
     expect(await run(input)).toEqual(ok({ eventId: 'evt-1' }));
     expect(progress.events()).toEqual([
       {
@@ -30,12 +46,28 @@ describe('logActivity', () => {
         createdAt: NOW,
       },
     ]);
+    expect(notifications.cancelled).toEqual([]);
   });
 
   it('recusa segundo registro no mesmo dia', async () => {
-    const progress = memoryProgressRepository();
-    const run = logActivity({ progress, clock: fixedClock(NOW), ids: sequentialIds('evt') });
+    const { run } = setup();
     await run(input);
     expect(await run(input)).toEqual(err({ code: 'alreadyDoneToday' }));
+  });
+
+  it('cancela o lembrete do plano pendente', async () => {
+    const plan: GamificationEvent = {
+      type: 'planned',
+      id: 'plan-1',
+      cityId: saoPaulo.id,
+      activity: 'walk',
+      date: '2026-09-13',
+      window: { date: '2026-09-13', startHour: 17, endHour: 19 },
+      windowScore: 84,
+      createdAt: NOW - 3600_000,
+    };
+    const { notifications, run } = setup([plan]);
+    expect(await run(input)).toEqual(ok({ eventId: 'evt-1' }));
+    expect(notifications.cancelled).toEqual(['plan-1']);
   });
 });

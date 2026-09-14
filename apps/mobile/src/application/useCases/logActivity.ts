@@ -7,7 +7,7 @@ import {
   type Result,
 } from '@/domain';
 
-import type { City, Clock, IdGenerator, ProgressRepository } from '../ports';
+import type { City, Clock, IdGenerator, NotificationScheduler, ProgressRepository } from '../ports';
 
 export type LogError = { readonly code: 'alreadyDoneToday' };
 export type LogInput = {
@@ -19,17 +19,19 @@ export type LogInput = {
 };
 type Deps = {
   readonly progress: ProgressRepository;
+  readonly notifications: NotificationScheduler;
   readonly clock: Clock;
   readonly ids: IdGenerator;
 };
 
 export const logActivity =
-  ({ progress, clock, ids }: Deps) =>
+  ({ progress, notifications, clock, ids }: Deps) =>
   async (input: LogInput): Promise<Result<{ eventId: string }, LogError>> => {
     const events = await progress.load();
     // defaultEngineConfig: ver comentário equivalente em planActivity.ts.
-    if (deriveProgress(events, defaultEngineConfig, input.date).todayRecord !== null)
-      return err({ code: 'alreadyDoneToday' });
+    const current = deriveProgress(events, defaultEngineConfig, input.date);
+    if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });
+    const pendingPlan = current.activePlan;
     const eventId = ids.next();
     await progress.append({
       type: 'logged',
@@ -41,5 +43,6 @@ export const logActivity =
       hourScore: input.hourScore,
       createdAt: clock.now(),
     });
+    if (pendingPlan !== null) await notifications.cancel(pendingPlan.planId);
     return ok({ eventId });
   };
