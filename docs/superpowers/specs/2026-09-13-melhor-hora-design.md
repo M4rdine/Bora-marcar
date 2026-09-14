@@ -212,7 +212,9 @@ Rótulos: Ótimo ≥ 80, Bom 65–79, Razoável 45–64, Ruim < 45.
 - Horas candidatas de hoje: da hora atual (incluída se faltam ≥ 30 min para acabar) até
   23 h. Para outros dias: 0–23 h.
 - Testa janelas contíguas de 1, 2 e 3 horas. Descarta janelas com alguma hora < 45.
-  Escolhe a maior média; empate → mais longa; novo empate → mais cedo.
+  Ranking = média + 3 pontos por hora adicional (uma janela de 3 h com média 91 vence uma
+  de 1 h com 96; sem o bônus, a média de 3 h nunca supera a do melhor par e a regra
+  degeneraria em "melhor hora isolada"). Empate → mais cedo. O score exibido é a média.
 - Se não sobrar janela, resultado é `NoUsableWindow` com o melhor score isolado e o fator
   dominante da penalidade (para a frase "chuva a tarde inteira").
 - "É agora": plano ativo e hora atual dentro da janela ou até 2 h após o fim.
