@@ -4,6 +4,11 @@ export type Point = readonly [number, number];
 
 /**
  * Interpolação linear por partes; satura fora do intervalo dos pontos.
+ * Pré-condição: `points` deve estar ordenado de forma crescente por x. A curva
+ * térmica vem da config (ver `thermalComfort` abaixo), então o schema Zod do
+ * Plano 3 precisa garantir `tolMin < idealMin <= idealMax < tolMax`, além de
+ * `levels` não vazio e todos os `sizes` de janela >= 1 — sem isso, `piecewise`
+ * e o restante do motor recebem entradas fora do domínio esperado.
  * As asserções `as` no ramo interior são seguras: os retornos antecipados
  * garantem `first[0] < x < last[0]`, e como os pontos estão ordenados por x,
  * sempre existe um par consecutivo com `pa[0] < x <= pb[0]`.

@@ -5,6 +5,7 @@ export type VetoId = 'storm' | 'rain' | 'snow' | 'thermal';
 
 type Veto = { readonly id: VetoId; readonly cap: number };
 
+// Códigos WMO emitidos pelo Open-Meteo: 95/96/99 tempestade; 71/73/75/77/85/86 neve; 45/48 nevoeiro.
 const STORM_CODES = new Set([95, 96, 99]);
 const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86]);
 const FOG_CODES = new Set([45, 48]);
