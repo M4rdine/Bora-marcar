@@ -1,0 +1,141 @@
+import type { ActivityId } from '../activities/types';
+import type { EngineConfig } from '../config/types';
+import { isWithinWindow, type TimeWindow } from '../recommendation/windows';
+
+import { evaluateBadges, type BadgeState } from './badges';
+import type { ConfirmedEvent, GamificationEvent, LoggedEvent, PlannedEvent } from './events';
+import { levelFor, type LevelProgress } from './levels';
+import type { ActivityRecord } from './records';
+import { computeStreak } from './streak';
+import { computeXp } from './xp';
+
+export type ActivePlan = {
+  readonly planId: string;
+  readonly cityId: string;
+  readonly activity: ActivityId;
+  readonly date: string;
+  readonly window: TimeWindow;
+  readonly windowScore: number;
+};
+
+export type Progress = {
+  readonly totalXp: number;
+  readonly level: LevelProgress;
+  readonly streak: number;
+  readonly records: readonly ActivityRecord[];
+  readonly badges: readonly BadgeState[];
+  readonly activeDates: ReadonlySet<string>;
+  readonly restDates: ReadonlySet<string>;
+  readonly citiesCount: number;
+  readonly activePlan: ActivePlan | null;
+  readonly todayRecord: ActivityRecord | null;
+};
+
+type Draft = Omit<ActivityRecord, 'streakDays' | 'xp'>;
+
+function draftFromConfirmed(
+  e: ConfirmedEvent,
+  plans: ReadonlyMap<string, PlannedEvent>,
+  cancelled: ReadonlySet<string>,
+  graceHours: number,
+): Draft | null {
+  const plan = plans.get(e.planId);
+  if (!plan || cancelled.has(plan.id)) return null;
+  const planFulfilled =
+    e.date === plan.date &&
+    isWithinWindow(plan.window, { hour: e.hourLeft, minute: 0 }, graceHours);
+  return {
+    id: e.id,
+    date: e.date,
+    cityId: plan.cityId,
+    activity: plan.activity,
+    hourLeft: e.hourLeft,
+    hourScore: e.hourScore,
+    planFulfilled,
+    createdAt: e.createdAt,
+  };
+}
+
+const draftFromLogged = (e: LoggedEvent): Draft => ({
+  id: e.id,
+  date: e.date,
+  cityId: e.cityId,
+  activity: e.activity,
+  hourLeft: e.hourLeft,
+  hourScore: e.hourScore,
+  planFulfilled: false,
+  createdAt: e.createdAt,
+});
+
+function buildRecords(
+  sorted: readonly GamificationEvent[],
+  cfg: EngineConfig,
+  restDates: ReadonlySet<string>,
+): readonly ActivityRecord[] {
+  const plans = new Map(
+    sorted.filter((e): e is PlannedEvent => e.type === 'planned').map((p) => [p.id, p]),
+  );
+  const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
+  const drafts = sorted.flatMap((e): Draft[] => {
+    if (e.type === 'confirmed') {
+      const d = draftFromConfirmed(e, plans, cancelled, cfg.window.graceHoursAfterEnd);
+      return d ? [d] : [];
+    }
+    return e.type === 'logged' ? [draftFromLogged(e)] : [];
+  });
+  return drafts.reduce<readonly ActivityRecord[]>((acc, d) => {
+    if (acc.some((r) => r.date === d.date)) return acc; // só o primeiro do dia conta
+    const active = new Set([...acc.map((r) => r.date), d.date]);
+    const streakDays = computeStreak(active, restDates, d.date);
+    const xp = computeXp(
+      { hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays },
+      cfg.xp,
+    );
+    return [...acc, { ...d, streakDays, xp }];
+  }, []);
+}
+
+function findActivePlan(sorted: readonly GamificationEvent[], today: string): ActivePlan | null {
+  const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
+  const confirmedIds = new Set(sorted.flatMap((e) => (e.type === 'confirmed' ? [e.planId] : [])));
+  const plan = [...sorted]
+    .reverse()
+    .find(
+      (e): e is PlannedEvent =>
+        e.type === 'planned' && e.date === today && !cancelled.has(e.id) && !confirmedIds.has(e.id),
+    );
+  return plan
+    ? {
+        planId: plan.id,
+        cityId: plan.cityId,
+        activity: plan.activity,
+        date: plan.date,
+        window: plan.window,
+        windowScore: plan.windowScore,
+      }
+    : null;
+}
+
+export function deriveProgress(
+  events: readonly GamificationEvent[],
+  cfg: EngineConfig,
+  today: string,
+): Progress {
+  const sorted = [...events].sort((a, b) => a.createdAt - b.createdAt);
+  const restDates = new Set(sorted.flatMap((e) => (e.type === 'badWeatherDay' ? [e.date] : [])));
+  const records = buildRecords(sorted, cfg, restDates);
+  const activeDates = new Set(records.map((r) => r.date));
+  const totalXp = records.reduce((acc, r) => acc + r.xp.total, 0);
+  return {
+    totalXp,
+    level: levelFor(totalXp, cfg.levels),
+    streak: computeStreak(activeDates, restDates, today),
+    records,
+    badges: evaluateBadges(records, restDates),
+    activeDates,
+    restDates,
+    citiesCount: new Set(records.map((r) => r.cityId)).size,
+    activePlan: findActivePlan(sorted, today),
+    todayRecord: records.find((r) => r.date === today) ?? null,
+  };
+}
