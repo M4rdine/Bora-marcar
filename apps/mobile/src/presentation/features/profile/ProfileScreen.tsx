@@ -1,10 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { defaultEngineConfig, localNow, type BadgeState, type Progress } from '@/domain';
+import { defaultEngineConfig, type BadgeState, type Progress } from '@/domain';
 
+import { useToday } from '../../hooks/useToday';
 import { t } from '../../i18n/pt-BR';
 import { useProgress } from '../../queries/useProgress';
-import { useServices } from '../../services/ServicesProvider';
 
 function badgeProgress(b: BadgeState): string {
   if (b.progress === null) return '';
@@ -31,10 +31,7 @@ const nextName = (level: number): string =>
   defaultEngineConfig.levels.find((x) => x.level === level + 1)?.name ?? '';
 
 export function ProfileScreen() {
-  const services = useServices();
-  // Usa o fuso do aparelho como aproximação para "hoje" (só afeta a contagem de streak exibida).
-  const offset = -new Date().getTimezoneOffset() * 60;
-  const today = localNow(services.ports.clock.now(), offset).date;
+  const { date: today } = useToday();
   const progress = useProgress(today);
 
   if (!progress.data) return <Text style={styles.container}>{t.home.loading}</Text>;

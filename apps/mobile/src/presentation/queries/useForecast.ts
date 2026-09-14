@@ -4,6 +4,7 @@ import type { City, ProviderError } from '@/application/ports';
 import type { Forecast } from '@/domain';
 
 import { useServices } from '../services/ServicesProvider';
+import { usePreferences } from '../state/preferencesStore';
 
 import { queryKeys } from './keys';
 import { FORECAST_GC_MS, FORECAST_STALE_MS } from './queryClient';
@@ -22,6 +23,7 @@ export function useForecast(city: City | null) {
         signal,
       );
       if (!r.ok) throw r.error;
+      usePreferences.getState().rememberForecast(r.value);
       return r.value;
     },
   });
