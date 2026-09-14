@@ -1,7 +1,14 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import { fakeForecast, fakeServices, saoPaulo } from '@/application/testing/fakes';
+import {
+  fakeForecast,
+  fakeServices,
+  fixedClock,
+  memoryProgressRepository,
+  saoPaulo,
+} from '@/application/testing/fakes';
 import { err, ok } from '@/domain';
+import { planned } from '@/domain/gamification/testing/fixtures';
 import { makeForecast } from '@/domain/recommendation/testing/fixtures';
 
 import { usePreferences } from '../../state/preferencesStore';
@@ -54,5 +61,37 @@ describe('HomeScreen', () => {
     await screen.findByText('Seu dia, hora a hora');
     expect(screen.getByText('17h · 100 · Ótimo')).toBeTruthy();
     await waitFor(() => expect(screen.getByText(/2026-09-14 · 6h – 9h · 100/)).toBeTruthy());
+  });
+
+  it('plano ativo antes da janela mostra Planejado e permite desfazer', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        progress: memoryProgressRepository([planned('2026-09-13', { startHour: 17, endHour: 19 })]),
+        clock: fixedClock(Date.UTC(2026, 8, 13, 11, 0, 0)),
+      }),
+    });
+    // 08:00 em São Paulo, antes da janela 17h–19h → estado "planned"
+    await screen.findByText('Planejado para as 17h');
+    fireEvent.press(screen.getByText('Desfazer plano'));
+    // após desfazer, o herói volta ao estado "plan" recalculado a partir das 08:00
+    await screen.findByText(/Planejar Caminhada às \d+h/);
+  });
+
+  it('dia sem janela boa mostra o motivo e permite registrar', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(
+          ok(makeForecast(DATES, () => ({ precipitationProbability: 95, precipitationMm: 2 }))),
+        ),
+      }),
+    });
+    await screen.findByText('Sem janela boa hoje');
+    expect(screen.getByText('Motivo principal: chuva.')).toBeTruthy();
+    fireEvent.press(screen.getByText('Saí em outro horário'));
+    await screen.findByText(/Concluído às 14h00/);
+    expect(screen.getByText(/\+\d+ XP/)).toBeTruthy();
   });
 });
