@@ -6,6 +6,7 @@ export * from './activities/types';
 export * from './config/types';
 export { defaultEngineConfig } from './config/defaultEngineConfig';
 export * from './recommendation/scoreHour';
+export type { VetoId } from './recommendation/vetoes';
 export * from './recommendation/windows';
 export * from './recommendation/tips';
 export * from './recommendation/recommendDay';
