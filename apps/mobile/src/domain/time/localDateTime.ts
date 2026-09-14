@@ -22,20 +22,23 @@ export function localNow(epochMs: number, utcOffsetSeconds: number): LocalDateTi
   };
 }
 
+const MS_PER_DAY = 86_400_000;
+
 export function parseLocalIso(iso: string): { date: string; hour: number; minute: number } {
-  const [date = '', time = '00:00'] = iso.split('T');
-  const [h = '0', m = '0'] = time.split(':');
+  const t = iso.indexOf('T');
+  const date = t === -1 ? iso : iso.slice(0, t);
+  const time = t === -1 ? '00:00' : iso.slice(t + 1);
+  const [h, m] = time.split(':');
   return { date, hour: Number(h), minute: Number(m) };
 }
 
 export function addDays(date: string, n: number): string {
-  const [y = 0, m = 1, d = 1] = date.split('-').map(Number);
-  const base = new Date(Date.UTC(y, m - 1, d + n));
-  return toDateString(base);
+  const base = Date.parse(`${date}T00:00:00Z`);
+  return toDateString(new Date(base + n * MS_PER_DAY));
 }
 
 export function minutesOfDay(value: string): number {
-  const time = value.includes('T') ? (value.split('T')[1] ?? '00:00') : value;
-  const [h = '0', m = '0'] = time.split(':');
+  const time = value.slice(value.indexOf('T') + 1);
+  const [h, m] = time.split(':');
   return Number(h) * 60 + Number(m);
 }

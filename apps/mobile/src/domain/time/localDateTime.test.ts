@@ -27,6 +27,10 @@ describe('parseLocalIso', () => {
   it('lê data, hora e minuto de um ISO local', () => {
     expect(parseLocalIso('2026-09-13T06:12')).toEqual({ date: '2026-09-13', hour: 6, minute: 12 });
   });
+
+  it('sem hora assume 00:00', () => {
+    expect(parseLocalIso('2026-09-13')).toEqual({ date: '2026-09-13', hour: 0, minute: 0 });
+  });
 });
 
 describe('addDays', () => {
