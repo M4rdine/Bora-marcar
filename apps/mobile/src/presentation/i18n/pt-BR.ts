@@ -112,6 +112,12 @@ export const t = {
     reminderAt: (hour: number, minute: number) =>
       `Lembrete às ${hour}h${String(minute).padStart(2, '0')}`,
     windowStarted: 'Sua janela começou',
+    hourAria: (hour: number, score: number, label: string) => `${hour}h: ${score}, ${label}`,
+    axisLabels: ['0h', '6h', '12h', '18h', '24h'],
+    legend: { great: 'Ótimo', fair: 'Ok', poor: 'Evite' },
+    bestOfWeek: 'melhor da semana',
+    sunLabel: 'Sol',
+    moonLabel: 'Lua',
   },
   cities: {
     placeholder: 'Digite o nome da cidade',

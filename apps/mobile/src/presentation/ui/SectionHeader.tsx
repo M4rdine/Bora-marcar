@@ -5,7 +5,7 @@ import { tokens } from './tokens';
 
 type Props = {
   readonly title: string;
-  readonly aside?: string;
+  readonly aside?: string | undefined;
 };
 
 export function SectionHeader({ title, aside }: Props) {

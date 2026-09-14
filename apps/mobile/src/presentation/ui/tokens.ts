@@ -26,7 +26,7 @@ export const tokens = {
   space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40 },
   radius: { hero: 24, card: 16, inner: 12, pill: 999 },
   font: { display: 52, xp: 56, title: 20, subtitle: 16, body: 14, small: 12, micro: 10 },
-  size: { orb: 34, orbBorder: 3, streakSquare: 18, badgeIcon: 52, glow: 160 },
+  size: { orb: 34, orbBorder: 3, streakSquare: 18, badgeIcon: 52, glow: 160, sunArc: 34 },
   gradients: {
     dawn: ['#F6C9A0', '#E8927A', '#8E6AA6', '#4C4477'],
     day: ['#9FD3F5', '#5AA2E0', '#3D6FC0'],

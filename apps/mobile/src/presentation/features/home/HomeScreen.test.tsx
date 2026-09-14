@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 
 import {
   fakeForecast,
@@ -67,8 +67,10 @@ describe('HomeScreen', () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     await screen.findByText('Seu dia, hora a hora');
-    expect(screen.getByText('17h · 100 · Ótimo')).toBeTruthy();
-    await waitFor(() => expect(screen.getByText(/2026-09-14 · 6h – 9h · 100/)).toBeTruthy());
+    expect(screen.getByLabelText('17h: 100, Ótimo')).toBeTruthy();
+    expect(screen.getByText(/Amanhã/)).toBeTruthy();
+    // todos os próximos dias têm a fixture uniforme, então a mesma janela se repete.
+    await waitFor(() => expect(screen.getAllByText(/6h – 9h/).length).toBeGreaterThan(0));
   });
 
   it('plano ativo antes da janela mostra Planejado e permite desfazer', async () => {
@@ -98,12 +100,15 @@ describe('HomeScreen', () => {
         ),
       }),
     });
-    await screen.findByText('Sem janela boa hoje');
-    expect(screen.getByText('Motivo principal: chuva.')).toBeTruthy();
+    // "Sem janela boa hoje" também aparece nas linhas de "Próximos dias" (mesma fixture uniforme
+    // de chuva para todos os dias), então a verificação do herói é escopada por `getByLabelText`.
+    const hero = await screen.findByLabelText('hero');
+    expect(within(hero).getByText('Sem janela boa hoje')).toBeTruthy();
+    expect(within(hero).getByText('Motivo principal: chuva.')).toBeTruthy();
     await waitFor(() =>
       expect(progress.events().filter((e) => e.type === 'badWeatherDay')).toHaveLength(1),
     );
-    fireEvent.press(screen.getByText('Saí em outro horário'));
+    fireEvent.press(within(hero).getByText('Saí em outro horário'));
     await screen.findByText(/Concluído às 14h00/);
     expect(screen.getByText(/\+\d+ XP/)).toBeTruthy();
   });

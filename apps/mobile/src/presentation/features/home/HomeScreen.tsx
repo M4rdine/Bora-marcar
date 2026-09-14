@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { City } from '@/application/ports';
 import type { OverviewSnapshot } from '@/application/useCases/buildOverview';
-import { recommendDay, type ActivityId, type EngineConfig, type Progress } from '@/domain';
+import { addDays, recommendDay, type ActivityId, type EngineConfig, type Progress } from '@/domain';
 
 import { t } from '../../i18n/pt-BR';
 import { useEngineConfig } from '../../queries/useEngineConfig';
@@ -17,7 +17,7 @@ import { AppText, Button, phaseFor, Sky, tokens } from '../../ui';
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
 import { HomeHeader } from './components/HomeHeader';
-import { HourlyList } from './components/HourlyList';
+import { HourlyTimeline } from './components/HourlyTimeline';
 import { NextDaysList } from './components/NextDaysList';
 import { StreakBar } from './components/StreakBar';
 import { Welcome } from './components/Welcome';
@@ -72,11 +72,21 @@ function HeroSection({ city, activity, config, snapshot, progress }: HeroSection
         actions={actions}
         unlockedToday={unlockedToday}
       />
-      <HourlyList hours={snapshot.overview.today.hours} nowHour={snapshot.now.hour} />
+      <HourlyTimeline
+        hours={snapshot.overview.today.hours}
+        nowHour={snapshot.now.hour}
+        sunrise={snapshot.overview.today.daily?.sunrise ?? null}
+        sunset={snapshot.overview.today.daily?.sunset ?? null}
+      />
       <NextDaysList
         days={snapshot.overview.nextDays}
         comparison={snapshot.overview.comparison}
         bestDate={snapshot.overview.bestDate}
+        today={snapshot.now.date}
+        tomorrow={addDays(snapshot.now.date, 1)}
+        // `onOpenDay` fica sem uso até a Task 6 criar a rota `/day/[date]` (rotas tipadas
+        // rejeitariam `router.push` para um caminho ainda inexistente).
+        onOpenDay={() => undefined}
       />
     </>
   );
