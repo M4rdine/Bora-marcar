@@ -1,1 +1,5 @@
+if grep -qiE '^(Co-Authored-By|Claude-Session):' "$1"; then
+  echo "commit-msg: trailers de atribuição não são permitidos neste repositório" >&2
+  exit 1
+fi
 pnpm exec commitlint --edit "$1"
