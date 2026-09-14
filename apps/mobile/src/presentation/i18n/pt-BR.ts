@@ -174,4 +174,10 @@ export const t = {
     short: (n: number) => `Nível ${n}`,
     aria: (n: number, name: string, pct: number) => `Nível ${n}, ${name}, ${pct}% para o próximo`,
   },
+  day: {
+    back: 'Voltar',
+    planTomorrow: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,
+    viewOnly: 'Planejamento disponível só para amanhã',
+    notFound: 'Dia fora da previsão',
+  },
 } as const;

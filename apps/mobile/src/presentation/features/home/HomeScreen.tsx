@@ -45,13 +45,14 @@ type HeroSectionProps = {
   readonly config: EngineConfig;
   readonly snapshot: OverviewSnapshot;
   readonly progress: Progress;
+  readonly onOpenDay: (date: string) => void;
 };
 
 /**
  * Só monta quando previsão e progresso já carregaram, então `useHeroActions` pode ser chamado
  * incondicionalmente a cada renderização deste componente sem violar as regras de hooks.
  */
-function HeroSection({ city, activity, config, snapshot, progress }: HeroSectionProps) {
+function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: HeroSectionProps) {
   const hero = deriveHeroState({
     today: snapshot.overview.today,
     now: snapshot.now,
@@ -85,9 +86,7 @@ function HeroSection({ city, activity, config, snapshot, progress }: HeroSection
         bestDate={snapshot.overview.bestDate}
         today={snapshot.now.date}
         tomorrow={addDays(snapshot.now.date, 1)}
-        // `onOpenDay` fica sem uso até a Task 6 criar a rota `/day/[date]` (rotas tipadas
-        // rejeitariam `router.push` para um caminho ainda inexistente).
-        onOpenDay={() => undefined}
+        onOpenDay={onOpenDay}
       />
     </>
   );
@@ -151,6 +150,7 @@ function HomeContent({ city, config, overview, progress }: ContentProps) {
           config={config}
           snapshot={overview.snapshot}
           progress={progress}
+          onOpenDay={(date) => router.push({ pathname: '/day/[date]', params: { date } })}
         />
       ) : null}
     </>

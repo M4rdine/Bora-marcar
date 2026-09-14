@@ -18,7 +18,10 @@ export default function RootLayout() {
   return (
     <AppProviders services={services}>
       <AppErrorBoundary>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="day/[date]" options={{ presentation: 'card' }} />
+        </Stack>
       </AppErrorBoundary>
     </AppProviders>
   );

@@ -16,14 +16,16 @@ import { renderWithProviders } from '../../testing/renderWithProviders';
 
 import { HomeScreen } from './HomeScreen';
 
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), back: jest.fn() }) }));
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, back: jest.fn() }) }));
 
 const DATES = ['2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'];
 const goodServices = () => fakeServices({ forecast: fakeForecast(ok(makeForecast(DATES))) });
 
-beforeEach(() =>
-  usePreferences.setState({ city: null, activity: 'walk', favorites: [], recents: [] }),
-);
+beforeEach(() => {
+  usePreferences.setState({ city: null, activity: 'walk', favorites: [], recents: [] });
+  mockPush.mockClear();
+});
 
 describe('HomeScreen', () => {
   it('sem cidade mostra as boas-vindas', () => {
@@ -71,6 +73,17 @@ describe('HomeScreen', () => {
     expect(screen.getByText(/Amanhã/)).toBeTruthy();
     // todos os próximos dias têm a fixture uniforme, então a mesma janela se repete.
     await waitFor(() => expect(screen.getAllByText(/6h – 9h/).length).toBeGreaterThan(0));
+  });
+
+  it('toca na linha de amanhã e navega para /day/[date]', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    const tomorrowRow = await screen.findByText('Amanhã');
+    fireEvent.press(tomorrowRow);
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/day/[date]',
+      params: { date: '2026-09-14' },
+    });
   });
 
   it('plano ativo antes da janela mostra Planejado e permite desfazer', async () => {
