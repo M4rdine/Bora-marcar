@@ -68,11 +68,7 @@
       "!src/infrastructure/container.ts",
       "!src/app/**",
       "!src/presentation/AppProviders.tsx",
-      "!src/presentation/services/**",
-      "!src/presentation/queries/**",
       "!src/presentation/i18n/**",
-      "!src/presentation/features/**",
-      "!src/presentation/state/preferencesStore.ts",
       "!src/presentation/hooks/useAppFocusRefetch.ts",
       "!src/presentation/hooks/useNowTick.ts"
     ],
