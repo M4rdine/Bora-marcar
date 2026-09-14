@@ -1,0 +1,332 @@
+<h2>Início completo, rico e gamificado</h2>
+<p class="subtitle">Três telas inteiras: Início ao planejar, Início após concluir, e Perfil. Emoji como ícone onde ajuda, gamificação visível, sistema de espaçamento de 4 px. Clique na que quiser comentar.</p>
+
+<style>
+  .wrap { display:flex; flex-wrap:wrap; gap:32px; justify-content:center; margin: 20px 0; }
+  .col { width: 350px; max-width: 100%; }
+  .ph { width: 100%; border-radius: 40px; padding: 14px; box-sizing:border-box; box-shadow: 0 30px 60px rgba(0,0,0,.22); position:relative; overflow:hidden; cursor:pointer;
+        font-family: -apple-system, "SF Pro Rounded", "SF Pro Text", Inter, system-ui, sans-serif; color:#fff; -webkit-font-smoothing: antialiased; }
+  .ph.selected { outline: 3px solid #4f8cff; outline-offset: 4px; }
+  .cap { font-size: 12px; color:#555; margin-top: 10px; text-align:center; }
+  .dusk  { background: linear-gradient(175deg, #f7b388 0%, #e58aa0 30%, #7d63b8 68%, #2c2c5e 100%); }
+  .night { background: linear-gradient(175deg, #3b3f7a 0%, #23264f 50%, #101230 100%); }
+  .inner { padding: 6px 6px 0; }
+
+  /* header */
+  .hd { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .city { display:flex; flex-direction:column; gap:2px; }
+  .city b { font-size:17px; font-weight:700; letter-spacing:-.01em; }
+  .city span { font-size:12px; opacity:.85; }
+  .lvl { display:flex; align-items:center; gap:10px; background: rgba(255,255,255,.14); border-radius: 999px; padding: 6px 12px 6px 6px; }
+  .orb { width: 34px; height: 34px; border-radius:50%; background: conic-gradient(#ffd66b 0 62%, rgba(255,255,255,.18) 62% 100%); display:grid; place-items:center; }
+  .orb b { width: 26px; height: 26px; border-radius:50%; background:#2c2c5e; display:grid; place-items:center; font-size: 12px; }
+  .lvl div { display:flex; flex-direction:column; line-height:1.15; }
+  .lvl small { font-size: 10px; opacity:.8; }
+  .lvl span { font-size: 12px; font-weight:700; }
+
+  /* streak row */
+  .streak { display:flex; align-items:center; justify-content:space-between; margin-top: 14px; background: rgba(255,255,255,.12); border-radius: 16px; padding: 10px 12px; }
+  .streak .l { display:flex; align-items:center; gap:8px; font-size: 13px; font-weight:600; }
+  .streak .l em { font-style:normal; font-size:18px; }
+  .dots { display:flex; gap:6px; }
+  .dots i { width: 18px; height: 18px; border-radius: 6px; background: rgba(255,255,255,.15); display:grid; place-items:center; font-size: 10px; font-style:normal; }
+  .dots i.y { background:#8ff0b6; color:#0a4a2a; font-weight:800; }
+  .dots i.t { background:#ffd66b; color:#5a3f00; font-weight:800; outline: 2px solid rgba(255,255,255,.6); }
+
+  /* chips */
+  .chips { display:flex; gap:8px; margin: 16px 0 14px; overflow:hidden; }
+  .chip { display:flex; align-items:center; gap:6px; font-size: 12.5px; font-weight:600; padding: 9px 12px; border-radius: 999px; background: rgba(255,255,255,.14); white-space:nowrap; }
+  .chip.on { background:#fff; color:#4b3fb5; box-shadow: 0 6px 16px rgba(0,0,0,.15); }
+  .chip.on::after { content:"84"; font-size: 10px; background:#8ff0b6; color:#0a4a2a; padding:2px 6px; border-radius:999px; }
+
+  /* hero */
+  .hero { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); border-radius: 24px; padding: 16px; position:relative; overflow:hidden; }
+  .hero::before { content:""; position:absolute; right:-40px; top:-40px; width: 160px; height:160px; border-radius:50%; background: radial-gradient(circle, rgba(255,214,107,.55), rgba(255,214,107,0) 70%); }
+  .kick { display:flex; align-items:center; gap:8px; font-size: 11px; letter-spacing:.12em; text-transform:uppercase; opacity:.85; }
+  .badge { font-size: 11px; font-weight:800; padding: 4px 9px; border-radius: 8px; background:#8ff0b6; color:#0a4a2a; letter-spacing:0; text-transform:none; }
+  .win { font-size: 52px; font-weight: 800; letter-spacing:-.045em; line-height: 1; margin: 10px 0 8px; font-variant-numeric: tabular-nums; position:relative; }
+  .win small { font-size: 24px; font-weight:700; letter-spacing:0; opacity:.9; }
+  .why { font-size: 13px; line-height: 1.45; position:relative; max-width: 30ch; }
+  .facts { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; margin-top: 14px; position:relative; }
+  .fact { background: rgba(0,0,0,.14); border-radius: 12px; padding: 8px 6px; text-align:center; }
+  .fact em { font-style:normal; font-size: 16px; display:block; }
+  .fact b { font-size: 13px; display:block; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .fact span { font-size: 9.5px; opacity:.75; }
+  .tips { display:flex; gap:6px; flex-wrap:wrap; margin-top: 12px; position:relative; }
+  .tip { font-size: 11px; background: rgba(255,255,255,.18); padding: 5px 9px; border-radius: 999px; }
+  .cta { margin-top: 14px; background:#fff; color:#4b3fb5; border-radius: 14px; padding: 13px; font-weight:800; font-size: 14px; text-align:center; position:relative; box-shadow: 0 10px 24px rgba(0,0,0,.18); }
+  .cta.mint { background:#8ff0b6; color:#0a4a2a; }
+  .cta.quiet { background: rgba(255,255,255,.14); color:#fff; box-shadow:none; font-weight:600; }
+  .cta small { display:block; font-size: 11px; font-weight:600; opacity:.75; margin-top: 2px; }
+
+  /* timeline */
+  .sec { display:flex; justify-content:space-between; align-items:baseline; margin: 18px 0 8px; }
+  .sec h4 { margin:0; font-size: 13px; font-weight:700; }
+  .sec span { font-size: 11.5px; opacity:.8; }
+  .tl { background: rgba(255,255,255,.12); border-radius: 18px; padding: 12px 12px 10px; }
+  .arc { position:relative; height: 34px; margin: 0 8px 4px; border-top: 1.5px dashed rgba(255,255,255,.45); border-radius: 100px 100px 0 0; }
+  .arc .sun { position:absolute; left: 40%; top:-12px; font-size: 18px; }
+  .arc .lab { position:absolute; bottom:-2px; font-size: 9.5px; opacity:.75; }
+  .bars { display:flex; gap:3px; align-items:flex-end; height: 48px; }
+  .bars i { flex:1; border-radius: 4px 4px 2px 2px; background: rgba(255,255,255,.28); }
+  .bars i.g { background:#8ff0b6; } .bars i.y { background:#ffd66b; } .bars i.r { background:#ff9b8a; }
+  .bars i.now { outline: 2px solid #fff; outline-offset: 1px; }
+  .axis { display:flex; justify-content:space-between; font-size: 9.5px; opacity:.7; margin-top: 6px; }
+  .legend { display:flex; gap:10px; font-size: 10px; opacity:.85; margin-top: 8px; }
+  .legend i { width: 8px; height: 8px; border-radius: 2px; display:inline-block; margin-right: 4px; vertical-align: -1px; }
+
+  /* days */
+  .days { display:flex; flex-direction:column; gap:8px; }
+  .day { display:grid; grid-template-columns: 64px 26px 1fr auto; align-items:center; gap:10px; background: rgba(255,255,255,.12); border-radius: 14px; padding: 10px 12px; font-size: 12.5px; }
+  .day b { font-weight:700; }
+  .day .w { font-size: 16px; text-align:center; }
+  .day .s { font-size: 11px; font-weight:800; padding: 4px 8px; border-radius: 999px; background:#8ff0b6; color:#0a4a2a; }
+  .day .s.y { background:#ffd66b; color:#5a3f00; } .day .s.r { background:#ff9b8a; color:#5a1a0f; }
+  .day.best { border: 1px solid #8ff0b6; }
+  .day.best::before { content:"melhor da semana"; grid-column: 1 / -1; font-size: 9.5px; letter-spacing:.1em; text-transform:uppercase; color:#8ff0b6; margin-bottom:-4px; }
+
+  /* tab bar */
+  .tabs { display:flex; justify-content:space-around; margin-top: 16px; background: rgba(0,0,0,.22); border-radius: 22px; padding: 10px; }
+  .tab { display:flex; flex-direction:column; align-items:center; gap:3px; font-size: 10px; opacity:.7; }
+  .tab.on { opacity:1; font-weight:700; }
+  .tab em { font-style:normal; font-size: 18px; }
+
+  /* done state */
+  .xpbig { display:flex; align-items:flex-end; gap:10px; }
+  .xpbig .n { font-size: 56px; font-weight:900; letter-spacing:-.05em; line-height:.9; font-variant-numeric: tabular-nums; }
+  .xpbig .u { font-size: 16px; font-weight:700; opacity:.85; padding-bottom:6px; }
+  .receipt { margin-top: 12px; background: rgba(0,0,0,.16); border-radius: 14px; padding: 4px 12px; }
+  .rrow { display:flex; justify-content:space-between; align-items:center; font-size: 12.5px; padding: 8px 0; }
+  .rrow + .rrow { border-top: 1px dashed rgba(255,255,255,.18); }
+  .rrow span:first-child { display:flex; gap:8px; align-items:center; }
+  .rrow b { font-variant-numeric: tabular-nums; }
+  .rrow.tot { font-weight:800; font-size: 13.5px; }
+  .lvlbar { margin-top: 14px; }
+  .lvlbar .t { display:flex; justify-content:space-between; font-size: 11.5px; margin-bottom: 6px; }
+  .lvlbar .b { height: 10px; border-radius:999px; background: rgba(255,255,255,.18); overflow:hidden; }
+  .lvlbar .b i { display:block; height:100%; width: 78%; background: linear-gradient(90deg,#ffd66b,#8ff0b6); border-radius:999px; }
+  .unlock { margin-top: 12px; display:flex; gap:12px; align-items:center; background: linear-gradient(135deg, rgba(255,214,107,.25), rgba(143,240,182,.18)); border: 1px solid rgba(255,214,107,.5); border-radius: 18px; padding: 12px; }
+  .unlock .ic { width: 52px; height:52px; border-radius: 16px; background:#ffd66b; display:grid; place-items:center; font-size: 26px; box-shadow: 0 8px 20px rgba(0,0,0,.2); }
+  .unlock b { display:block; font-size: 13.5px; }
+  .unlock span { font-size: 11.5px; opacity:.85; line-height:1.35; }
+  .unlock small { font-size: 10px; letter-spacing:.12em; text-transform:uppercase; color:#ffd66b; display:block; margin-bottom:2px; }
+
+  /* profile */
+  .pstats { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-top: 14px; }
+  .pst { background: rgba(255,255,255,.12); border-radius: 16px; padding: 12px 10px; text-align:center; }
+  .pst em { font-style:normal; font-size: 20px; display:block; }
+  .pst b { font-size: 20px; display:block; font-weight:800; letter-spacing:-.02em; }
+  .pst span { font-size: 10.5px; opacity:.8; }
+  .cal { display:grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+  .cal span { aspect-ratio:1; border-radius: 8px; background: rgba(255,255,255,.12); font-size: 10px; display:grid; place-items:center; }
+  .cal span.y { background:#8ff0b6; color:#0a4a2a; font-weight:800; }
+  .cal span.p { background: rgba(255,255,255,.06); color: rgba(255,255,255,.55); border: 1px dashed rgba(255,255,255,.3); }
+  .cal span.h { font-size:9px; opacity:.6; background:transparent; aspect-ratio:auto; }
+  .bgrid { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
+  .bd { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .bd i { width: 58px; height: 58px; border-radius: 18px; background: rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3); display:grid; place-items:center; font-size: 26px; font-style:normal; }
+  .bd.k i { background:#ffd66b; border-color:#ffd66b; box-shadow: 0 8px 20px rgba(0,0,0,.18); }
+  .bd.lock i { opacity:.35; filter: grayscale(1); }
+  .bd span { font-size: 9.5px; text-align:center; line-height:1.2; opacity:.9; }
+  .hist { display:flex; flex-direction:column; gap:6px; }
+  .hi { display:grid; grid-template-columns: 30px 1fr auto; gap:10px; align-items:center; background: rgba(255,255,255,.1); border-radius: 12px; padding: 8px 10px; font-size: 12px; }
+  .hi em { font-style:normal; font-size:18px; text-align:center; }
+  .hi small { display:block; font-size: 10.5px; opacity:.75; }
+  .hi b { font-variant-numeric: tabular-nums; color:#ffd66b; }
+</style>
+
+<div class="wrap">
+
+  <!-- 1. Início: planejar -->
+  <div class="col">
+    <div class="ph dusk option" data-choice="v3-home-plan" onclick="toggleSelect(this)">
+      <div class="inner">
+        <div class="hd">
+          <div class="city"><b>São Paulo, SP ⌄</b><span>Sábado, 13 de setembro · 14h</span></div>
+          <div class="lvl"><div class="orb"><b>4</b></div><div><small>Nível 4</small><span>Ventania</span></div></div>
+        </div>
+
+        <div class="streak">
+          <div class="l"><em>🔥</em>6 dias seguidos</div>
+          <div class="dots"><i class="y">S</i><i class="y">T</i><i class="y">Q</i><i class="y">Q</i><i class="y">S</i><i class="t">S</i><i>D</i></div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">🚶 Caminhada</span>
+          <span class="chip on">🏃 Corrida</span>
+          <span class="chip">🚴 Ciclismo</span>
+          <span class="chip">🏖 Praia</span>
+        </div>
+
+        <div class="hero">
+          <div class="kick">Melhor horário hoje <span class="badge">Ótimo · 84</span></div>
+          <div class="win">17<small>h</small> – 19<small>h</small></div>
+          <div class="why">Sensação de 23°, sem chuva e vento leve. Antes das 16h o UV está alto: melhor esperar.</div>
+          <div class="facts">
+            <div class="fact"><em>🌡</em><b>23°</b><span>sensação</span></div>
+            <div class="fact"><em>💧</em><b>5%</b><span>chuva</span></div>
+            <div class="fact"><em>🍃</em><b>9</b><span>km/h</span></div>
+            <div class="fact"><em>☀️</em><b>3</b><span>UV</span></div>
+          </div>
+          <div class="tips"><span class="tip">🧴 Use protetor</span><span class="tip">💧 Leve água</span><span class="tip">🧥 Esfria às 19h</span></div>
+          <div class="cta">Planejar corrida às 17h<small>+50 XP base · +25 se cumprir</small></div>
+        </div>
+
+        <div class="sec"><h4>Seu dia, hora a hora</h4><span>Agora: Razoável · 52</span></div>
+        <div class="tl">
+          <div class="arc"><span class="sun">☀️</span><span class="lab" style="left:-6px">06:12</span><span class="lab" style="right:-6px">18:04</span></div>
+          <div class="bars">
+            <i class="r" style="height:22%"></i><i class="r" style="height:24%"></i><i class="r" style="height:26%"></i><i class="r" style="height:30%"></i><i class="r" style="height:34%"></i><i class="y" style="height:44%"></i>
+            <i class="y" style="height:58%"></i><i class="g" style="height:66%"></i><i class="y" style="height:60%"></i><i class="y" style="height:52%"></i><i class="y" style="height:46%"></i><i class="r" style="height:40%"></i>
+            <i class="r" style="height:42%"></i><i class="y" style="height:48%"></i><i class="y now" style="height:52%"></i><i class="y" style="height:62%"></i><i class="g" style="height:74%"></i><i class="g" style="height:88%"></i>
+            <i class="g" style="height:96%"></i><i class="g" style="height:90%"></i><i class="g" style="height:72%"></i><i class="y" style="height:60%"></i><i class="y" style="height:52%"></i><i class="y" style="height:46%"></i>
+          </div>
+          <div class="axis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span></div>
+          <div class="legend"><span><i style="background:#8ff0b6"></i>Ótimo</span><span><i style="background:#ffd66b"></i>Ok</span><span><i style="background:#ff9b8a"></i>Evite</span></div>
+        </div>
+
+        <div class="sec"><h4>Próximos dias</h4><span>Amanhã cedo é melhor que hoje ↗</span></div>
+        <div class="days">
+          <div class="day best"><b>Amanhã</b><span class="w">🌤</span><span>7h – 9h · 19°, seco</span><span class="s">91</span></div>
+          <div class="day"><b>Segunda</b><span class="w">⛅</span><span>18h – 19h · 24°</span><span class="s y">71</span></div>
+          <div class="day"><b>Terça</b><span class="w">🌧</span><span>Chuva o dia todo</span><span class="s r">22</span></div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab on"><em>🌤</em>Hoje</div>
+          <div class="tab"><em>🔍</em>Cidades</div>
+          <div class="tab"><em>🏅</em>Perfil</div>
+        </div>
+      </div>
+    </div>
+    <div class="cap">Início · estado "planejar" · 14h</div>
+  </div>
+
+  <!-- 2. Início: concluído -->
+  <div class="col">
+    <div class="ph night option" data-choice="v3-home-done" onclick="toggleSelect(this)">
+      <div class="inner">
+        <div class="hd">
+          <div class="city"><b>São Paulo, SP ⌄</b><span>Sábado, 13 de setembro · 20h</span></div>
+          <div class="lvl"><div class="orb" style="background: conic-gradient(#ffd66b 0 78%, rgba(255,255,255,.18) 78% 100%)"><b>4</b></div><div><small>Nível 4</small><span>Ventania</span></div></div>
+        </div>
+
+        <div class="streak">
+          <div class="l"><em>🔥</em>7 dias seguidos</div>
+          <div class="dots"><i class="y">S</i><i class="y">T</i><i class="y">Q</i><i class="y">Q</i><i class="y">S</i><i class="y">S</i><i>D</i></div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">🚶 Caminhada</span>
+          <span class="chip on">🏃 Corrida</span>
+          <span class="chip">🚴 Ciclismo</span>
+          <span class="chip">🏖 Praia</span>
+        </div>
+
+        <div class="hero">
+          <div class="kick">Corrida concluída · 17h42 <span class="badge">Plano cumprido</span></div>
+          <div class="xpbig" style="margin-top:12px"><span class="n">+118</span><span class="u">XP</span></div>
+          <div class="receipt">
+            <div class="rrow"><span>🏃 Atividade registrada</span><b>50</b></div>
+            <div class="rrow"><span>🌤 Saiu com score 86</span><b>+43</b></div>
+            <div class="rrow"><span>🎯 Cumpriu o plano das 17h</span><b>+25</b></div>
+            <div class="rrow"><span>🔥 7 dias seguidos</span><b>×1,5</b></div>
+            <div class="rrow tot"><span>Total</span><b>118 XP</b></div>
+          </div>
+          <div class="lvlbar">
+            <div class="t"><span>Nível 4 · Ventania</span><span>1.358 / 1.600 XP</span></div>
+            <div class="b"><i></i></div>
+          </div>
+          <div class="unlock">
+            <div class="ic">📅</div>
+            <div><small>Nova conquista</small><b>Semana cheia</b><span>Sete dias seguidos de atividade. 4 de 8 conquistas.</span></div>
+          </div>
+        </div>
+
+        <div class="sec"><h4>Amanhã</h4><span>Domingo, 14</span></div>
+        <div class="days">
+          <div class="day best"><b>7h – 9h</b><span class="w">🌤</span><span>19°, seco, vento leve</span><span class="s">91</span></div>
+        </div>
+        <div class="cta quiet" style="margin-top:10px">Planejar amanhã às 7h</div>
+
+        <div class="sec"><h4>Próximos dias</h4><span></span></div>
+        <div class="days">
+          <div class="day"><b>Segunda</b><span class="w">⛅</span><span>18h – 19h · 24°</span><span class="s y">71</span></div>
+          <div class="day"><b>Terça</b><span class="w">🌧</span><span>Chuva o dia todo</span><span class="s r">22</span></div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab on"><em>🌙</em>Hoje</div>
+          <div class="tab"><em>🔍</em>Cidades</div>
+          <div class="tab"><em>🏅</em>Perfil</div>
+        </div>
+      </div>
+    </div>
+    <div class="cap">Início · estado "concluído" · 20h</div>
+  </div>
+
+  <!-- 3. Perfil -->
+  <div class="col">
+    <div class="ph dusk option" data-choice="v3-profile" onclick="toggleSelect(this)">
+      <div class="inner">
+        <div class="hd">
+          <div class="city"><b>Seu progresso</b><span>Desde 20 de agosto</span></div>
+          <div class="lvl"><div class="orb" style="background: conic-gradient(#ffd66b 0 78%, rgba(255,255,255,.18) 78% 100%)"><b>4</b></div><div><small>Nível 4</small><span>Ventania</span></div></div>
+        </div>
+
+        <div class="hero" style="margin-top:14px">
+          <div class="kick">Nível 4 <span class="badge" style="background:#ffd66b;color:#5a3f00">Ventania</span></div>
+          <div class="lvlbar" style="margin-top:10px">
+            <div class="t"><span>1.358 XP</span><span>242 para Aurora ✦</span></div>
+            <div class="b"><i></i></div>
+          </div>
+          <div class="pstats">
+            <div class="pst"><em>🔥</em><b>7</b><span>dias seguidos</span></div>
+            <div class="pst"><em>🏃</em><b>23</b><span>atividades</span></div>
+            <div class="pst"><em>🧭</em><b>5</b><span>cidades</span></div>
+          </div>
+        </div>
+
+        <div class="sec"><h4>Setembro</h4><span>13 dias ativos · 2 folgas por chuva</span></div>
+        <div class="tl">
+          <div class="cal">
+            <span class="h">S</span><span class="h">T</span><span class="h">Q</span><span class="h">Q</span><span class="h">S</span><span class="h">S</span><span class="h">D</span>
+            <span class="y">1</span><span class="y">2</span><span class="p">3</span><span class="y">4</span><span class="y">5</span><span class="y">6</span><span>7</span>
+            <span class="y">8</span><span class="y">9</span><span class="y">10</span><span class="p">11</span><span class="y">12</span><span class="y">13</span><span>14</span>
+            <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span>
+          </div>
+          <div class="legend" style="margin-top:10px"><span><i style="background:#8ff0b6"></i>Atividade</span><span><i style="background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.5)"></i>Folga por mau tempo</span></div>
+        </div>
+
+        <div class="sec"><h4>Conquistas</h4><span>4 de 8</span></div>
+        <div class="bgrid">
+          <div class="bd k"><i>🌅</i><span>Madrugador</span></div>
+          <div class="bd k"><i>🦉</i><span>Coruja</span></div>
+          <div class="bd k"><i>🧭</i><span>Explorador</span></div>
+          <div class="bd k"><i>📅</i><span>Semana cheia</span></div>
+          <div class="bd lock"><i>🎯</i><span>Fiel ao plano<br>7/10</span></div>
+          <div class="bd lock"><i>🤸</i><span>Multiatleta<br>3/5</span></div>
+          <div class="bd lock"><i>☀️</i><span>Clima perfeito</span></div>
+          <div class="bd lock"><i>🏅</i><span>Primeira saída</span></div>
+        </div>
+
+        <div class="sec"><h4>Histórico</h4><span>Ver tudo</span></div>
+        <div class="hist">
+          <div class="hi"><em>🏃</em><div>Corrida · São Paulo<small>Hoje, 17h42 · plano cumprido</small></div><b>+118</b></div>
+          <div class="hi"><em>🚶</em><div>Caminhada · São Paulo<small>Ontem, 18h10</small></div><b>+92</b></div>
+          <div class="hi"><em>🚴</em><div>Ciclismo · Campinas<small>Quinta, 7h05 · plano cumprido</small></div><b>+131</b></div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab"><em>🌤</em>Hoje</div>
+          <div class="tab"><em>🔍</em>Cidades</div>
+          <div class="tab on"><em>🏅</em>Perfil</div>
+        </div>
+      </div>
+    </div>
+    <div class="cap">Perfil</div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="max-width:80ch">Detalhes que dão riqueza sem virar bagunça: anel de nível no cabeçalho, streak com os sete dias da semana, chip da atividade ativa mostrando o score, quatro fatores em cartõezinhos, dicas de preparo, arco do sol sobre a linha do dia, marcador do "agora", "melhor da semana" destacado, recibo de XP com parcelas e a conquista como um cartão dourado. Tudo com espaçamento em múltiplos de 4 e três raios (24 herói, 14–16 blocos, 999 chips).</p>

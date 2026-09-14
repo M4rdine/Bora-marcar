@@ -1,0 +1,168 @@
+<h2>Qual direção visual para a tela de Início?</h2>
+<p class="subtitle">Mesmo conteúdo, três personalidades. Olhe hierarquia, clima e como a gamificação se encaixa. Clique na que mais te agrada.</p>
+
+<style>
+  .phones { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 28px; margin: 24px 0; }
+  .phone { width: 100%; max-width: 330px; aspect-ratio: 9/19; border-radius: 40px; padding: 18px 16px; box-sizing: border-box; overflow:hidden; position:relative; font-family: -apple-system, "SF Pro Display", Inter, system-ui, sans-serif; margin: 0 auto; box-shadow: 0 30px 60px rgba(0,0,0,.25); }
+  .row { display:flex; align-items:center; justify-content:space-between; }
+  .chips { display:flex; gap:8px; margin: 14px 0; overflow:hidden; }
+  .chip { font-size: 11px; padding: 7px 11px; border-radius: 999px; white-space:nowrap; }
+  .hero { border-radius: 24px; padding: 16px; margin-bottom: 12px; }
+  .big { font-weight: 800; line-height: .95; letter-spacing: -0.03em; }
+  .small { font-size: 10.5px; opacity: .8; line-height:1.35; }
+  .tag { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 8px; display:inline-block; }
+  .btn { margin-top: 12px; text-align:center; padding: 11px; border-radius: 14px; font-weight: 700; font-size: 12px; }
+  .bars { display:flex; gap:2px; align-items:flex-end; height: 44px; margin: 6px 0 2px; }
+  .bars i { flex:1; display:block; border-radius: 3px; }
+  .axis { display:flex; justify-content:space-between; font-size: 9px; opacity:.6; }
+  .days { margin-top: 10px; }
+  .day { display:flex; justify-content:space-between; align-items:center; padding: 8px 0; font-size: 11px; }
+  .pill { font-size: 10px; font-weight:700; padding: 3px 8px; border-radius: 999px; }
+  .pip { display:flex; gap:10px; font-size: 10.5px; font-weight: 600; }
+  .card .card-image { padding: 20px 10px; background: #f1f3f6; }
+  .card-body p { font-size: 13px; }
+
+  /* A: Céu vivo */
+  .a { background: linear-gradient(170deg, #ff9a6c 0%, #f7677f 28%, #7b5ce0 62%, #2f2a6b 100%); color:#fff; }
+  .a .chip { background: rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.25); }
+  .a .chip.on { background:#fff; color:#4b3fb5; }
+  .a .hero { background: rgba(255,255,255,.16); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,.35); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+  .a .tag { background: #ffe28a; color:#5a3f00; }
+  .a .btn { background:#fff; color:#4b3fb5; }
+  .a .bars i { background: rgba(255,255,255,.35); }
+  .a .bars i.hi { background: #ffe28a; }
+  .a .pill { background: rgba(255,255,255,.2); }
+  .a .pill.g { background:#7ef0b6; color:#064a2b; }
+
+  /* B: Editorial */
+  .b { background: #f6f1e8; color:#1b1a17; }
+  .b .chip { background: transparent; color:#1b1a17; border: 1px solid #1b1a17; }
+  .b .chip.on { background:#1b1a17; color:#f6f1e8; }
+  .b .hero { background: transparent; border-top: 2px solid #1b1a17; border-bottom: 1px solid #1b1a17; border-radius: 0; padding: 14px 0; }
+  .b .big { font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif; font-weight: 500; letter-spacing: -0.04em; }
+  .b .tag { background:#1b1a17; color:#f6f1e8; border-radius: 2px; }
+  .b .btn { background:#1b1a17; color:#f6f1e8; border-radius: 4px; }
+  .b .bars i { background: #d9d1c3; }
+  .b .bars i.hi { background: #e2572b; }
+  .b .pill { border: 1px solid #1b1a17; }
+  .b .pill.g { background:#e2572b; color:#fff; border-color:#e2572b; }
+  .b .day { border-bottom: 1px solid #d9d1c3; }
+
+  /* C: Noite atmosférica */
+  .c { background: radial-gradient(120% 70% at 50% 0%, #1b2a4a 0%, #0b0f1c 60%, #06080f 100%); color:#e9eefc; }
+  .c .chip { background: rgba(255,255,255,.06); color:#c8d2f0; border:1px solid rgba(255,255,255,.08); }
+  .c .chip.on { background:#5eead4; color:#062a25; }
+  .c .hero { background: linear-gradient(180deg, rgba(94,234,212,.10), rgba(94,234,212,.02)); border:1px solid rgba(94,234,212,.25); box-shadow: 0 0 40px rgba(94,234,212,.15); }
+  .c .tag { background:#5eead4; color:#062a25; }
+  .c .btn { background:#5eead4; color:#062a25; }
+  .c .bars i { background: rgba(255,255,255,.12); }
+  .c .bars i.hi { background: #5eead4; box-shadow: 0 0 10px rgba(94,234,212,.7); }
+  .c .pill { background: rgba(255,255,255,.08); }
+  .c .pill.g { background:#5eead4; color:#062a25; }
+  .ring { width: 46px; height:46px; border-radius:50%; background: conic-gradient(#5eead4 0 72%, rgba(255,255,255,.1) 72% 100%); display:grid; place-items:center; }
+  .ring b { width: 36px; height:36px; border-radius:50%; background:#0b0f1c; display:grid; place-items:center; font-size: 12px; }
+</style>
+
+<div class="cards phones">
+
+  <!-- A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="phone a">
+        <div class="row">
+          <div><div class="small">São Paulo, SP ▾</div><div style="font-size:13px;font-weight:700">Sábado, 13 set</div></div>
+          <div class="pip"><span>🔥 6</span><span>⚡ 1.240</span></div>
+        </div>
+        <div class="chips"><span class="chip">🚶 Caminhada</span><span class="chip on">🏃 Corrida</span><span class="chip">🚴 Ciclismo</span><span class="chip">🏖 Praia</span></div>
+        <div class="hero">
+          <span class="tag">ÓTIMO · 84</span>
+          <div class="big" style="font-size:44px;margin:10px 0 6px">17h–19h</div>
+          <div class="small">Sensação de 23°, sem chuva e vento leve. UV alto até as 16h: melhor esperar.</div>
+          <div class="small" style="margin-top:8px">🧴 Use protetor · 💧 Leve água</div>
+          <div class="btn">Planejar corrida às 17h</div>
+        </div>
+        <div class="row"><span class="small">Agora · 14h</span><span class="pill">Razoável · 52</span></div>
+        <div class="bars"><i style="height:20%"></i><i style="height:22%"></i><i style="height:25%"></i><i style="height:30%"></i><i style="height:34%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:62%"></i><i style="height:58%"></i><i style="height:50%"></i><i style="height:44%"></i><i style="height:42%"></i><i style="height:45%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:80%"></i><i class="hi" style="height:90%"></i><i class="hi" style="height:96%"></i><i class="hi" style="height:88%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:45%"></i></div>
+        <div class="axis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span></div>
+        <div class="days">
+          <div class="day"><span>Amanhã</span><span class="small">7h–9h</span><span class="pill g">Ótimo 91</span></div>
+          <div class="day"><span>Segunda</span><span class="small">18h–19h</span><span class="pill">Bom 71</span></div>
+          <div class="day"><span>Terça</span><span class="small">Chuva o dia todo</span><span class="pill">Ruim 22</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Céu vivo</h3>
+      <p>Gradiente que muda com a hora do dia e o score (amanhecer, tarde, crepúsculo). Cartões de vidro, números grandes, cantos generosos. Caloroso e “app de clima” na hora; a gamificação parece natural aqui.</p>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="phone b">
+        <div class="row">
+          <div><div class="small">SÃO PAULO, SP ▾</div><div style="font-size:13px;font-weight:700">Sábado, 13 set</div></div>
+          <div class="pip"><span>6 dias</span><span>·</span><span>1.240 xp</span></div>
+        </div>
+        <div class="chips"><span class="chip">Caminhada</span><span class="chip on">Corrida</span><span class="chip">Ciclismo</span><span class="chip">Praia</span></div>
+        <div class="hero">
+          <div class="small" style="text-transform:uppercase;letter-spacing:.12em;font-size:9px;opacity:1">Melhor horário hoje</div>
+          <div class="big" style="font-size:64px;margin:6px 0 4px">17<span style="font-size:28px">h</span>–19<span style="font-size:28px">h</span></div>
+          <span class="tag">Ótimo · 84</span>
+          <div class="small" style="margin-top:10px">Sensação de 23°, sem chuva e vento leve. UV alto até as 16h: melhor esperar.</div>
+          <div class="small" style="margin-top:8px">Leve água · Use protetor</div>
+          <div class="btn">Planejar às 17h</div>
+        </div>
+        <div class="row"><span class="small">Agora, 14h</span><span class="pill">Razoável · 52</span></div>
+        <div class="bars"><i style="height:20%"></i><i style="height:22%"></i><i style="height:25%"></i><i style="height:30%"></i><i style="height:34%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:62%"></i><i style="height:58%"></i><i style="height:50%"></i><i style="height:44%"></i><i style="height:42%"></i><i style="height:45%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:80%"></i><i class="hi" style="height:90%"></i><i class="hi" style="height:96%"></i><i class="hi" style="height:88%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:45%"></i></div>
+        <div class="axis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span></div>
+        <div class="days">
+          <div class="day"><span>Amanhã</span><span class="small">7h–9h</span><span class="pill g">Ótimo 91</span></div>
+          <div class="day"><span>Segunda</span><span class="small">18h–19h</span><span class="pill">Bom 71</span></div>
+          <div class="day"><span>Terça</span><span class="small">Chuva o dia todo</span><span class="pill">Ruim 22</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Editorial</h3>
+      <p>Fundo creme, numerais serifados enormes, linhas finas, uma única cor de acento (laranja) usada só para score. Sofisticado e raro em app de clima. A gamificação fica mais discreta, tipo “revista”.</p>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="phone c">
+        <div class="row">
+          <div><div class="small">São Paulo, SP ▾</div><div style="font-size:13px;font-weight:700">Sábado, 13 set</div></div>
+          <div class="ring"><b>84</b></div>
+        </div>
+        <div class="chips"><span class="chip">🚶 Caminhada</span><span class="chip on">🏃 Corrida</span><span class="chip">🚴 Ciclismo</span><span class="chip">🏖 Praia</span></div>
+        <div class="hero">
+          <span class="tag">ÓTIMO</span>
+          <div class="big" style="font-size:44px;margin:10px 0 6px">17h–19h</div>
+          <div class="small">Sensação de 23°, sem chuva e vento leve. UV alto até as 16h: melhor esperar.</div>
+          <div class="small" style="margin-top:8px">🧴 Protetor · 💧 Água</div>
+          <div class="btn">Planejar corrida às 17h</div>
+        </div>
+        <div class="row"><span class="small">Agora · 14h</span><span class="pill">Razoável · 52</span></div>
+        <div class="bars"><i style="height:20%"></i><i style="height:22%"></i><i style="height:25%"></i><i style="height:30%"></i><i style="height:34%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:62%"></i><i style="height:58%"></i><i style="height:50%"></i><i style="height:44%"></i><i style="height:42%"></i><i style="height:45%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:80%"></i><i class="hi" style="height:90%"></i><i class="hi" style="height:96%"></i><i class="hi" style="height:88%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:45%"></i></div>
+        <div class="axis"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span></div>
+        <div class="days">
+          <div class="day"><span>Amanhã</span><span class="small">7h–9h</span><span class="pill g">Ótimo 91</span></div>
+          <div class="day"><span>Segunda</span><span class="small">18h–19h</span><span class="pill">Bom 71</span></div>
+          <div class="day"><span>Terça</span><span class="small">Chuva o dia todo</span><span class="pill">Ruim 22</span></div>
+        </div>
+        <div class="row" style="margin-top:8px"><span class="pip">🔥 6 dias · ⚡ 1.240 xp</span><span class="small">Nível 4 · Ventania</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Noite atmosférica</h3>
+      <p>Fundo escuro profundo, anel de score luminoso, acento turquesa com brilho. Badges e XP “brilham” bem aqui. Risco: parecer o dark mode genérico se não for bem executado.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle">Você também pode misturar: por exemplo, a estrutura de B com o gradiente de A. Diga o que sentiu.</p>
