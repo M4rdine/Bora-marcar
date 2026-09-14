@@ -1,141 +1,68 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import type { EngineConfig } from '@/domain';
+import type { BadgeState, EngineConfig, LevelProgress, LocalDateTime } from '@/domain';
 
-import { t } from '../../../i18n/pt-BR';
+import { AppText, Surface, tokens } from '../../../ui';
 import type { HeroState } from '../heroState';
+import type { HeroActionsResult } from '../useHeroActions';
+
+import { HeroActions } from './HeroActions';
+import { HeroBody } from './HeroBody';
 
 type Props = {
   readonly state: HeroState;
   readonly config: EngineConfig;
-  readonly busy: boolean;
-  readonly errorMessage: string | null;
-  readonly onPlan: () => void;
-  readonly onCancel: () => void;
-  readonly onConfirm: () => void;
-  readonly onLogNow: () => void;
+  readonly now: LocalDateTime;
+  /** Score da hora atual, usado ao registrar fora de um plano (`onLogNow`). */
+  readonly nowScore: number;
+  readonly level: LevelProgress;
+  readonly actions: HeroActionsResult;
+  readonly unlockedToday: readonly BadgeState[];
 };
 
-function Body({ state }: Pick<Props, 'state'>) {
-  switch (state.kind) {
-    case 'plan':
-      return (
-        <>
-          <Text style={styles.kicker}>{t.home.bestToday}</Text>
-          <Text style={styles.big}>{`${state.window.startHour}h – ${state.window.endHour}h`}</Text>
-          <Text>{`${t.labels[state.day.label ?? 'poor']} · ${state.score}`}</Text>
-          {state.day.sentence ? <Text>{state.day.sentence}</Text> : null}
-          {state.day.caveat ? <Text>{state.day.caveat}</Text> : null}
-          {state.day.tips.length > 0 ? (
-            <Text>{state.day.tips.map((tip) => tip.text).join(' · ')}</Text>
-          ) : null}
-        </>
-      );
-    case 'planned':
-      return <Text style={styles.big}>{t.home.planned(state.plan.window.startHour)}</Text>;
-    case 'confirm':
-      return (
-        <>
-          <Text
-            style={styles.big}
-          >{`${state.plan.window.startHour}h – ${state.plan.window.endHour}h`}</Text>
-          {state.nowScore !== null ? <Text>{`${t.home.now} · ${state.nowScore}`}</Text> : null}
-        </>
-      );
-    case 'done':
-      return (
-        <>
-          <Text style={styles.big}>
-            {t.home.done(state.record.hourLeft, state.record.minuteLeft)}
-          </Text>
-          <Text>{t.home.xpEarned(state.record.xp.total)}</Text>
-        </>
-      );
-    case 'logNoPlan':
-      return (
-        <>
-          <Text style={styles.kicker}>{t.home.windowPassed}</Text>
-          {state.expiredPlan ? (
-            <Text style={styles.big}>{t.home.planExpired(state.expiredPlan.window.startHour)}</Text>
-          ) : null}
-        </>
-      );
-    case 'noWindow': {
-      const dominant = state.day.result.kind === 'none' ? state.day.result.dominant : null;
-      return (
-        <>
-          <Text style={styles.big}>{t.home.noWindow}</Text>
-          {dominant ? <Text>{t.home.noWindowBecause(t.reasons[dominant])}</Text> : null}
-        </>
-      );
-    }
-  }
-}
-
-function Actions({
-  state,
-  config,
-  busy,
-  onPlan,
-  onCancel,
-  onConfirm,
-  onLogNow,
-}: Omit<Props, 'errorMessage'>) {
-  const button = (label: string, onPress: () => void) => (
-    <Pressable accessibilityRole="button" onPress={onPress} disabled={busy} style={styles.button}>
-      <Text style={styles.buttonText}>{label}</Text>
-    </Pressable>
-  );
-  switch (state.kind) {
-    case 'plan':
-      return button(
-        t.home.plan(config.activities[state.day.activityId].name, state.window.startHour),
-        onPlan,
-      );
-    case 'planned':
-      return button(t.home.cancelPlan, onCancel);
-    case 'confirm':
-      return (
-        <>
-          {button(t.home.confirm, onConfirm)}
-          {button(t.home.logOther, onLogNow)}
-        </>
-      );
-    case 'logNoPlan':
-      return (
-        <>
-          {button(t.home.logNow, onLogNow)}
-          {state.expiredPlan ? button(t.home.cancelPlan, onCancel) : null}
-        </>
-      );
-    case 'noWindow':
-      return button(t.home.logOther, onLogNow);
-    case 'done':
-      return null;
-  }
-}
-
-export function HeroCard(props: Props) {
+export function HeroCard({ state, config, now, nowScore, level, actions, unlockedToday }: Props) {
   return (
-    <View style={styles.card} accessibilityLabel="hero">
-      <Body state={props.state} />
-      <Actions {...props} />
-      {props.errorMessage ? <Text style={styles.error}>{props.errorMessage}</Text> : null}
-    </View>
+    <Surface
+      strength="strong"
+      radius="hero"
+      padding={5}
+      gap={3}
+      style={styles.card}
+      accessibilityLabel="hero"
+    >
+      <View pointerEvents="none" style={styles.glow} />
+      <HeroBody state={state} now={now} level={level} unlockedToday={unlockedToday} />
+      <HeroActions
+        state={state}
+        config={config}
+        busy={actions.busy}
+        onPlan={actions.onPlan}
+        onCancel={actions.onCancel}
+        onConfirm={actions.onConfirm}
+        onLogNow={() => actions.onLogNow(now.hour, now.minute, nowScore)}
+      />
+      {actions.errorMessage ? (
+        <AppText variant="small" style={styles.error}>
+          {actions.errorMessage}
+        </AppText>
+      ) : null}
+    </Surface>
   );
 }
+
+const GLOW = tokens.size.glow;
 
 const styles = StyleSheet.create({
-  card: { padding: 16, borderRadius: 16, backgroundColor: '#f4f4f4', gap: 8 },
-  kicker: { fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
-  big: { fontSize: 32, fontWeight: '700' },
-  button: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#333',
-    alignItems: 'center',
+  card: { overflow: 'hidden' },
+  glow: {
+    position: 'absolute',
+    top: -tokens.space[10],
+    right: -tokens.space[10],
+    width: GLOW,
+    height: GLOW,
+    borderRadius: GLOW / 2,
+    backgroundColor: tokens.color.gold,
+    opacity: 0.35,
   },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  error: { color: '#b00020' },
+  error: { color: tokens.color.danger },
 });

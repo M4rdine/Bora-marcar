@@ -7,6 +7,7 @@ export * from './Text';
 export * from './Surface';
 export * from './Button';
 export * from './Chip';
+export * from './LevelBar';
 export * from './Pill';
 export * from './SectionHeader';
 export * from './Emoji';

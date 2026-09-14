@@ -3,6 +3,8 @@ import type { BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 
 type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
+const streakDaysLabel = (n: number): string => (n === 1 ? '1 dia seguido' : `${n} dias seguidos`);
+
 export const t = {
   tabs: { home: 'Hoje', cities: 'Cidades', profile: 'Perfil' },
   labels: { great: 'Ótimo', good: 'Bom', fair: 'Razoável', poor: 'Ruim' } satisfies Record<
@@ -35,6 +37,33 @@ export const t = {
     multi: 'Multiatleta',
     perfect: 'Clima perfeito',
   } satisfies Record<BadgeId, string>,
+  badgeEmoji: {
+    first: '🏅',
+    early: '🌅',
+    owl: '🦉',
+    explorer: '🧭',
+    planner: '🎯',
+    week: '📅',
+    multi: '🤸',
+    perfect: '☀️',
+  } satisfies Record<BadgeId, string>,
+  badgeDescription: {
+    first: 'Registrou a primeira atividade.',
+    early: 'Saiu antes das 7h da manhã.',
+    owl: 'Saiu às 20h ou mais tarde.',
+    explorer: 'Registrou atividades em 5 cidades diferentes.',
+    planner: 'Cumpriu 10 planos.',
+    week: 'Manteve a sequência por 7 dias seguidos.',
+    multi: 'Praticou as 5 atividades disponíveis.',
+    perfect: 'Saiu em uma hora com score 95 ou mais.',
+  } satisfies Record<BadgeId, string>,
+  tipEmoji: {
+    sunscreen: '🧴',
+    water: '💧',
+    cooling: '🧥',
+    rain: '☔',
+    coat: '🧥',
+  } satisfies Record<TipId, string>,
   errors: {
     network: 'Sem conexão. Tente de novo.',
     http: 'O serviço de previsão respondeu com erro.',
@@ -77,6 +106,12 @@ export const t = {
     todayBest: 'Hoje é o melhor dia da semana',
     retry: 'Tentar de novo',
     loading: 'Carregando previsão…',
+    planSubtext: (base: number, planBonus: number) => `+${base} XP base · +${planBonus} se cumprir`,
+    plannedKicker: 'Planejado',
+    startsIn: (hours: number, minutes: number) => `Começa em ${hours} h ${minutes} min`,
+    reminderAt: (hour: number, minute: number) =>
+      `Lembrete às ${hour}h${String(minute).padStart(2, '0')}`,
+    windowStarted: 'Sua janela começou',
   },
   cities: {
     placeholder: 'Digite o nome da cidade',
@@ -94,12 +129,43 @@ export const t = {
     xp: (n: number) => `${n} XP`,
     xpToNext: (xp: number, name: string) => `${xp} XP para ${name}`,
     maxLevel: 'Nível máximo',
-    streak: (n: number) => `${n} dias seguidos`,
+    streak: (n: number) => streakDaysLabel(n),
     activities: (n: number) => `${n} atividades`,
     cities: (n: number) => `${n} cidades`,
     badges: (unlocked: number, total: number) => `Conquistas · ${unlocked} de ${total}`,
     bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
     history: 'Histórico',
     empty: 'Nenhuma atividade ainda.',
+  },
+  facts: {
+    apparent: 'sensação',
+    rain: 'chuva',
+    wind: 'km/h',
+    uv: 'UV',
+  },
+  receipt: {
+    base: 'Atividade registrada',
+    hour: (score: number) => `Saiu com score ${score}`,
+    plan: 'Cumpriu o plano',
+    streak: (n: number) => streakDaysLabel(n),
+    total: 'Total',
+  },
+  unlock: {
+    kicker: 'Nova conquista',
+    count: (unlocked: number, total: number) => `${unlocked} de ${total} conquistas`,
+  },
+  streak: {
+    days: (n: number) => streakDaysLabel(n),
+    state: {
+      done: 'atividade feita',
+      today: 'hoje',
+      todayDone: 'hoje, atividade feita',
+      rest: 'folga por mau tempo',
+      none: 'sem atividade',
+    },
+  },
+  level: {
+    short: (n: number) => `Nível ${n}`,
+    aria: (n: number, name: string, pct: number) => `Nível ${n}, ${name}, ${pct}% para o próximo`,
   },
 } as const;

@@ -1,14 +1,18 @@
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { ACTIVITY_IDS, type ActivityId, type EngineConfig } from '@/domain';
+
+import { Chip, tokens } from '../../../ui';
 
 type Props = {
   readonly config: EngineConfig;
   readonly selected: ActivityId;
   readonly onSelect: (id: ActivityId) => void;
+  /** Score da atividade ATIVA (calculado só para ela); inativas não mostram score. */
+  readonly scoreFor?: ((id: ActivityId) => number | null) | undefined;
 };
 
-export function ActivityPicker({ config, selected, onSelect }: Props) {
+export function ActivityPicker({ config, selected, onSelect, scoreFor }: Props) {
   return (
     <ScrollView
       horizontal
@@ -16,20 +20,17 @@ export function ActivityPicker({ config, selected, onSelect }: Props) {
       contentContainerStyle={styles.row}
     >
       {ACTIVITY_IDS.map((id) => {
-        const p = config.activities[id];
+        const profile = config.activities[id];
         const active = id === selected;
         return (
-          <Pressable
+          <Chip
             key={id}
+            label={profile.name}
+            emoji={profile.emoji}
+            active={active}
+            score={active ? (scoreFor?.(id) ?? null) : null}
             onPress={() => onSelect(id)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            style={[styles.chip, active && styles.chipActive]}
-          >
-            <Text
-              style={active ? styles.chipTextActive : styles.chipText}
-            >{`${p.emoji} ${p.name}`}</Text>
-          </Pressable>
+          />
         );
       })}
     </ScrollView>
@@ -37,9 +38,5 @@ export function ActivityPicker({ config, selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 8, paddingVertical: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: '#eee' },
-  chipActive: { backgroundColor: '#333' },
-  chipText: { color: '#333' },
-  chipTextActive: { color: '#fff' },
+  row: { gap: tokens.space[2], paddingVertical: tokens.space[2] },
 });

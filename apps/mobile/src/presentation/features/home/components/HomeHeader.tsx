@@ -1,0 +1,59 @@
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import type { City } from '@/application/ports';
+import type { LevelProgress, LocalDateTime } from '@/domain';
+
+import { formatLongDate } from '../../../i18n/dates';
+import { t } from '../../../i18n/pt-BR';
+import { AppText, Surface, tokens } from '../../../ui';
+
+import { LevelOrb } from './LevelOrb';
+
+type Props = {
+  readonly city: City;
+  readonly now: LocalDateTime;
+  readonly level: LevelProgress;
+  readonly onOpenCities: () => void;
+};
+
+export function HomeHeader({ city, now, level, onOpenCities }: Props) {
+  const cityLabel = `${city.name}${city.admin1 ? `, ${city.admin1}` : ''}`;
+  return (
+    <View style={styles.row}>
+      <Pressable accessibilityRole="button" onPress={onOpenCities} style={styles.cityButton}>
+        <View style={styles.cityLine}>
+          <AppText variant="subtitle" weight="700">
+            {cityLabel}
+          </AppText>
+          <AppText variant="subtitle"> ⌄</AppText>
+        </View>
+        <AppText variant="small" tone="muted">
+          {`${formatLongDate(now.date)} · ${now.hour}h`}
+        </AppText>
+      </Pressable>
+      <Surface strength="soft" radius="pill" padding={2} gap={2} style={styles.levelPill}>
+        <LevelOrb level={level.level} name={level.name} progress={level.progress} />
+        <View>
+          <AppText variant="micro" tone="muted">
+            {t.level.short(level.level)}
+          </AppText>
+          <AppText variant="small" weight="700">
+            {level.name}
+          </AppText>
+        </View>
+      </Surface>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: tokens.space[3],
+  },
+  cityButton: { flexShrink: 1 },
+  cityLine: { flexDirection: 'row', alignItems: 'center' },
+  levelPill: { flexDirection: 'row', alignItems: 'center' },
+});

@@ -8,7 +8,7 @@ import {
   saoPaulo,
 } from '@/application/testing/fakes';
 import { err, ok } from '@/domain';
-import { planned } from '@/domain/gamification/testing/fixtures';
+import { logged, planned } from '@/domain/gamification/testing/fixtures';
 import { makeForecast } from '@/domain/recommendation/testing/fixtures';
 
 import { usePreferences } from '../../state/preferencesStore';
@@ -35,15 +35,23 @@ describe('HomeScreen', () => {
   it('com cidade mostra a janela de hoje e permite planejar e confirmar', async () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, { services: goodServices() });
+    // cabeçalho: cidade e nível (progresso ainda carregado do zero-estado).
+    await screen.findByText('São Paulo, São Paulo');
+    expect(screen.getByText('Nível 1')).toBeTruthy();
     // relógio falso: 14:00 em São Paulo → janela 14h–17h
     await screen.findByText('14h – 17h', {}, { timeout: 3000 });
     expect(screen.getByText('Ótimo · 100')).toBeTruthy();
+    // fatos da janela (fixture padrão: sensação 22°, chuva 5%).
+    expect(screen.getByText('22°')).toBeTruthy();
+    expect(screen.getByText('5%')).toBeTruthy();
     fireEvent.press(screen.getByText('Planejar Caminhada às 14h'));
     // 14:00 está dentro da janela → estado "confirm"
     await screen.findByText('Confirmar que fui');
     fireEvent.press(screen.getByText('Confirmar que fui'));
     await screen.findByText('Concluído às 14h00');
     expect(screen.getByText('+130 XP')).toBeTruthy(); // 50 + 50 (score 100) + 25 (plano) + 5 (1 dia)
+    expect(screen.getByText('Cumpriu o plano')).toBeTruthy();
+    expect(screen.getByText('+25')).toBeTruthy();
   });
 
   it('erro de rede mostra mensagem e botão de tentar de novo', async () => {
@@ -115,5 +123,23 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByText('Registrar atividade'));
     await screen.findByText(/Concluído às 20h00/);
     expect(progress.events().some((e) => e.type === 'badWeatherDay')).toBe(false);
+  });
+
+  it('sem histórico, a faixa de streak mostra 0 dias seguidos', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    await screen.findByText('0 dias seguidos');
+  });
+
+  it('com 1 dia seguido, a faixa de streak usa o singular', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        // registro em 2026-09-12 (véspera do "hoje" fixo 2026-09-13): streak = 1 dia.
+        progress: memoryProgressRepository([logged('2026-09-12')]),
+      }),
+    });
+    await screen.findByText('1 dia seguido');
   });
 });

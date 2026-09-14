@@ -1,194 +1,200 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import type { City } from '@/application/ports';
+import type { OverviewSnapshot } from '@/application/useCases/buildOverview';
+import { recommendDay, type ActivityId, type EngineConfig, type Progress } from '@/domain';
 
 import { t } from '../../i18n/pt-BR';
 import { useEngineConfig } from '../../queries/useEngineConfig';
-import { useGamificationActions } from '../../queries/useGamificationActions';
-import { useOverview } from '../../queries/useOverview';
+import { useOverview, type OverviewState } from '../../queries/useOverview';
 import { useProgress } from '../../queries/useProgress';
-import { useServices } from '../../services/ServicesProvider';
 import { usePreferences } from '../../state/preferencesStore';
+import { AppText, Button, phaseFor, Sky, tokens } from '../../ui';
 
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
+import { HomeHeader } from './components/HomeHeader';
 import { HourlyList } from './components/HourlyList';
 import { NextDaysList } from './components/NextDaysList';
-import { deriveHeroState, type HeroState } from './heroState';
+import { StreakBar } from './components/StreakBar';
+import { Welcome } from './components/Welcome';
+import { deriveHeroState } from './heroState';
 import { useBadWeatherRecorder } from './useBadWeatherRecorder';
+import { useHeroActions } from './useHeroActions';
+import { weekStrip } from './weekStrip';
 
-type ActionErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
-const isActionError = (e: unknown): e is { code: ActionErrorCode } =>
-  typeof e === 'object' &&
-  e !== null &&
-  'code' in e &&
-  typeof (e as { code: unknown }).code === 'string';
-
-/** Único plano que o herói ainda permite desfazer: o planejado ou o que expirou sem registro. */
-const cancellablePlanId = (state: HeroState): string | null => {
-  if (state.kind === 'planned') return state.plan.planId;
-  if (state.kind === 'logNoPlan') return state.expiredPlan?.planId ?? null;
+function OverviewStatus({ overview }: { readonly overview: OverviewState }) {
+  if (overview.status === 'error' && overview.error) {
+    return (
+      <View style={styles.status}>
+        <AppText variant="small">{t.errors[overview.error.code]}</AppText>
+        <Button label={t.home.retry} kind="quiet" onPress={overview.refetch} />
+      </View>
+    );
+  }
+  if (overview.status === 'loading') return <AppText variant="small">{t.home.loading}</AppText>;
   return null;
+}
+
+type HeroSectionProps = {
+  readonly city: City;
+  readonly activity: ActivityId;
+  readonly config: EngineConfig;
+  readonly snapshot: OverviewSnapshot;
+  readonly progress: Progress;
 };
 
-function Welcome() {
-  const router = useRouter();
-  const services = useServices();
-  const selectCity = usePreferences((s) => s.selectCity);
-  const [error, setError] = useState<string | null>(null);
-  const resolveLocation = async () => {
-    const r = await services.resolveMyLocation();
-    if (r.ok) selectCity(r.value);
-    else setError(t.errors[r.error.code]);
-  };
+/**
+ * Só monta quando previsão e progresso já carregaram, então `useHeroActions` pode ser chamado
+ * incondicionalmente a cada renderização deste componente sem violar as regras de hooks.
+ */
+function HeroSection({ city, activity, config, snapshot, progress }: HeroSectionProps) {
+  const hero = deriveHeroState({
+    today: snapshot.overview.today,
+    now: snapshot.now,
+    progress,
+    graceHours: config.window.graceHoursAfterEnd,
+    fairThreshold: config.scores.fair,
+  });
+  const actions = useHeroActions({ city, activity, snapshot, hero });
+  const unlockedToday = progress.badges.filter((b) => b.unlockedOn === snapshot.now.date);
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{t.home.welcomeTitle}</Text>
-      <Text>{t.home.welcomeBody}</Text>
-      <Pressable
-        accessibilityRole="button"
-        style={styles.button}
-        onPress={() => router.push('/cities')}
-      >
-        <Text style={styles.buttonText}>{t.home.searchCity}</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        style={styles.button}
-        onPress={() => void resolveLocation()}
-      >
-        <Text style={styles.buttonText}>{t.home.useLocation}</Text>
-      </Pressable>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </View>
+    <>
+      <HeroCard
+        state={hero}
+        config={config}
+        now={snapshot.now}
+        nowScore={snapshot.overview.now?.score ?? 0}
+        level={progress.level}
+        actions={actions}
+        unlockedToday={unlockedToday}
+      />
+      <HourlyList hours={snapshot.overview.today.hours} nowHour={snapshot.now.hour} />
+      <NextDaysList
+        days={snapshot.overview.nextDays}
+        comparison={snapshot.overview.comparison}
+        bestDate={snapshot.overview.bestDate}
+      />
+    </>
+  );
+}
+
+/** Score da atividade ATIVA na melhor janela de hoje; inativas não recebem score (ver ActivityPicker). */
+function useActiveScore(overview: OverviewState, config: EngineConfig, activity: ActivityId) {
+  const now = overview.snapshot?.now ?? null;
+  const forecast = overview.forecast;
+  return useMemo(() => {
+    if (!forecast || !now) return undefined;
+    return (id: ActivityId) =>
+      recommendDay(forecast, config.activities[id], config, { date: now.date, now }).score;
+  }, [forecast, config, now]);
+}
+
+type ContentProps = {
+  readonly city: City;
+  readonly config: EngineConfig;
+  readonly overview: OverviewState;
+  readonly progress: Progress | undefined;
+};
+
+function HomeContent({ city, config, overview, progress }: ContentProps) {
+  const router = useRouter();
+  const activity = usePreferences((s) => s.activity);
+  const selectActivity = usePreferences((s) => s.selectActivity);
+  const now = overview.snapshot?.now ?? null;
+  const scoreFor = useActiveScore(overview, config, activity);
+  return (
+    <>
+      {progress && now ? (
+        <>
+          <HomeHeader
+            city={city}
+            now={now}
+            level={progress.level}
+            onOpenCities={() => router.push('/cities')}
+          />
+          <StreakBar
+            streak={progress.streak}
+            days={weekStrip({
+              today: now.date,
+              activeDates: progress.activeDates,
+              restDates: progress.restDates,
+            })}
+          />
+        </>
+      ) : null}
+      <ActivityPicker
+        config={config}
+        selected={activity}
+        onSelect={selectActivity}
+        scoreFor={scoreFor}
+      />
+      <OverviewStatus overview={overview} />
+      {overview.snapshot && progress ? (
+        <HeroSection
+          city={city}
+          activity={activity}
+          config={config}
+          snapshot={overview.snapshot}
+          progress={progress}
+        />
+      ) : null}
+    </>
   );
 }
 
 export function HomeScreen() {
   const city = usePreferences((s) => s.city);
   const activity = usePreferences((s) => s.activity);
-  const selectActivity = usePreferences((s) => s.selectActivity);
-  const router = useRouter();
   const config = useEngineConfig();
   const overview = useOverview(city, activity);
   const today = overview.snapshot?.overview.today ?? null;
   const progress = useProgress(overview.snapshot?.now.date ?? null);
-  const actions = useGamificationActions();
-  const [actionError, setActionError] = useState<string | null>(null);
   // `fairThreshold` fica nulo enquanto a config não carregou; o hook (que não pode ser
   // condicional) simplesmente não dispara nesse intervalo.
   useBadWeatherRecorder(city?.id ?? null, today, config.data?.scores.fair ?? null);
+  const isBadDay =
+    today !== null &&
+    today.bestScoreOfDay !== null &&
+    config.data !== undefined &&
+    today.bestScoreOfDay < config.data.scores.fair;
+  const phase = overview.snapshot
+    ? phaseFor({ now: overview.snapshot.now, daily: today?.daily ?? null, isBadDay })
+    : 'day';
 
-  if (city === null) return <Welcome />;
-  if (!config.data) return <Text style={styles.container}>{t.home.loading}</Text>;
-
-  const run = async (fn: () => Promise<unknown>) => {
-    setActionError(null);
-    try {
-      await fn();
-    } catch (e) {
-      setActionError(isActionError(e) ? t.errors[e.code] : t.errors.network);
-    }
-  };
-
-  const snapshot = overview.snapshot;
-  const hero =
-    snapshot && progress.data
-      ? deriveHeroState({
-          today: snapshot.overview.today,
-          now: snapshot.now,
-          progress: progress.data,
-          graceHours: config.data.window.graceHoursAfterEnd,
-          fairThreshold: config.data.scores.fair,
-        })
-      : null;
-  const busy =
-    actions.plan.isPending ||
-    actions.confirm.isPending ||
-    actions.log.isPending ||
-    actions.cancel.isPending;
+  if (city === null) {
+    return (
+      <Sky phase="dusk">
+        <Welcome />
+      </Sky>
+    );
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Pressable accessibilityRole="button" onPress={() => router.push('/cities')}>
-        <Text style={styles.title}>{`${city.name}${city.admin1 ? `, ${city.admin1}` : ''}`}</Text>
-      </Pressable>
-      <ActivityPicker config={config.data} selected={activity} onSelect={selectActivity} />
-
-      {overview.status === 'error' && overview.error ? (
-        <View>
-          <Text style={styles.error}>{t.errors[overview.error.code]}</Text>
-          <Pressable accessibilityRole="button" style={styles.button} onPress={overview.refetch}>
-            <Text style={styles.buttonText}>{t.home.retry}</Text>
-          </Pressable>
-        </View>
-      ) : null}
-      {overview.status === 'loading' ? <Text>{t.home.loading}</Text> : null}
-
-      {snapshot && hero ? (
-        <>
-          <HeroCard
-            state={hero}
-            config={config.data}
-            busy={busy}
-            errorMessage={actionError}
-            onPlan={() =>
-              hero.kind === 'plan' &&
-              void run(() =>
-                actions.plan.mutateAsync({
-                  city,
-                  activity,
-                  window: hero.window,
-                  windowScore: hero.score,
-                  utcOffsetSeconds: snapshot.now.utcOffsetSeconds,
-                }),
-              )
-            }
-            onCancel={() => {
-              const planId = cancellablePlanId(hero);
-              if (planId !== null) void run(() => actions.cancel.mutateAsync(planId));
-            }}
-            onConfirm={() =>
-              hero.kind === 'confirm' &&
-              void run(() =>
-                actions.confirm.mutateAsync({
-                  planId: hero.plan.planId,
-                  date: snapshot.now.date,
-                  hourLeft: snapshot.now.hour,
-                  minuteLeft: snapshot.now.minute,
-                  hourScore: hero.nowScore ?? 0,
-                }),
-              )
-            }
-            onLogNow={() =>
-              void run(() =>
-                actions.log.mutateAsync({
-                  city,
-                  activity,
-                  date: snapshot.now.date,
-                  hourLeft: snapshot.now.hour,
-                  minuteLeft: snapshot.now.minute,
-                  hourScore: snapshot.overview.now?.score ?? 0,
-                }),
-              )
-            }
-          />
-          <HourlyList hours={snapshot.overview.today.hours} nowHour={snapshot.now.hour} />
-          <NextDaysList
-            days={snapshot.overview.nextDays}
-            comparison={snapshot.overview.comparison}
-            bestDate={snapshot.overview.bestDate}
-          />
-        </>
-      ) : null}
-    </ScrollView>
+    <Sky phase={phase}>
+      <SafeAreaView style={styles.safe}>
+        <ScrollView contentContainerStyle={styles.container}>
+          {config.data ? (
+            <HomeContent
+              city={city}
+              config={config.data}
+              overview={overview}
+              progress={progress.data}
+            />
+          ) : (
+            <AppText>{t.home.loading}</AppText>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Sky>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 12 },
-  title: { fontSize: 20, fontWeight: '700' },
-  button: { padding: 12, borderRadius: 12, backgroundColor: '#333', alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  error: { color: '#b00020' },
+  safe: { flex: 1 },
+  container: { padding: tokens.space[4], gap: tokens.space[3] },
+  status: { gap: tokens.space[2] },
 });
