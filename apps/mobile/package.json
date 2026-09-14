@@ -16,7 +16,8 @@
     "expo": "~57.0.22",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-native": "0.86.3"
+    "react-native": "0.86.3",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
