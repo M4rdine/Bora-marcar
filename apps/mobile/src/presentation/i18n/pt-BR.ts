@@ -54,6 +54,10 @@ export const t = {
     planNotFound: 'Plano não encontrado.',
     alreadyConfirmed: 'Esse plano já foi confirmado.',
   } satisfies Record<ProviderErrorCode | LocationError['code'] | UseCaseErrorCode, string>,
+  unexpected: {
+    title: 'Algo deu errado',
+    body: 'Feche e abra o app de novo. Se continuar, avise a gente.',
+  },
   home: {
     welcomeTitle: 'A melhor hora para sair, em uma frase.',
     welcomeBody: 'Escolha uma cidade e uma atividade. O resto é com a previsão.',
