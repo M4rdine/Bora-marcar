@@ -99,6 +99,10 @@ module.exports = defineConfig([
             // Only non-domain layers may depend on external npm packages or
             // Node core builtins; `domain` has no allow policy for external
             // origins, so it falls through to `default: 'disallow'`.
+            // `@melhor-hora/contracts` (Task 1) is a workspace package, so `eslint-plugin-import`'s
+            // resolver classifies it the same as any npm dependency — origin `external`. It is
+            // imported from `infrastructure` (see `engineConfigSchema.test.ts`), so no new policy
+            // is needed here.
             {
               from: {
                 element: {
