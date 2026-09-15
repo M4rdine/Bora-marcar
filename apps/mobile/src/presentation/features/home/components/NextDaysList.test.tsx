@@ -98,4 +98,23 @@ describe('NextDaysList', () => {
     fireEvent.press(screen.getByRole('button'));
     expect(onOpenDay).toHaveBeenCalledWith(day.date);
   });
+
+  it('dia sem janela mostra "Sem janela boa" com o motivo dominante, sem dizer "hoje"', () => {
+    const rainy = makeForecast(DATES, (date) =>
+      date === '2026-09-14' ? { precipitationProbability: 95, precipitationMm: 2 } : {},
+    );
+    const day = recommendDay(rainy, profile, defaultEngineConfig, { date: '2026-09-14' });
+    render(<NextDaysList {...baseProps} days={[day]} comparison={null} bestDate={null} />);
+    expect(screen.getByText('Sem janela boa · chuva')).toBeTruthy();
+    expect(screen.queryByText(/hoje/)).toBeNull();
+  });
+
+  it('dia sem janela e sem hora avaliável mostra só "Sem janela boa"', () => {
+    const empty: DayRecommendation = {
+      ...dayFor('2026-09-14'),
+      result: { kind: 'none', best: null, dominant: null },
+    };
+    render(<NextDaysList {...baseProps} days={[empty]} comparison={null} bestDate={null} />);
+    expect(screen.getByText('Sem janela boa')).toBeTruthy();
+  });
 });

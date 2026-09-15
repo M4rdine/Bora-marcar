@@ -38,6 +38,7 @@ export function Button({
 
   return (
     <Pressable
+      testID={`button-${kind}`}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled }}

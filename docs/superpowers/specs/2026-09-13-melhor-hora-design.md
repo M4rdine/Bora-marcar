@@ -204,7 +204,6 @@ Cada fator vira um conforto em [0, 1] por curva linear por partes:
 | `precipitation_probability ≥ 80` ou `precipitation ≥ 1 mm` | score ≤ 20  |
 | Neve (71–77, 85, 86)                                       | score ≤ 20  |
 | Sensação fora da faixa de tolerância                       | score ≤ 30  |
-| Madrugada (hora < 5h), qualquer atividade                  | score ≤ 20  |
 | Nevoeiro (45, 48) e atividade Ciclismo                     | score × 0,6 |
 
 Rótulos: Ótimo ≥ 80, Bom 65–79, Razoável 45–64, Ruim < 45.
@@ -212,7 +211,9 @@ Rótulos: Ótimo ≥ 80, Bom 65–79, Razoável 45–64, Ruim < 45.
 ### 4.3 Escolha da janela
 
 - Horas candidatas de hoje: da hora atual (incluída se faltam ≥ 30 min para acabar) até
-  23 h. Para outros dias: 0–23 h.
+  23 h. Para outros dias: 5–23 h. A madrugada (antes de `window.quietHoursEnd` = 5 h) nunca
+  entra numa janela, por melhor que o tempo esteja; o score dessas horas continua real na
+  linha do dia e no XP de quem sair mesmo assim.
 - Testa janelas contíguas de 1, 2 e 3 horas. Descarta janelas com alguma hora < 45.
   Ranking = média + 3 pontos por hora adicional (uma janela de 3 h com média 91 vence uma
   de 1 h com 96; sem o bônus, a média de 3 h nunca supera a do melhor par e a regra

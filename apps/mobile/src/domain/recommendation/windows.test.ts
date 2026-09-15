@@ -8,8 +8,15 @@ const flat = (scores: readonly number[]) => scores.map((s, hour) => makeHourScor
 describe('candidateHours', () => {
   const day = flat(Array.from({ length: 24 }, () => 70));
 
-  it('sem "agora" devolve o dia inteiro', () => {
-    expect(candidateHours(day, null, cfg)).toHaveLength(24);
+  it('sem "agora" devolve o dia a partir do fim da madrugada (5h)', () => {
+    const c = candidateHours(day, null, cfg);
+    expect(c).toHaveLength(19);
+    expect(c[0]?.hour.hour).toBe(5);
+  });
+
+  it('a madrugada nunca entra, mesmo com "agora" às 2h', () => {
+    const c = candidateHours(day, { hour: 2, minute: 0 }, cfg);
+    expect(c[0]?.hour.hour).toBe(5);
   });
 
   it('inclui a hora atual se faltam pelo menos 30 min', () => {

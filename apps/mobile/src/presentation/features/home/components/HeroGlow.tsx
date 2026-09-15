@@ -15,6 +15,9 @@ const RINGS = [
 ] as const;
 
 const OFFSET = tokens.space[10];
+/** Caixa da âncora = maior anel; filhos absolutos nunca saem dela (o Android não desenha filhos
+ * fora de um pai de área zero de forma confiável). */
+const BOX = tokens.size.glow * RINGS[0].scale;
 
 export function HeroGlow() {
   return (
@@ -30,8 +33,8 @@ export function HeroGlow() {
                 width: diameter,
                 height: diameter,
                 borderRadius: diameter / 2,
-                left: -diameter / 2,
-                top: -diameter / 2,
+                left: (BOX - diameter) / 2,
+                top: (BOX - diameter) / 2,
                 opacity,
               },
             ]}
@@ -43,6 +46,12 @@ export function HeroGlow() {
 }
 
 const styles = StyleSheet.create({
-  anchor: { position: 'absolute', top: -OFFSET, right: -OFFSET, width: 0, height: 0 },
+  anchor: {
+    position: 'absolute',
+    top: -OFFSET - BOX / 2,
+    right: -OFFSET - BOX / 2,
+    width: BOX,
+    height: BOX,
+  },
   ring: { position: 'absolute', backgroundColor: tokens.color.gold },
 });

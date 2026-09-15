@@ -15,6 +15,37 @@ const SAO_PAULO = {
   timezone: 'America/Sao_Paulo',
 };
 const RAINY_HOURS = 24;
+const WINDOW_HOURS = 3;
+
+/** Plano de hoje cuja janela contém a hora atual da cidade: força o estado `confirm` do herói. */
+const planNow = (city) => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: city.timezone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+  }).formatToParts(new Date());
+  const get = (type) => parts.find((p) => p.type === type).value;
+  const date = `${get('year')}-${get('month')}-${get('day')}`;
+  const startHour = Number(get('hour'));
+  return JSON.stringify({
+    schemaVersion: 1,
+    events: [
+      {
+        id: 'qa-plan',
+        createdAt: Date.now() - 3_600_000,
+        type: 'planned',
+        cityId: city.id,
+        activity: 'walk',
+        date,
+        window: { date, startHour, endHour: Math.min(24, startHour + WINDOW_HOURS) },
+        windowScore: 90,
+      },
+    ],
+  });
+};
 
 const rainyToday = (c) =>
   c.on('Fetch.requestPaused', async (p) => {
@@ -47,20 +78,25 @@ const rainyToday = (c) =>
 
 module.exports = async (h, c) => {
   await h.goto('/');
-  await h.wait(3000);
-  await h.clearStorage();
-  await h.goto('/');
-  await h.wait(6000);
+  await h.waitForText('Buscar cidade');
   await h.shot('welcome');
 
   await h.setStorage('prefs:v1', city(SAO_PAULO));
   await h.goto('/');
-  await h.wait(7000);
+  await h.waitForText('Seu dia, hora a hora');
   await h.shot('home-plan');
   await h.scroll(900);
   await h.clickText('Amanhã');
-  await h.wait(3000);
+  await h.waitForText('Melhor horário');
   await h.shot('day-tomorrow');
+
+  await h.setStorage('progress:v1', planNow(SAO_PAULO));
+  await h.goto('/');
+  await h.waitForText('Confirmar que fui');
+  await h.shot('home-confirm');
+  await h.clickText('Confirmar que fui');
+  await h.waitForText('Total');
+  await h.shot('home-done');
 
   await c.evaluate('localStorage.removeItem("progress:v1")');
   await c.send('Fetch.enable', {
@@ -68,11 +104,11 @@ module.exports = async (h, c) => {
   });
   rainyToday(c);
   await h.goto('/');
-  await h.wait(7000);
+  await h.waitForText('Sem janela boa hoje');
   await h.shot('home-no-window');
   await c.send('Fetch.disable');
 
   await h.goto('/profile');
-  await h.wait(5000);
+  await h.waitForText('Seu progresso');
   await h.shot('profile');
 };

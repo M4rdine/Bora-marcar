@@ -58,20 +58,6 @@ describe('applyVetoes', () => {
     expect(applyVetoes(makeHour({ weatherCode: 48 }), walk, 80)).toEqual({ score: 80, veto: null });
   });
 
-  it.each([0, 4])('madrugada (%ih) limita a 20 mesmo com tempo perfeito', (hour) => {
-    expect(applyVetoes(makeHour({ hour, isDay: false }), walk, 88)).toEqual({
-      score: 20,
-      veto: 'night',
-    });
-  });
-
-  it('a partir das 5h a madrugada deixa de vetar', () => {
-    expect(applyVetoes(makeHour({ hour: 5, isDay: false }), walk, 88)).toEqual({
-      score: 88,
-      veto: null,
-    });
-  });
-
   it('o menor limite vence quando há mais de um veto', () => {
     const h = makeHour({ weatherCode: 71, apparentTemperature: 40 });
     expect(applyVetoes(h, walk, 88)).toEqual({ score: 20, veto: 'snow' });

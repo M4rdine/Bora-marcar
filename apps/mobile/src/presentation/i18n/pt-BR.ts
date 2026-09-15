@@ -4,7 +4,12 @@ import type { BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
-const streakDaysLabel = (n: number): string => `${n} ${plural(n, 'dia seguido', 'dias seguidos')}`;
+const statLabels = {
+  streak: (n: number) => plural(n, 'dia seguido', 'dias seguidos'),
+  activities: (n: number) => plural(n, 'atividade', 'atividades'),
+  cities: (n: number) => plural(n, 'cidade', 'cidades'),
+};
+const streakDaysLabel = (n: number): string => `${n} ${statLabels.streak(n)}`;
 
 const LABELS = {
   great: 'Ótimo',
@@ -36,7 +41,6 @@ export const t = {
     sun: 'céu fechado',
     storm: 'trovoada',
     snow: 'neve',
-    night: 'madrugada',
   } satisfies Record<FactorId | VetoId, string>,
   badges: {
     first: 'Primeira saída',
@@ -171,13 +175,9 @@ export const t = {
     xpToNext: (xp: number, name: string) => `${xp} XP para ${name}`,
     maxLevel: 'Nível máximo',
     streak: (n: number) => streakDaysLabel(n),
-    activities: (n: number) => `${n} ${plural(n, 'atividade', 'atividades')}`,
-    cities: (n: number) => `${n} ${plural(n, 'cidade', 'cidades')}`,
-    statLabels: {
-      streak: (n: number) => plural(n, 'dia seguido', 'dias seguidos'),
-      activities: (n: number) => plural(n, 'atividade', 'atividades'),
-      cities: (n: number) => plural(n, 'cidade', 'cidades'),
-    },
+    activities: (n: number) => `${n} ${statLabels.activities(n)}`,
+    cities: (n: number) => `${n} ${statLabels.cities(n)}`,
+    statLabels,
     achievements: 'Conquistas',
     badges: (unlocked: number, total: number) => `${unlocked} de ${total}`,
     bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
@@ -224,6 +224,7 @@ export const t = {
   },
   day: {
     best: 'Melhor horário',
+    noWindow: 'Sem janela boa',
     back: 'Voltar',
     backGlyph: '‹',
     planTomorrow: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,

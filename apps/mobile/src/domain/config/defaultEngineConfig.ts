@@ -61,6 +61,7 @@ export const defaultEngineConfig: EngineConfig = {
     lengthBonus: 3,
     minRemainingMinutes: 30,
     graceHoursAfterEnd: 2,
+    quietHoursEnd: 5,
   },
   tips: { uvProtect: 6, waterApparent: 28, coolDropDeg: 4, rainNextPct: 40, coatApparent: 14 },
   xp: { base: 50, planBonus: 25, streakPerDay: 5, streakMaxDays: 10 },

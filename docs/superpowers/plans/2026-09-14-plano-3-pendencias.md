@@ -103,9 +103,9 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
   afirma `timezone=auto` e `forecast_days=5` dentro do handler. Uma falha ali vira erro de rede no
   teste em vez de asserção legível; mover as asserções de parâmetro para o corpo do teste
   (capturando a URL requisitada) no Plano 4.
-- ~~**`Welcome.tsx` sem teste dos CTAs**~~ (resolvido na rodada de QA visual: `HomeScreen.test.tsx` pressiona os dois CTAs): o teste de tela só confere os textos. Nenhum caso pressiona
-  "Buscar cidade" (`router.push('/cities')`) nem "Usar minha localização" (caminho de sucesso e o
-  ramo de erro que preenche `error`).
+- ~~**`Welcome.tsx` sem teste dos CTAs**~~: resolvido na rodada de QA visual — `HomeScreen.test.tsx`
+  pressiona "Buscar cidade" (navega para `/cities`) e "Usar minha localização" nos dois ramos
+  (cidade do GPS selecionada; permissão negada mostra o erro traduzido).
 - **Desmarcar uma conquista**: `ProfileScreen.test.tsx` cobre tocar numa badge e ver o detalhe, mas
   não o segundo toque na MESMA badge, que fecha o detalhe (`current === badge.id ? null : ...` em
   `BadgeGrid`).

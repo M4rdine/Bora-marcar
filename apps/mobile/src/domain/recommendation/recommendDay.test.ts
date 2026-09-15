@@ -26,6 +26,18 @@ describe('recommendDay', () => {
     expect(r.bestScoreOfDay).toBe(100);
   });
 
+  it('chuva das 5h às 23h com madrugada limpa não recomenda 1h–4h: fica sem janela', () => {
+    // Regressão do QA visual: o nightFactor sozinho deixava a madrugada vencer o dia chuvoso.
+    const f = makeForecast(DATES, (_, hour) =>
+      hour >= 5 ? { precipitationProbability: 95, precipitationMm: 3, weatherCode: 63 } : {},
+    );
+    const r = recommendDay(f, walk, cfg, { date: '2026-09-13' });
+    expect(r.result.kind).toBe('none');
+    expect(r.result.kind === 'none' && r.result.dominant).toBe('rain');
+    // As horas da madrugada continuam pontuadas de verdade (timeline, XP), só não viram janela.
+    expect(r.hours[2]?.score).toBeGreaterThan(45);
+  });
+
   it('bestScoreOfDay olha o dia inteiro, mesmo quando o "agora" não deixa janela', () => {
     const r = recommendDay(makeForecast(DATES), cfg.activities.beach, cfg, {
       date: '2026-09-13',

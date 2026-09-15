@@ -13,7 +13,7 @@ function HowItWorks() {
     <Surface padding={4} gap={3}>
       <AppText variant="kicker">{t.home.howTitle}</AppText>
       {t.home.howSteps.map((step, index) => (
-        <View key={step.emoji} style={styles.step}>
+        <View key={step.text} style={styles.step}>
           <View style={styles.stepBadge}>
             <Emoji symbol={step.emoji} size={STEP_EMOJI_SIZE} label={t.home.stepLabel(index + 1)} />
           </View>

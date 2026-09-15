@@ -107,6 +107,7 @@ describe('defaultEngineConfig', () => {
       minHourScore: 45,
       lengthBonus: 3,
       minRemainingMinutes: 30,
+      quietHoursEnd: 5,
       graceHoursAfterEnd: 2,
     });
     expect(defaultEngineConfig.tips).toEqual({

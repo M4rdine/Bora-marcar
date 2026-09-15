@@ -55,8 +55,7 @@ export function PlanSection({
         hours={state.day.hours}
         level={level}
         config={config}
-        cityId={null}
-        kicker={t.day.best}
+        scope="otherDay"
         unlockedToday={[]}
       />
       <Button
@@ -112,7 +111,7 @@ export function NoWindowSection({ state, now, level, config }: NoWindowSectionPr
       hours={state.day.hours}
       level={level}
       config={config}
-      cityId={null}
+      scope="otherDay"
       unlockedToday={[]}
     />
   );

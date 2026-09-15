@@ -12,6 +12,7 @@ import { t } from '../../../i18n/pt-BR';
 import { AppText, CountUp, LevelBar, Pill, Reveal } from '../../../ui';
 import { countdown } from '../countdown';
 import type { HeroState } from '../heroState';
+import { levelBarRight } from '../levelBarLabel';
 import { hoursInWindow, windowFacts } from '../windowFacts';
 import { xpReceipt } from '../xpReceipt';
 
@@ -27,11 +28,14 @@ type Props = {
   readonly level: LevelProgress;
   readonly config: EngineConfig;
   readonly unlockedToday: readonly BadgeState[];
-  /** Cidade em foco; um plano feito em outra cidade ganha um aviso discreto. `null` fora da Home. */
-  readonly cityId: string | null;
-  /** Kicker do estado `plan`; a tela do dia troca "Melhor horário hoje" por "Melhor horário". */
-  readonly kicker?: string;
+  /** Cidade em foco; um plano feito em outra cidade ganha um aviso discreto. Só a Home passa. */
+  readonly cityId?: string;
+  /** "Hoje" na Home; "outro dia" na tela do dia, onde a cópia não pode dizer "hoje" nem
+   * prometer a folga de sequência, que só é registrada para o dia atual. */
+  readonly scope?: HeroScope;
 };
+
+export type HeroScope = 'today' | 'otherDay';
 
 const MINUTES_PER_HOUR = 60;
 
@@ -42,9 +46,9 @@ function OtherCityNote({
   cityId,
 }: {
   readonly planCityId: string;
-  readonly cityId: string | null;
+  readonly cityId: string | undefined;
 }) {
-  if (cityId === null || planCityId === cityId) return null;
+  if (cityId === undefined || planCityId === cityId) return null;
   return (
     <AppText variant="small" tone="muted">
       {t.home.otherCityPlan}
@@ -91,7 +95,7 @@ function PlannedBody({
   readonly now: LocalDateTime;
   readonly hours: readonly HourScore[];
   readonly config: EngineConfig;
-  readonly cityId: string | null;
+  readonly cityId: string | undefined;
 }) {
   const { plan } = state;
   const left = countdown(now, plan.window.startHour);
@@ -124,12 +128,11 @@ function ConfirmBody({
   readonly state: Extract<HeroState, { kind: 'confirm' }>;
   readonly hours: readonly HourScore[];
   readonly config: EngineConfig;
-  readonly cityId: string | null;
+  readonly cityId: string | undefined;
 }) {
-  const { plan } = state;
+  const { plan, nowScore } = state;
   const activity = config.activities[plan.activity];
   const windowHours = hoursInWindow(hours, plan.window.startHour, plan.window.endHour);
-  const nowLabel = state.nowScore === null ? null : labelFor(state.nowScore, config);
   return (
     <>
       <AppText variant="kicker">{t.home.windowStarted}</AppText>
@@ -137,21 +140,15 @@ function ConfirmBody({
       <AppText variant="body">
         {t.home.planOf(activity.emoji, activity.name, plan.window.startHour)}
       </AppText>
-      {nowLabel !== null && state.nowScore !== null ? (
-        <Pill label={`${t.home.now}: ${t.labels[nowLabel]} · ${state.nowScore}`} tone={nowLabel} />
+      {nowScore !== null ? (
+        <Pill
+          label={`${t.home.now}: ${t.labels[labelFor(nowScore, config)]} · ${nowScore}`}
+          tone={labelFor(nowScore, config)}
+        />
       ) : null}
       <OtherCityNote planCityId={plan.cityId} cityId={cityId} />
       <FactsRow facts={windowFacts(windowHours)} />
     </>
-  );
-}
-
-/** "90 / 100 XP" dentro do nível atual; no último nível, "Nível máximo". */
-function levelBarRight(level: LevelProgress): string {
-  if (level.nextLevelXp === null) return t.profile.maxLevel;
-  return t.level.xpWithin(
-    level.totalXp - level.levelStartXp,
-    level.nextLevelXp - level.levelStartXp,
   );
 }
 
@@ -203,19 +200,27 @@ function LogNoPlanBody({ state }: { readonly state: Extract<HeroState, { kind: '
   );
 }
 
-function NoWindowBody({ state }: { readonly state: Extract<HeroState, { kind: 'noWindow' }> }) {
+function NoWindowBody({
+  state,
+  scope,
+}: {
+  readonly state: Extract<HeroState, { kind: 'noWindow' }>;
+  readonly scope: HeroScope;
+}) {
   const result = state.day.result;
   const dominant = result.kind === 'none' ? result.dominant : null;
   const score = result.kind === 'none' ? (result.best?.score ?? null) : null;
   return (
     <>
-      <AppText variant="title">{t.home.noWindow}</AppText>
+      <AppText variant="title">{scope === 'today' ? t.home.noWindow : t.day.noWindow}</AppText>
       {dominant ? (
         <AppText variant="small">{t.home.noWindowBecause(t.reasons[dominant])}</AppText>
       ) : null}
-      <AppText variant="small" tone="muted">
-        {t.home.restDayProtected}
-      </AppText>
+      {scope === 'today' ? (
+        <AppText variant="small" tone="muted">
+          {t.home.restDayProtected}
+        </AppText>
+      ) : null}
       {score !== null ? <Pill label={`${t.labels.poor} · ${score}`} tone="poor" /> : null}
     </>
   );
@@ -229,11 +234,11 @@ export function HeroBody({
   config,
   unlockedToday,
   cityId,
-  kicker,
+  scope = 'today',
 }: Props) {
   switch (state.kind) {
     case 'plan':
-      return <PlanBody state={state} kicker={kicker ?? t.home.bestToday} />;
+      return <PlanBody state={state} kicker={scope === 'today' ? t.home.bestToday : t.day.best} />;
     case 'planned':
       return <PlannedBody state={state} now={now} hours={hours} config={config} cityId={cityId} />;
     case 'confirm':
@@ -243,6 +248,6 @@ export function HeroBody({
     case 'logNoPlan':
       return <LogNoPlanBody state={state} />;
     case 'noWindow':
-      return <NoWindowBody state={state} />;
+      return <NoWindowBody state={state} scope={scope} />;
   }
 }

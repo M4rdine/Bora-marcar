@@ -1,7 +1,7 @@
 import type { ActivityProfile } from '../activities/types';
 import type { HourlyConditions } from '../forecast/types';
 
-export type VetoId = 'storm' | 'rain' | 'snow' | 'thermal' | 'night';
+export type VetoId = 'storm' | 'rain' | 'snow' | 'thermal';
 
 type Veto = { readonly id: VetoId; readonly cap: number };
 
@@ -12,11 +12,8 @@ const FOG_CODES = new Set([45, 48]);
 const RAIN_PROB_VETO = 80;
 const RAIN_MM_VETO = 1;
 const FOG_CYCLING_FACTOR = 0.6;
-/** Madrugada (antes das 5h) nunca é recomendada: o `nightFactor` só reduz o score e, num dia de
- * chuva, a madrugada acabaria vencendo. Teto igual ao da chuva. */
-export const QUIET_HOURS_END = 5;
 
-const CAPS = { storm: 0, rain: 20, snow: 20, thermal: 30, night: 20 } as const;
+const CAPS = { storm: 0, rain: 20, snow: 20, thermal: 30 } as const;
 
 function collectVetoes(h: HourlyConditions, p: ActivityProfile): readonly Veto[] {
   const outOfTolerance =
@@ -28,7 +25,6 @@ function collectVetoes(h: HourlyConditions, p: ActivityProfile): readonly Veto[]
       : null,
     SNOW_CODES.has(h.weatherCode) ? { id: 'snow', cap: CAPS.snow } : null,
     outOfTolerance ? { id: 'thermal', cap: CAPS.thermal } : null,
-    h.hour < QUIET_HOURS_END ? { id: 'night', cap: CAPS.night } : null,
   ];
   return candidates.filter((v): v is Veto => v !== null);
 }

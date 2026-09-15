@@ -39,6 +39,9 @@ describe('DayScreen', () => {
     });
     await screen.findByText('Amanhã');
     expect(screen.getByText(/6h – 9h/)).toBeTruthy();
+    // fora de hoje o kicker não pode dizer "hoje".
+    expect(screen.getByText('Melhor horário')).toBeTruthy();
+    expect(screen.queryByText('Melhor horário hoje')).toBeNull();
     fireEvent.press(screen.getByText('Planejar Caminhada às 6h'));
     await waitFor(() =>
       expect(progress.events().some((e) => e.type === 'planned' && e.date === '2026-09-14')).toBe(
@@ -46,6 +49,25 @@ describe('DayScreen', () => {
       ),
     );
     await screen.findByText('Desfazer plano');
+  });
+
+  it('amanhã sem janela boa não diz "hoje" nem promete folga de sequência', async () => {
+    mockDate = '2026-09-14';
+    renderWithProviders(<DayScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(
+          ok(
+            makeForecast(DATES, (date) =>
+              date === '2026-09-14' ? { precipitationProbability: 95, precipitationMm: 2 } : {},
+            ),
+          ),
+        ),
+      }),
+    });
+    await screen.findByText('Sem janela boa');
+    expect(screen.getByText('Motivo principal: chuva.')).toBeTruthy();
+    expect(screen.queryByText('Sem janela boa hoje')).toBeNull();
+    expect(screen.queryByText('Hoje não conta contra a sua sequência.')).toBeNull();
   });
 
   it('depois de amanhã é somente visualização, sem botão de planejar', async () => {

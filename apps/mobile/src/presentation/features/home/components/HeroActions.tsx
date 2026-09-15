@@ -139,6 +139,9 @@ function DefaultActions({
   onOpenTomorrow,
 }: DefaultActionsProps) {
   const tomorrowProps = { shortcut, busy, onOpenTomorrow };
+  // Mesma condição de `SeeTomorrowButton` existir: sem atalho, registrar é a única ação e volta a
+  // ser o botão primário.
+  const hasTomorrowShortcut = shortcut !== null;
   switch (state.kind) {
     case 'plan': {
       const { base, planBonus } = config.xp;
@@ -170,13 +173,12 @@ function DefaultActions({
         </>
       );
     case 'noWindow':
-      // Sem atalho para amanhã, registrar é a única ação e volta a ser o botão primário.
       return (
         <>
           <SeeTomorrowButton {...tomorrowProps} config={config} />
           <Button
             label={t.home.logOther}
-            kind={shortcut === null ? 'primary' : 'quiet'}
+            kind={hasTomorrowShortcut ? 'quiet' : 'primary'}
             onPress={onOpenPicker}
             disabled={busy}
           />

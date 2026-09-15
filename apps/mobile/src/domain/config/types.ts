@@ -12,6 +12,10 @@ export type WindowRules = {
   readonly lengthBonus: number;
   readonly minRemainingMinutes: number;
   readonly graceHoursAfterEnd: number;
+  /** Primeira hora que pode entrar numa janela: antes dela é madrugada e ninguém quer uma
+   * caminhada às 1h recomendada, por melhor que o tempo esteja. Só afeta a escolha da janela; o
+   * score da hora (XP, timeline, conquistas) continua honesto. */
+  readonly quietHoursEnd: number;
 };
 
 export type TipThresholds = {

@@ -6,7 +6,19 @@ export const MIN_QUERY_LENGTH = 2;
 
 type Deps = { readonly geocoding: GeocodingProvider };
 
-const cityKey = (c: City): string => `${c.name}|${c.admin1 ?? ''}|${c.countryCode}`.toLowerCase();
+/** ~11 km: colapsa o mesmo ponto devolvido duas vezes, mas preserva homônimos distantes. */
+const COORD_DECIMALS = 1;
+
+const cityKey = (c: City): string =>
+  [
+    c.name,
+    c.admin1 ?? '',
+    c.countryCode,
+    c.latitude.toFixed(COORD_DECIMALS),
+    c.longitude.toFixed(COORD_DECIMALS),
+  ]
+    .join('|')
+    .toLowerCase();
 
 /** O Open-Meteo devolve a mesma localidade com feature codes diferentes; fica a primeira. */
 export const dedupeCities = (cities: readonly City[]): readonly City[] =>

@@ -40,8 +40,10 @@ abaixo com a decisão tomada para cada um.
 1. **Janela de madrugada recomendada.** Em Tóquio, "Amanhã · 1h – 4h · chuva · 50" e o CTA
    "Planejar amanhã às 1h": com o resto do dia chovendo, o `nightFactor` (0,7 na caminhada) só
    reduz o score e a madrugada vence. Ninguém quer uma caminhada às 1h recomendada.
-   **Decisão:** veto `night` (teto 20, mesmo da chuva) para horas antes das 5h; entra na lista
-   de motivos ("madrugada"). Constante no domínio, documentada na spec (§4.2).
+   **Decisão (após revisão):** a madrugada sai das **horas candidatas** da janela
+   (`window.quietHoursEnd = 5`, configurável no `EngineConfig`), não do score. Assim nenhuma janela
+   começa antes das 5h, mas o score real das horas continua valendo na linha do dia, no XP de quem
+   sair mesmo assim e nas conquistas ("Madrugador"). Spec §4.3.
 
 ### Home
 
@@ -105,13 +107,13 @@ abaixo com a decisão tomada para cada um.
 
 ## Depois da rodada
 
-Capturas após as correções em `2026-09-15-web-depois/` (mesmos cenários, geradas com
-`tools/qa-web/scenarios/home-states.js`): boas-vindas com "Como funciona", herói `plan` com
+Capturas após as correções em `2026-09-15-web-depois/` (cenário `tools/qa-web/scenarios/home-states.js`,
+que também cobre `confirm`/`done` semeando um plano na hora local da cidade): boas-vindas com "Como funciona", herói `plan` com
 "São Paulo, Brasil" e orb legível, `confirm` com atividade/pílula colorida/aviso de outra cidade,
 `done` com recibo ilustrado e "90 / 100 XP", `noWindow` com o atalho de amanhã como primário,
 tela do dia com kicker neutro e horários do sol, Perfil com plurais corretos.
 
 ## Alvo web
 
-Mantido como alvo de QA (não de entrega): `react-native-web` e `react-dom` ficam nas
-dependências, e o harness em `tools/qa-web/` documenta como repetir as capturas.
+Mantido como alvo de QA (não de entrega): `react-native-web` e `react-dom` ficam em
+`devDependencies`, e o harness em `tools/qa-web/` documenta como repetir as capturas.

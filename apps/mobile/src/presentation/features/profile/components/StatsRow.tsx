@@ -43,8 +43,15 @@ export function StatsRow({ streak, activities, cities }: Props) {
   return (
     <View style={styles.row}>
       {stats.map((stat) => (
-        <Surface key={stat.symbol} padding={3} gap={1} style={styles.tile}>
-          <Emoji symbol={stat.symbol} label={stat.a11y} />
+        <Surface
+          key={stat.symbol}
+          accessible
+          accessibilityLabel={stat.a11y}
+          padding={3}
+          gap={1}
+          style={styles.tile}
+        >
+          <Emoji symbol={stat.symbol} label={stat.label} />
           <AppText variant="title" weight="800">
             {stat.value}
           </AppText>

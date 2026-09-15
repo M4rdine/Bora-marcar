@@ -32,15 +32,18 @@ type Candidate = {
 
 const MINUTES_PER_HOUR = 60;
 
+/** Horas que podem compor uma janela: fora da madrugada (`quietHoursEnd`) e, quando há um "agora",
+ * da hora atual em diante (incluída se ainda restam `minRemainingMinutes`). */
 export function candidateHours(
   dayHours: readonly HourScore[],
   now: Clock | null,
   cfg: EngineConfig,
 ): readonly HourScore[] {
-  if (now === null) return dayHours;
+  const awake = dayHours.filter((h) => h.hour.hour >= cfg.window.quietHoursEnd);
+  if (now === null) return awake;
   const remaining = MINUTES_PER_HOUR - now.minute;
   const firstHour = remaining >= cfg.window.minRemainingMinutes ? now.hour : now.hour + 1;
-  return dayHours.filter((h) => h.hour.hour >= firstHour);
+  return awake.filter((h) => h.hour.hour >= firstHour);
 }
 
 // hours[i] existe para todo i < hours.length - 1, então o acesso abaixo nunca é undefined.

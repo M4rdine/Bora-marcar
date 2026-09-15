@@ -4,6 +4,7 @@
 // Depende só do `ws` já presente no workspace (via metro) e de um Chrome instalado.
 const { spawn } = require('child_process');
 const http = require('http');
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
@@ -26,7 +27,7 @@ const getJSON = (p, method = 'GET') =>
         try {
           res(JSON.parse(b));
         } catch (e) {
-          rej(new Error(b));
+          rej(new Error(b, { cause: e }));
         }
       });
     });
@@ -34,14 +35,19 @@ const getJSON = (p, method = 'GET') =>
     req.end();
   });
 
+const LAUNCH_ATTEMPTS = 50;
+const LAUNCH_POLL_MS = 200;
+
+// Perfil temporário por execução: cada rodada começa com localStorage vazio, sem ritual de limpeza.
 async function launch() {
   fs.mkdirSync(OUT, { recursive: true });
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'mh-qa-chrome-'));
   const proc = spawn(
     CHROME,
     [
       '--headless=new',
       `--remote-debugging-port=${PORT}`,
-      `--user-data-dir=${OUT}/profile`,
+      `--user-data-dir=${profile}`,
       '--no-first-run',
       '--no-default-browser-check',
       '--hide-scrollbars',
@@ -51,15 +57,18 @@ async function launch() {
     ],
     { stdio: 'ignore' },
   );
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < LAUNCH_ATTEMPTS; i++) {
     try {
       await getJSON('/json/version');
-      break;
+      return proc;
     } catch {
-      await sleep(200);
+      await sleep(LAUNCH_POLL_MS);
     }
   }
-  return proc;
+  proc.kill('SIGKILL');
+  throw new Error(
+    `Chrome não respondeu em ${(LAUNCH_ATTEMPTS * LAUNCH_POLL_MS) / 1000} s: ${CHROME}`,
+  );
 }
 
 async function connect() {
@@ -149,6 +158,14 @@ const helpers = (c) => ({
     const r = await this.rectOfText(t, nth);
     if (!r) throw new Error('text not found: ' + t);
     await this.tap(r.x, r.y);
+  },
+  waitForText: async function (t, timeoutMs = 15000) {
+    const until = Date.now() + timeoutMs;
+    while (Date.now() < until) {
+      if (await this.rectOfText(t)) return;
+      await sleep(250);
+    }
+    throw new Error('timeout waiting for text: ' + t);
   },
   type: async (t) => {
     await c.evaluate(

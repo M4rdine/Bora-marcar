@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react-nativ
 
 import {
   fakeForecast,
+  fakeLocation,
   fakeServices,
   fixedClock,
   memoryProgressRepository,
@@ -38,6 +39,23 @@ describe('HomeScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/cities');
   });
 
+  it('nas boas-vindas, "Usar minha localização" seleciona a cidade do GPS', async () => {
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        location: fakeLocation(
+          ok({
+            coords: { latitude: saoPaulo.latitude, longitude: saoPaulo.longitude },
+            city: saoPaulo,
+          }),
+        ),
+      }),
+    });
+    fireEvent.press(screen.getByText('Usar minha localização'));
+    await screen.findByText('São Paulo, Brasil');
+    expect(usePreferences.getState().city?.id).toBe(saoPaulo.id);
+  });
+
   it('nas boas-vindas, "Usar minha localização" negada mostra o erro traduzido', async () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     fireEvent.press(screen.getByText('Usar minha localização'));
@@ -57,8 +75,13 @@ describe('HomeScreen', () => {
     expect(screen.getByText('22°')).toBeTruthy();
     expect(screen.getByText('5%')).toBeTruthy();
     fireEvent.press(screen.getByText('Planejar Caminhada às 14h'));
-    // 14:00 está dentro da janela → estado "confirm"
+    // 14:00 está dentro da janela → estado "confirm", com a atividade do plano, o score de agora
+    // colorido e os fatores da janela (fixture padrão: sensação 22°).
     await screen.findByText('Confirmar que fui');
+    const confirmHero = screen.getByLabelText('hero');
+    expect(within(confirmHero).getByText('🚶 Caminhada · plano das 14h')).toBeTruthy();
+    expect(within(confirmHero).getByText('Agora: Ótimo · 100')).toBeTruthy();
+    expect(within(confirmHero).queryByText('Plano feito em outra cidade')).toBeNull();
     fireEvent.press(screen.getByText('Confirmar que fui'));
     await screen.findByText('Concluído · Caminhada · 14h00');
     expect(screen.getByText('+130 XP')).toBeTruthy(); // 50 + 50 (score 100) + 25 (plano) + 5 (1 dia)
@@ -115,12 +138,29 @@ describe('HomeScreen', () => {
     // 08:00 em São Paulo, antes da janela 17h–19h → estado "planned"
     // o plano da fixture é de corrida; o título usa a atividade do plano, não a selecionada.
     await screen.findByText('Corrida às 17h');
+    // a fixture planeja na cidade 'sp', que não é a São Paulo selecionada (id 3448439).
+    expect(screen.getByText('Plano feito em outra cidade')).toBeTruthy();
     // previsão da janela (17h–19h), fixture padrão: sensação 22°, chuva 5%.
     expect(screen.getAllByText('22°').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('5%')).toBeTruthy();
     fireEvent.press(screen.getByText('Desfazer plano'));
     // após desfazer, o herói volta ao estado "plan" recalculado a partir das 08:00
     await screen.findByText(/Planejar Caminhada às \d+h/);
+  });
+
+  it('plano feito na cidade em foco não mostra o aviso de outra cidade', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        progress: memoryProgressRepository([
+          planned('2026-09-13', { cityId: saoPaulo.id, startHour: 17, endHour: 19 }),
+        ]),
+        clock: fixedClock(Date.UTC(2026, 8, 13, 11, 0, 0)),
+      }),
+    });
+    await screen.findByText('Corrida às 17h');
+    expect(screen.queryByText('Plano feito em outra cidade')).toBeNull();
   });
 
   it('dia sem janela boa mostra o motivo, permite registrar e marca o dia de folga', async () => {
@@ -145,6 +185,11 @@ describe('HomeScreen', () => {
     expect(within(hero).getByText('Sem janela boa hoje')).toBeTruthy();
     expect(within(hero).getByText('Motivo principal: chuva.')).toBeTruthy();
     expect(within(hero).getByText('Hoje não conta contra a sua sequência.')).toBeTruthy();
+    // hierarquia: o atalho de amanhã é o botão primário; registrar fica discreto.
+    expect(within(within(hero).getByTestId('button-primary')).getByText(/^Amanhã:/)).toBeTruthy();
+    expect(
+      within(within(hero).getByTestId('button-quiet')).getByText('Saí em outro horário'),
+    ).toBeTruthy();
     await waitFor(() =>
       expect(progress.events().filter((e) => e.type === 'badWeatherDay')).toHaveLength(1),
     );
