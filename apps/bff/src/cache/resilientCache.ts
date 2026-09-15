@@ -33,6 +33,8 @@ export function resilientCache(
     slidingCount: (key, nowMs, windowMs) =>
       guard('slidingCount', 0, () => primary.slidingCount(key, nowMs, windowMs)),
     ping: () => guard('ping', false, () => primary.ping()),
-    ...(primary.close ? { close: () => primary.close?.() ?? Promise.resolve() } : {}),
+    ...(primary.close
+      ? { close: () => guard('close', undefined, () => primary.close?.() ?? Promise.resolve()) }
+      : {}),
   };
 }

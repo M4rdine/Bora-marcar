@@ -22,6 +22,7 @@ describe.skipIf(!url)('redisCache (integração)', () => {
       }
       await new Promise((resolve) => setTimeout(resolve, READY_WAIT_MS));
     }
+    throw new Error('Redis não ficou pronto em 1 s');
   });
 
   it('set/get com TTL', async () => {
