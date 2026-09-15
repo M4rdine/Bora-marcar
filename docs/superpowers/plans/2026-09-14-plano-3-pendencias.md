@@ -23,9 +23,8 @@ por encerrado. Roteiro (`pnpm --filter mobile start` → abrir no Expo Go):
 12. No Perfil, abrir o calendário do mês e conferir os dias de folga (chuva) marcados, e tocar numa
     conquista para ver a descrição e o progresso.
 13. Com um leitor de tela (VoiceOver no iOS ou TalkBack no Android) ativado, navegar até uma linha
-    de cidade em Cidades: ela tem um botão de favoritar (estrela) aninhado dentro do botão de
-    selecionar a cidade — conferir que o leitor de tela consegue focar e acionar os dois
-    separadamente, sem "engolir" o toque da estrela como parte da linha.
+    de cidade em Cidades: selecionar a cidade e favoritar são dois botões IRMÃOS (o aninhamento foi
+    desfeito na revisão final) — conferir que o leitor foca e aciona os dois separadamente.
 14. Conferir que os ícones das abas (Hoje/Cidades/Perfil) aparecem e têm rótulo lido pelo leitor de
     tela.
 
@@ -52,7 +51,8 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
 
 ## Notas da Tarefa 11 (MSW) para quem mexer nisso de novo
 
-- `msw` está fixado em `2.10.5` (não `^2.15`/latest): a partir da série `2.11`, o pacote passou a
+- `msw` está fixado em `2.10.5` EXATO (o specifier em `apps/mobile/package.json` não tem `^`, para
+  que um `pnpm install` novo não puxe a série `2.11+`): a partir da série `2.11`, o pacote passou a
   depender de `rettime`, que só publica build ESM (`"type": "module"`, sem condição `require` nos
   `exports`). Sob o Jest deste projeto (CJS, `transformIgnorePatterns` restrito às libs RN), isso
   quebra com `SyntaxError: Cannot use import statement outside a module` ao importar `msw`/`msw/node`.
@@ -87,6 +87,32 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
   explícito nem skeleton de carregamento — hoje só "carregando"/"erro" em texto; vale alinhar com o
   padrão de `OverviewStatus` (mensagem + botão "Tentar de novo") quando o Plano 4 trouxer o BFF com
   cache (latência maior, mais chance de erro intermitente).
+- **Progresso das conquistas na grade** (spec 3.2/5.5): `BadgeGrid` só distingue desbloqueada de
+  bloqueada; o progresso parcial ("2/5") aparece apenas no `BadgeDetail`, depois de tocar. A spec
+  pede o progresso visível na própria célula da grade.
+- **Linha de fatos em "É agora" e score em "Planejado"**: `ConfirmBody` mostra só a pílula do score
+  da hora corrente, sem a `FactsRow` da janela; `PlannedBody` mostra a `FactsRow` mas não o score
+  da janela planejada. Os dois estados ficam mais pobres que o herói de "Melhor horário hoje".
+- **Tinta do emoji das abas**: `src/app/(tabs)/_layout.tsx` passa `tabBarActiveTintColor` como
+  `color` para o `AppText` do emoji, e emoji coloridos ignoram `color` — a aba ativa e as inativas
+  ficam com o ícone idêntico. Distinguir por opacidade/escala (ou por um par de glifos) no Plano 4.
+- **Threshold de cobertura por diretório para `presentation/features` (85 %)**: hoje só existem o
+  global (80 %) e o de `src/domain` (100 %), então uma tela nova pode entrar sem teste sem derrubar
+  a suíte.
+- **`expect()` dentro do handler do MSW**: `presentation/testing/msw/handlers.ts` (linhas 17-18)
+  afirma `timezone=auto` e `forecast_days=5` dentro do handler. Uma falha ali vira erro de rede no
+  teste em vez de asserção legível; mover as asserções de parâmetro para o corpo do teste
+  (capturando a URL requisitada) no Plano 4.
+- **`Welcome.tsx` sem teste dos CTAs**: o teste de tela só confere os textos. Nenhum caso pressiona
+  "Buscar cidade" (`router.push('/cities')`) nem "Usar minha localização" (caminho de sucesso e o
+  ramo de erro que preenche `error`).
+- **Desmarcar uma conquista**: `ProfileScreen.test.tsx` cobre tocar numa badge e ver o detalhe, mas
+  não o segundo toque na MESMA badge, que fecha o detalhe (`current === badge.id ? null : ...` em
+  `BadgeGrid`).
+- **"cedo" fora do comparativo é deliberado**: a spec e o mockup escrevem "Amanhã cedo é melhor que
+  hoje"; o app usa `t.home.tomorrowBetter = 'Amanhã é melhor que hoje'`. A comparação usa a melhor
+  janela do dia inteiro, não necessariamente a da manhã, então "cedo" seria impreciso. Não mexer
+  sem antes mudar a regra de comparação.
 - **Ramos sem fixture (cobertura de branch abaixo de 100 %, não bloqueia o global ≥ 80 %)**:
   - `MonthCalendar.tsx` (75 % branch, linha 37): falta um dia com `state === 'rest'` num teste, que
     exercitaria o `styles.restBorder` extra aplicado às células de folga.
