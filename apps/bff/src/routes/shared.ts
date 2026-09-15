@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { AppDeps } from '../app';
 import { AppError } from '../http/errors';
 import type { AppEnv } from '../http/requestLog';
+import type { UpstreamError } from '../upstream/types';
 
 export function parseQuery<S extends z.ZodType>(
   schema: S,
@@ -13,6 +14,19 @@ export function parseQuery<S extends z.ZodType>(
   if (parsed.success) return parsed.data;
   const detail = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
   throw new AppError(400, 'bad_request', `Parâmetros inválidos — ${detail}`);
+}
+
+/** O detalhe do upstream (host, IP, status) só vai para o log; o cliente recebe mensagem fixa. */
+export function upstreamUnavailable(
+  c: Context<AppEnv>,
+  deps: AppDeps,
+  error: UpstreamError,
+): AppError {
+  deps.logger.warn(
+    { route: c.req.path, code: error.code, detail: error.message },
+    'upstream indisponível',
+  );
+  return new AppError(502, 'upstream_unavailable', `Open-Meteo indisponível (${error.code})`);
 }
 
 type Options<T> = {

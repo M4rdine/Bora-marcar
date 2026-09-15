@@ -1,4 +1,5 @@
 import { forecastSaoPaulo, geocodingSaoPaulo } from '@melhor-hora/contracts/testing';
+import pino from 'pino';
 import { describe, expect, it } from 'vitest';
 
 import { createApp } from '../app';
@@ -7,9 +8,17 @@ import { testDeps } from '../testing/deps';
 import { fakeFetch } from '../testing/fakeFetch';
 import { createOpenMeteoUpstream } from '../upstream/openMeteo';
 
+const capturingLogger = () => {
+  const lines: Record<string, unknown>[] = [];
+  const logger = pino({ level: 'info' }, { write: (line: string) => lines.push(JSON.parse(line)) });
+  return { logger, lines };
+};
+
 const appWith = (reply: Parameters<typeof fakeFetch>[0]) => {
   const { fetchFn, calls } = fakeFetch(reply);
+  const { logger, lines } = capturingLogger();
   const deps = testDeps({
+    logger,
     upstream: createOpenMeteoUpstream({
       fetchFn,
       forecastBaseUrl: 'https://fc.test',
@@ -17,7 +26,7 @@ const appWith = (reply: Parameters<typeof fakeFetch>[0]) => {
       timeoutMs: 1000,
     }),
   });
-  return { app: createApp(deps), deps, calls };
+  return { app: createApp(deps), deps, calls, logs: lines };
 };
 
 describe('GET /v1/cities', () => {
@@ -44,14 +53,27 @@ describe('GET /v1/cities', () => {
     expect((await res.json()).error.code).toBe('bad_request');
   });
 
-  it('upstream fora → 502 e nada entra no cache', async () => {
+  it('upstream fora → 502 com mensagem fixa e nada entra no cache', async () => {
     const { app, deps } = appWith({ status: 500 });
     const res = await app.request('/v1/cities?q=rio');
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({
-      error: { code: 'upstream_unavailable', message: expect.stringContaining('upstream_http') },
+      error: { code: 'upstream_unavailable', message: 'Open-Meteo indisponível (upstream_http)' },
     });
     expect(await deps.cache.get('geo:v1:pt:rio')).toBeNull();
+  });
+
+  it('erro de rede do upstream vai para o log, não para a resposta', async () => {
+    const raw = 'getaddrinfo ENOTFOUND geo.test 10.0.0.7';
+    const { app, logs } = appWith({ throws: new Error(raw) });
+    const res = await app.request('/v1/cities?q=rio');
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.error.message).toBe('Open-Meteo indisponível (upstream_network)');
+    expect(JSON.stringify(body)).not.toContain('ENOTFOUND');
+    expect(logs).toContainEqual(
+      expect.objectContaining({ route: '/v1/cities', code: 'upstream_network', detail: raw }),
+    );
   });
 
   it('resposta upstream fora do schema nunca é cacheada', async () => {
@@ -71,6 +93,25 @@ describe('GET /v1/forecast', () => {
     const second = await app.request('/v1/forecast?lat=-23.549&lon=-46.641');
     expect(second.headers.get('x-cache')).toBe('HIT');
     expect(calls).toHaveLength(1);
+  });
+
+  it('upstream fora → 502 com mensagem fixa, detalhe só no log', async () => {
+    const { app, deps, logs } = appWith({ status: 503 });
+    const res = await app.request('/v1/forecast?lat=-23.5475&lon=-46.63611');
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body).toEqual({
+      error: { code: 'upstream_unavailable', message: 'Open-Meteo indisponível (upstream_http)' },
+    });
+    expect(JSON.stringify(body)).not.toContain('HTTP 503');
+    expect(logs).toContainEqual(
+      expect.objectContaining({
+        route: '/v1/forecast',
+        code: 'upstream_http',
+        detail: 'Open-Meteo respondeu HTTP 503',
+      }),
+    );
+    expect(await deps.cache.get('fc:v1:-23.55:-46.64')).toBeNull();
   });
 
   it('lat/lon fora da faixa → 400', async () => {

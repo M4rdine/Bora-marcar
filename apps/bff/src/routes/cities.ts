@@ -3,10 +3,9 @@ import { z } from 'zod';
 
 import type { AppDeps } from '../app';
 import { GEO_TTL_S, geoKey } from '../cache/keys';
-import { AppError } from '../http/errors';
 import type { AppEnv } from '../http/requestLog';
 
-import { cachedJson, parseQuery } from './shared';
+import { cachedJson, parseQuery, upstreamUnavailable } from './shared';
 
 const querySchema = z.object({
   q: z.string().trim().min(2).max(64),
@@ -23,8 +22,7 @@ export function citiesRoute(deps: AppDeps) {
       cacheControl: 'public, max-age=300',
       load: async () => {
         const r = await deps.upstream.searchCities(q, lang);
-        if (!r.ok)
-          throw new AppError(502, 'upstream_unavailable', `${r.error.code}: ${r.error.message}`);
+        if (!r.ok) throw upstreamUnavailable(c, deps, r.error);
         return r.value;
       },
     });

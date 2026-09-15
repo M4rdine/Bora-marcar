@@ -76,7 +76,8 @@ Toda resposta de erro segue `{ error: { code, message } }`:
 
 Códigos: `bad_request` (400, query inválida), `not_found` (404, rota inexistente),
 `rate_limited` (429, com header `Retry-After`), `upstream_unavailable` (502, erro ou timeout da
-Open-Meteo), `internal` (500, erro inesperado).
+Open-Meteo — mensagem fixa `Open-Meteo indisponível (<código>)`; o detalhe do upstream vai só para
+o log), `internal` (500, erro inesperado).
 
 ## Política de cache
 
