@@ -4,3 +4,4 @@ coverage
 dist
 pnpm-lock.yaml
 docs/superpowers/mockups
+apps/mobile/expo-env.d.ts
