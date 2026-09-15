@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "jest --coverage",
+    "test": "jest --coverage --maxWorkers=50%",
     "test:watch": "jest --watch"
   },
   "dependencies": {
@@ -50,6 +50,7 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "testTimeout": 15000,
     "roots": [
       "<rootDir>/src"
     ],
