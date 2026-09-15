@@ -131,7 +131,7 @@ export const t = {
     unfavorite: 'Remover dos favoritos',
     searching: 'Buscando…',
     clear: 'Limpar',
-    searchIcon: 'Buscar',
+    searchIcon: 'Ícone de busca',
     flag: (country: string) => `Bandeira: ${country}`,
   },
   profile: {

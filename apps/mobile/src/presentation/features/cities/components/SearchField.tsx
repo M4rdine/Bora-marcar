@@ -11,7 +11,7 @@ type Props = {
 export function SearchField({ value, onChangeText }: Props) {
   return (
     <Surface strength="strong" radius="pill" padding={3} style={styles.row}>
-      <Emoji symbol="🔍" size={tokens.size.flag} label={t.cities.searchIcon} />
+      <Emoji symbol="🔍" size={tokens.size.icon} label={t.cities.searchIcon} />
       <TextInput
         accessibilityLabel={t.cities.placeholder}
         placeholder={t.cities.placeholder}
