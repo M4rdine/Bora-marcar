@@ -16,7 +16,9 @@ IMAGE="${REPOSITORY}:${TAG}"
 
 sed -i.bak "s#^BFF_IMAGE=.*#BFF_IMAGE=${IMAGE}#; s#^APP_VERSION=.*#APP_VERSION=${TAG}#" .env && rm -f .env.bak
 docker compose --env-file .env pull bff
-docker compose --env-file .env up -d --wait
+# Serviços explícitos: `--wait` trata o minio-init (tarefa única que sai 0) como falha, e ele só
+# precisa rodar no setup inicial, onde o setup-vps.sh o executa com `run --rm`.
+docker compose --env-file .env up -d --wait redis minio bff
 for _ in $(seq 1 10); do
   if HEALTH="$(curl -fsS http://127.0.0.1:8180/health)" &&
     grep -q '"status":"ok"' <<<"$HEALTH" && grep -q "\"version\":\"${TAG}\"" <<<"$HEALTH"; then
