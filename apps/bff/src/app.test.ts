@@ -1,12 +1,28 @@
+import { forecastSaoPaulo } from '@melhor-hora/contracts/testing';
 import { describe, expect, it } from 'vitest';
 
 import { createApp } from './app';
 import { AppError } from './http/errors';
 import { testDeps } from './testing/deps';
+import { fakeFetch } from './testing/fakeFetch';
+import { createOpenMeteoUpstream } from './upstream/openMeteo';
 
 describe('createApp', () => {
   it('GET /health responde estado, versão, cache e redis', async () => {
-    const app = createApp(testDeps({ env: { APP_VERSION: 'abc123' } }));
+    const { fetchFn } = fakeFetch({ body: forecastSaoPaulo });
+    const app = createApp(
+      testDeps({
+        env: { APP_VERSION: 'abc123' },
+        upstream: createOpenMeteoUpstream({
+          fetchFn,
+          forecastBaseUrl: 'https://fc.test',
+          geocodingBaseUrl: 'https://geo.test',
+          timeoutMs: 1000,
+        }),
+      }),
+    );
+    await app.request('/v1/forecast?lat=0&lon=0');
+    await app.request('/v1/forecast?lat=0&lon=0');
     const res = await app.request('/health');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
@@ -14,7 +30,7 @@ describe('createApp', () => {
       version: 'abc123',
       uptimeSeconds: expect.any(Number),
       redis: 'disabled',
-      cache: { hits: 0, misses: 0, hitRate: 0 },
+      cache: { hits: 1, misses: 1, hitRate: 0.5 },
     });
   });
 

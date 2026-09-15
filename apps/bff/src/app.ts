@@ -6,6 +6,7 @@ import type { Cache } from './cache/cache';
 import type { Meter } from './cache/meter';
 import type { Env } from './config/env';
 import { AppError, errorBody, errorResponse } from './http/errors';
+import { rateLimit } from './http/rateLimit';
 import { requestLog, type AppEnv } from './http/requestLog';
 import type { Logger } from './logger';
 import { citiesRoute } from './routes/cities';
@@ -30,6 +31,7 @@ export function createApp(deps: AppDeps) {
   app.use('*', requestLog(deps.logger));
   app.use('*', secureHeaders({ xFrameOptions: 'DENY' }));
   app.use('*', cors({ origin: (origin) => (allowed.has(origin) ? origin : null) }));
+  app.use('/v1/*', rateLimit(deps));
 
   app.route('/health', healthRoute(deps));
   app.route('/v1/cities', citiesRoute(deps));
