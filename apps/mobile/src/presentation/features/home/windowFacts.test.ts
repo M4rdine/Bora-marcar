@@ -1,6 +1,6 @@
 import { makeHourScore } from '@/domain/recommendation/testing/fixtures';
 
-import { windowFacts } from './windowFacts';
+import { hoursInWindow, windowFacts } from './windowFacts';
 
 it('faz a média arredondada dos fatores da janela', () => {
   const a = makeHourScore(17, 90);
@@ -32,4 +32,13 @@ it('faz a média arredondada dos fatores da janela', () => {
 
 it('lista vazia devolve zeros', () => {
   expect(windowFacts([])).toEqual({ apparent: 0, rainPct: 0, windKmh: 0, uv: 0 });
+});
+
+it('hoursInWindow filtra horas dentro de [startHour, endHour)', () => {
+  const hours = Array.from({ length: 24 }, (_, hour) => makeHourScore(hour, 80));
+  expect(hoursInWindow(hours, 17, 19).map((h) => h.hour.hour)).toEqual([17, 18]);
+});
+
+it('hoursInWindow com lista vazia devolve lista vazia', () => {
+  expect(hoursInWindow([], 17, 19)).toEqual([]);
 });

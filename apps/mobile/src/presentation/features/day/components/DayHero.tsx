@@ -1,0 +1,119 @@
+import { StyleSheet } from 'react-native';
+
+import type { City } from '@/application/ports';
+import type {
+  ActivityId,
+  DayRecommendation,
+  EngineConfig,
+  HourScore,
+  LevelProgress,
+  LocalDateTime,
+  Progress,
+} from '@/domain';
+
+import { AppText, Surface, tokens } from '../../../ui';
+import { HourlyTimeline } from '../../home/components/HourlyTimeline';
+import { dayHeroState, type DayHeroState } from '../dayHeroState';
+import type { DayActionsResult } from '../useDayActions';
+
+import { NoWindowSection, PlannedSection, PlanSection, ViewOnlySection } from './DaySections';
+
+type DayHeroBodyProps = {
+  readonly heroState: DayHeroState;
+  readonly now: LocalDateTime;
+  readonly level: LevelProgress;
+  readonly activityName: string;
+  readonly hours: readonly HourScore[];
+  readonly city: City;
+  readonly activity: ActivityId;
+  readonly utcOffsetSeconds: number;
+  readonly actions: DayActionsResult;
+};
+
+function DayHeroBody(props: DayHeroBodyProps) {
+  const { heroState, now, level, activityName, hours, city, activity, utcOffsetSeconds, actions } =
+    props;
+  switch (heroState.kind) {
+    case 'plan':
+      return (
+        <PlanSection
+          state={heroState}
+          now={now}
+          level={level}
+          activityName={activityName}
+          city={city}
+          activity={activity}
+          utcOffsetSeconds={utcOffsetSeconds}
+          actions={actions}
+        />
+      );
+    case 'planned':
+      return <PlannedSection state={heroState} hours={hours} actions={actions} />;
+    case 'noWindow':
+      return <NoWindowSection state={heroState} now={now} level={level} />;
+    case 'viewOnly':
+      return <ViewOnlySection />;
+  }
+}
+
+type Props = {
+  readonly city: City;
+  readonly activity: ActivityId;
+  readonly date: string;
+  readonly today: string;
+  readonly tomorrow: string;
+  readonly day: DayRecommendation;
+  readonly now: LocalDateTime;
+  readonly config: EngineConfig;
+  readonly progress: Progress;
+  readonly actions: DayActionsResult;
+};
+
+export function DayHero({
+  city,
+  activity,
+  date,
+  today,
+  tomorrow,
+  day,
+  now,
+  config,
+  progress,
+  actions,
+}: Props) {
+  const plan = progress.plansByDate.get(date) ?? null;
+  const heroState = dayHeroState({ day, date, today, tomorrow, plan });
+  const activityName = config.activities[day.activityId].name;
+  return (
+    <>
+      <Surface strength="strong" radius="hero" padding={5} gap={3}>
+        <DayHeroBody
+          heroState={heroState}
+          now={now}
+          level={progress.level}
+          activityName={activityName}
+          hours={day.hours}
+          city={city}
+          activity={activity}
+          utcOffsetSeconds={now.utcOffsetSeconds}
+          actions={actions}
+        />
+        {actions.errorMessage ? (
+          <AppText variant="small" style={styles.error}>
+            {actions.errorMessage}
+          </AppText>
+        ) : null}
+      </Surface>
+      <HourlyTimeline
+        hours={day.hours}
+        nowHour={null}
+        sunrise={day.daily?.sunrise ?? null}
+        sunset={day.daily?.sunset ?? null}
+      />
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  error: { color: tokens.color.danger },
+});

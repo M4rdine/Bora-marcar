@@ -17,3 +17,10 @@ export const windowFacts = (hours: readonly HourScore[]): WindowFacts => ({
   windKmh: mean(hours.map((h) => h.hour.windSpeedKmh)),
   uv: mean(hours.map((h) => h.hour.uvIndex)),
 });
+
+/** Horas pontuadas dentro de `[startHour, endHour)`. */
+export const hoursInWindow = (
+  hours: readonly HourScore[],
+  startHour: number,
+  endHour: number,
+): readonly HourScore[] => hours.filter((h) => h.hour.hour >= startHour && h.hour.hour < endHour);

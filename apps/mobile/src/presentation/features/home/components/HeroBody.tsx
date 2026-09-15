@@ -5,7 +5,7 @@ import { t } from '../../../i18n/pt-BR';
 import { AppText, LevelBar, Pill } from '../../../ui';
 import { countdown } from '../countdown';
 import type { HeroState } from '../heroState';
-import { windowFacts } from '../windowFacts';
+import { hoursInWindow, windowFacts } from '../windowFacts';
 import { xpReceipt } from '../xpReceipt';
 
 import { FactsRow } from './FactsRow';
@@ -20,13 +20,6 @@ type Props = {
   readonly level: LevelProgress;
   readonly unlockedToday: readonly BadgeState[];
 };
-
-/** Horas pontuadas dentro de `[startHour, endHour)`. */
-const hoursInWindow = (
-  hours: readonly HourScore[],
-  startHour: number,
-  endHour: number,
-): readonly HourScore[] => hours.filter((h) => h.hour.hour >= startHour && h.hour.hour < endHour);
 
 function PlanBody({ state }: { readonly state: Extract<HeroState, { kind: 'plan' }> }) {
   const hours = state.day.result.kind === 'window' ? state.day.result.hours : [];

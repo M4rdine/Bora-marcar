@@ -178,6 +178,7 @@ export const t = {
   },
   day: {
     back: 'Voltar',
+    backGlyph: '‹',
     planTomorrow: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,
     viewOnly: 'Planejamento disponível só para amanhã',
     notFound: 'Dia fora da previsão',

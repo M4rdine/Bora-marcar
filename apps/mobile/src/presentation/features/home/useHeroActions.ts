@@ -1,22 +1,12 @@
-import { useState } from 'react';
-
 import type { City } from '@/application/ports';
 import type { OverviewSnapshot } from '@/application/useCases/buildOverview';
 import type { ActivityId } from '@/domain';
 
-import { t } from '../../i18n/pt-BR';
 import { useGamificationActions } from '../../queries/useGamificationActions';
 
+import { useActionRunner } from './actionRunner';
 import type { HeroState } from './heroState';
 import { pickableHours, type PickableHour } from './pickableHours';
-
-type ActionErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
-
-const isActionError = (e: unknown): e is { code: ActionErrorCode } =>
-  typeof e === 'object' &&
-  e !== null &&
-  'code' in e &&
-  typeof (e as { code: unknown }).code === 'string';
 
 /** Único plano que o herói ainda permite desfazer: o planejado ou o que expirou sem registro. */
 const cancellablePlanId = (state: HeroState): string | null => {
@@ -24,21 +14,6 @@ const cancellablePlanId = (state: HeroState): string | null => {
   if (state.kind === 'logNoPlan') return state.expiredPlan?.planId ?? null;
   return null;
 };
-
-/** Roda uma mutação e converte o erro em mensagem pronta para exibição. */
-function useActionRunner(): {
-  readonly run: (fn: () => Promise<unknown>) => void;
-  readonly errorMessage: string | null;
-} {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const run = (fn: () => Promise<unknown>) => {
-    setErrorMessage(null);
-    void fn().catch((e: unknown) => {
-      setErrorMessage(isActionError(e) ? t.errors[e.code] : t.errors.network);
-    });
-  };
-  return { run, errorMessage };
-}
 
 type Input = {
   readonly city: City;
