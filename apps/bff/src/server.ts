@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server';
 
 import { createApp } from './app';
-import { memoryCache } from './cache/memoryCache';
+import { createCache } from './cache/createCache';
 import { createMeter } from './cache/meter';
 import { loadEnv } from './config/env';
 import { createLogger } from './logger';
@@ -9,7 +9,7 @@ import { unusedUpstream } from './testing/deps';
 
 const env = loadEnv(process.env);
 const logger = createLogger(env.LOG_LEVEL);
-const cache = memoryCache(() => Date.now()); // Task 4 troca por Redis resiliente quando REDIS_URL existir
+const cache = createCache(env, logger);
 const app = createApp({
   env,
   logger,
@@ -26,6 +26,7 @@ const server = serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, 
 
 const shutdown = () => {
   logger.info('encerrando');
+  void cache.close?.();
   server.close(() => process.exit(0));
 };
 process.on('SIGTERM', shutdown);
