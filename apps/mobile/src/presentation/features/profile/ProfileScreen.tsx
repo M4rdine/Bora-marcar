@@ -1,11 +1,12 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { addDays, type Progress } from '@/domain';
+import { addDays, type EngineConfig, type Progress } from '@/domain';
 
 import { useToday } from '../../hooks/useToday';
 import { formatLongDate } from '../../i18n/dates';
 import { t } from '../../i18n/pt-BR';
+import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useProgress } from '../../queries/useProgress';
 import { AppText, screenPaddingBottom, SectionHeader, Sky, tokens } from '../../ui';
 
@@ -34,9 +35,10 @@ function countInMonth(dates: ReadonlySet<string>, year: number, month: number): 
 type ContentProps = {
   readonly progress: Progress;
   readonly today: string;
+  readonly config: EngineConfig;
 };
 
-function ProfileContent({ progress, today }: ContentProps) {
+function ProfileContent({ progress, today, config }: ContentProps) {
   const { year, month } = monthOf(today);
   const grid = monthGrid({
     year,
@@ -72,7 +74,12 @@ function ProfileContent({ progress, today }: ContentProps) {
       />
       <BadgeGrid badges={progress.badges} />
       <SectionHeader title={t.profile.history} />
-      <HistoryList records={progress.records} today={today} tomorrow={addDays(today, 1)} />
+      <HistoryList
+        records={progress.records}
+        today={today}
+        tomorrow={addDays(today, 1)}
+        config={config}
+      />
     </>
   );
 }
@@ -80,13 +87,14 @@ function ProfileContent({ progress, today }: ContentProps) {
 export function ProfileScreen() {
   const { date: today } = useToday();
   const progress = useProgress(today);
+  const config = useEngineConfig();
 
   return (
     <Sky phase="dusk">
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.container}>
-          {progress.data ? (
-            <ProfileContent progress={progress.data} today={today} />
+          {progress.data && config.data ? (
+            <ProfileContent progress={progress.data} today={today} config={config.data} />
           ) : (
             <AppText variant="small">{t.home.loading}</AppText>
           )}

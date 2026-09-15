@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { defaultEngineConfig, type ActivityRecord } from '@/domain';
+import type { ActivityRecord, EngineConfig } from '@/domain';
 
 import { formatDayTitle } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
@@ -10,6 +10,8 @@ type Props = {
   readonly records: readonly ActivityRecord[];
   readonly today: string;
   readonly tomorrow: string;
+  /** Config carregada pela tela: nome e emoji da atividade saem dela, não do padrão estático. */
+  readonly config: EngineConfig;
 };
 
 const MAX_ROWS = 20;
@@ -19,10 +21,11 @@ type RowProps = {
   readonly record: ActivityRecord;
   readonly today: string;
   readonly tomorrow: string;
+  readonly config: EngineConfig;
 };
 
-function HistoryRow({ record, today, tomorrow }: RowProps) {
-  const activity = defaultEngineConfig.activities[record.activity];
+function HistoryRow({ record, today, tomorrow, config }: RowProps) {
+  const activity = config.activities[record.activity];
   return (
     <Surface padding={2} style={styles.row}>
       <Emoji symbol={activity.emoji} label={activity.name} />
@@ -43,7 +46,7 @@ function HistoryRow({ record, today, tomorrow }: RowProps) {
 }
 
 /** Últimos 20 registros, mais recente primeiro — mockup `.hist`. */
-export function HistoryList({ records, today, tomorrow }: Props) {
+export function HistoryList({ records, today, tomorrow, config }: Props) {
   if (records.length === 0) {
     return (
       <AppText variant="small" tone="muted">
@@ -55,7 +58,13 @@ export function HistoryList({ records, today, tomorrow }: Props) {
   return (
     <View style={styles.list}>
       {recent.map((record) => (
-        <HistoryRow key={record.id} record={record} today={today} tomorrow={tomorrow} />
+        <HistoryRow
+          key={record.id}
+          record={record}
+          today={today}
+          tomorrow={tomorrow}
+          config={config}
+        />
       ))}
     </View>
   );

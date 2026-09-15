@@ -43,7 +43,14 @@ const EVENTS: readonly GamificationEvent[] = [
 describe('HistoryList', () => {
   it('mostra "plano cumprido" só na linha do registro que cumpriu o plano', () => {
     const progress = deriveProgress(EVENTS, CONFIG, '2026-09-13');
-    render(<HistoryList records={progress.records} today="2026-09-13" tomorrow="2026-09-14" />);
+    render(
+      <HistoryList
+        records={progress.records}
+        today="2026-09-13"
+        tomorrow="2026-09-14"
+        config={CONFIG}
+      />,
+    );
 
     expect(screen.getAllByText('plano cumprido')).toHaveLength(1);
     expect(screen.getByText('Caminhada · 18h00')).toBeTruthy();
