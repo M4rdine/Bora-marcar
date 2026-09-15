@@ -166,6 +166,7 @@ export const t = {
     clear: 'Limpar',
     searchIcon: 'Ícone de busca',
     flag: (country: string) => `Bandeira: ${country}`,
+    retry: 'Tentar de novo',
   },
   profile: {
     title: 'Seu progresso',

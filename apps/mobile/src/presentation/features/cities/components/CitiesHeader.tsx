@@ -22,6 +22,7 @@ type Props = {
   readonly query: string;
   readonly onChangeQuery: (text: string) => void;
   readonly onUseLocation: () => void;
+  readonly onRetry: () => void;
   readonly locationError: string | null;
   readonly message: CitiesStateMessage | null;
 };
@@ -30,6 +31,7 @@ export function CitiesHeader({
   query,
   onChangeQuery,
   onUseLocation,
+  onRetry,
   locationError,
   message,
 }: Props) {
@@ -43,10 +45,11 @@ export function CitiesHeader({
         </AppText>
       ) : null}
       {message ? (
-        <Surface strength="soft" radius="card" padding={3}>
+        <Surface strength="soft" radius="card" padding={3} style={styles.messageRow}>
           <AppText variant="small" tone="muted" style={message.danger ? styles.error : undefined}>
             {message.text}
           </AppText>
+          {message.danger ? <Button kind="quiet" label={t.cities.retry} onPress={onRetry} /> : null}
         </Surface>
       ) : null}
     </View>
@@ -55,5 +58,6 @@ export function CitiesHeader({
 
 const styles = StyleSheet.create({
   header: { padding: tokens.space[4], gap: tokens.space[3] },
+  messageRow: { gap: tokens.space[2] },
   error: { color: tokens.color.danger },
 });

@@ -14,6 +14,7 @@ import { Sky } from '../../ui';
 
 import { CitiesHeader, searchStateMessage } from './components/CitiesHeader';
 import { CityResults } from './components/CityResults';
+import { CitySkeleton } from './components/CitySkeleton';
 
 export function CitiesScreen() {
   const router = useRouter();
@@ -44,17 +45,22 @@ export function CitiesScreen() {
           query={query}
           onChangeQuery={setQuery}
           onUseLocation={() => void resolveLocation()}
+          onRetry={search.retry}
           locationError={locationError}
           message={searchStateMessage(query, search)}
         />
-        <CityResults
-          results={search.results}
-          favorites={favorites}
-          recents={recents}
-          isFavorite={(city) => isFavorite(favorites, city)}
-          onSelect={choose}
-          onToggleFavorite={toggleFav}
-        />
+        {search.isSearching ? (
+          <CitySkeleton />
+        ) : (
+          <CityResults
+            results={search.results}
+            favorites={favorites}
+            recents={recents}
+            isFavorite={(city) => isFavorite(favorites, city)}
+            onSelect={choose}
+            onToggleFavorite={toggleFav}
+          />
+        )}
       </SafeAreaView>
     </Sky>
   );

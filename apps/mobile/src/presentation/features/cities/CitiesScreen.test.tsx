@@ -78,6 +78,24 @@ describe('CitiesScreen', () => {
     await flushListBatching();
   });
 
+  it('erro na busca mostra "Tentar de novo" e refaz a consulta', async () => {
+    const geocoding = fakeGeocoding(err({ code: 'network' as const, message: 'offline' }));
+    renderWithProviders(<CitiesScreen />, { services: fakeServices({ geocoding }) });
+    fireEvent.changeText(screen.getByPlaceholderText('Digite o nome da cidade'), 'São Paulo');
+    await screen.findByText('Tentar de novo', {}, { timeout: 2000 });
+    fireEvent.press(screen.getByText('Tentar de novo'));
+    await waitFor(() => expect(geocoding.calls.length).toBe(2));
+  });
+
+  it('enquanto busca mostra o skeleton', async () => {
+    const slow = { search: () => new Promise<never>(() => undefined), calls: [] as string[] };
+    renderWithProviders(<CitiesScreen />, { services: fakeServices({ geocoding: slow }) });
+    fireEvent.changeText(screen.getByPlaceholderText('Digite o nome da cidade'), 'São Paulo');
+    expect(
+      (await screen.findAllByLabelText('Buscando…', {}, { timeout: 2000 })).length,
+    ).toBeGreaterThan(0);
+  });
+
   it('favorita e lista em Favoritas; recente some ao virar favorita', async () => {
     usePreferences.setState({ recents: [saoPaulo] });
     renderWithProviders(<CitiesScreen />, { services: fakeServices() });

@@ -23,5 +23,11 @@ export function useCitySearch(query: string) {
       return r.value;
     },
   });
-  return { results: q.data ?? [], isSearching: isActive && q.isPending, error: q.error, isActive };
+  return {
+    results: q.data ?? [],
+    isSearching: isActive && q.isPending,
+    error: q.error,
+    isActive,
+    retry: () => void q.refetch(),
+  };
 }
