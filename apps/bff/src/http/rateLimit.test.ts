@@ -21,7 +21,7 @@ const appWithLimit = (limit: number) => {
   );
 };
 const get = (app: ReturnType<typeof createApp>, ip: string) =>
-  app.request('/v1/forecast?lat=0&lon=0', { headers: { 'x-forwarded-for': `${ip}, 10.0.0.9` } });
+  app.request('/v1/forecast?lat=0&lon=0', { headers: { 'x-real-ip': ip } });
 
 describe('rateLimit', () => {
   it('bloqueia a requisição seguinte ao limite com 429 e Retry-After', async () => {
@@ -30,6 +30,8 @@ describe('rateLimit', () => {
     const blocked = await get(app, '1.1.1.1');
     expect(blocked.status).toBe(429);
     expect(blocked.headers.get('retry-after')).toBe('60');
+    expect(blocked.headers.get('x-ratelimit-limit')).toBe('3');
+    expect(blocked.headers.get('x-ratelimit-remaining')).toBe('0');
     expect((await blocked.json()).error.code).toBe('rate_limited');
   });
 
@@ -45,8 +47,8 @@ describe('rateLimit', () => {
   it('/health não é limitado', async () => {
     const app = appWithLimit(1);
     await get(app, '1.1.1.1');
-    expect(
-      (await app.request('/health', { headers: { 'x-forwarded-for': '1.1.1.1' } })).status,
-    ).toBe(200);
+    expect((await app.request('/health', { headers: { 'x-real-ip': '1.1.1.1' } })).status).toBe(
+      200,
+    );
   });
 });

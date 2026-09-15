@@ -12,11 +12,14 @@ const probe = (trustProxy: boolean, headers: Record<string, string> = {}) => {
 };
 
 describe('clientIp', () => {
-  it('confia no primeiro X-Forwarded-For atrás do nginx', async () => {
-    expect(await probe(true, { 'x-forwarded-for': ' 203.0.113.7 , 10.0.0.1' })).toBe('203.0.113.7');
+  it('confia no X-Real-IP atrás do nginx', async () => {
+    expect(await probe(true, { 'x-real-ip': '203.0.113.7' })).toBe('203.0.113.7');
   });
-  it('ignora o cabeçalho quando não confia no proxy', async () => {
-    expect(await probe(false, { 'x-forwarded-for': '203.0.113.7' })).toBe('unknown');
+  it('ignora X-Forwarded-For mesmo com trustProxy', async () => {
+    expect(await probe(true, { 'x-forwarded-for': '1.2.3.4' })).toBe('unknown');
+  });
+  it('ignora os cabeçalhos quando não confia no proxy', async () => {
+    expect(await probe(false, { 'x-real-ip': '203.0.113.7' })).toBe('unknown');
   });
   it('sem cabeçalho e sem conexão real devolve unknown', async () => {
     expect(await probe(true)).toBe('unknown');
