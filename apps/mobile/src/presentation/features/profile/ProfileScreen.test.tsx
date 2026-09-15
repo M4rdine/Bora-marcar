@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 
 import { fakeServices, memoryProgressRepository, saoPaulo } from '@/application/testing/fakes';
 
@@ -8,8 +8,11 @@ import { renderWithProviders } from '../../testing/renderWithProviders';
 import { ProfileScreen } from './ProfileScreen';
 
 describe('ProfileScreen', () => {
-  it('mostra nível, números, conquistas e histórico', async () => {
-    usePreferences.setState({ city: saoPaulo });
+  it('mostra nível, números, calendário, conquistas e histórico', async () => {
+    usePreferences.setState({
+      city: saoPaulo,
+      lastForecast: { utcOffsetSeconds: -10800, timezone: 'America/Sao_Paulo' },
+    });
     const progress = memoryProgressRepository([
       {
         type: 'logged',
@@ -33,12 +36,23 @@ describe('ProfileScreen', () => {
       },
     ]);
     renderWithProviders(<ProfileScreen />, { services: fakeServices({ progress }) });
-    await screen.findByText(/Nível 2 · Garoa · \d+ XP/);
-    expect(screen.getByText(/2 dias seguidos · 2 atividades · 2 cidades/)).toBeTruthy();
-    expect(screen.getByText(/🏅 Primeira saída/)).toBeTruthy();
-    expect(screen.getByText(/🏅 Madrugador/)).toBeTruthy();
-    expect(screen.getByText(/🔒 Explorador \(2\/5\)/)).toBeTruthy();
-    expect(screen.getByText('2026-09-13 · Corrida · 18h · +100 XP')).toBeTruthy();
+
+    await screen.findByText(/Nível 2 · Garoa/);
+    expect(screen.getByText(/2 dias seguidos/)).toBeTruthy();
+
+    expect(screen.getByLabelText('Primeira saída: desbloqueada')).toBeTruthy();
+    expect(screen.getByLabelText('Madrugador: desbloqueada')).toBeTruthy();
+    expect(screen.getByLabelText('Explorador: bloqueada')).toBeTruthy();
+
+    expect(screen.getByText('Corrida · 18h00')).toBeTruthy();
+    expect(screen.getByText('+100 XP')).toBeTruthy();
+
+    expect(screen.getByText('Setembro 2026')).toBeTruthy();
+    expect(screen.getByLabelText('13: hoje, atividade feita')).toBeTruthy();
+
+    fireEvent.press(screen.getByText('Explorador'));
+    expect(screen.getByText('2/5')).toBeTruthy();
+    expect(screen.getByText('Registrou atividades em 5 cidades diferentes.')).toBeTruthy();
   });
 
   it('sem registros mostra o vazio', async () => {

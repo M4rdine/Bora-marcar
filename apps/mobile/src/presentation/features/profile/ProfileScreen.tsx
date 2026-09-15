@@ -1,65 +1,102 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { defaultEngineConfig, type BadgeState, type Progress } from '@/domain';
+import { addDays, type Progress } from '@/domain';
 
 import { useToday } from '../../hooks/useToday';
+import { formatLongDate } from '../../i18n/dates';
 import { t } from '../../i18n/pt-BR';
 import { useProgress } from '../../queries/useProgress';
+import { AppText, SectionHeader, Sky, tokens } from '../../ui';
 
-function badgeProgress(b: BadgeState): string {
-  if (b.progress === null) return '';
-  if (b.id === 'week') return ` (${t.profile.bestStreak(b.progress.current, b.progress.target)})`;
-  return ` (${b.progress.current}/${b.progress.target})`;
+import { BadgeGrid } from './components/BadgeGrid';
+import { HistoryList } from './components/HistoryList';
+import { LevelCard } from './components/LevelCard';
+import { MonthCalendar } from './components/MonthCalendar';
+import { StatsRow } from './components/StatsRow';
+import { monthGrid } from './monthGrid';
+
+const sinceLabel = (records: Progress['records']): string => {
+  const first = records[0];
+  return first ? t.profile.since(formatLongDate(first.date)) : t.profile.noHistory;
+};
+
+function monthOf(date: string): { readonly year: number; readonly month: number } {
+  const [y, m] = date.split('-').map(Number);
+  return { year: y ?? 0, month: m ?? 1 };
 }
 
-function Level({ progress }: { progress: Progress }) {
-  const l = progress.level;
+function countInMonth(dates: ReadonlySet<string>, year: number, month: number): number {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  return [...dates].filter((d) => d.startsWith(prefix)).length;
+}
+
+type ContentProps = {
+  readonly progress: Progress;
+  readonly today: string;
+};
+
+function ProfileContent({ progress, today }: ContentProps) {
+  const { year, month } = monthOf(today);
+  const grid = monthGrid({
+    year,
+    month,
+    today,
+    activeDates: progress.activeDates,
+    restDates: progress.restDates,
+  });
+  const unlocked = progress.badges.filter((b) => b.unlocked).length;
+  const activeInMonth = countInMonth(progress.activeDates, year, month);
+  const restInMonth = countInMonth(progress.restDates, year, month);
+
   return (
-    <View>
-      <Text
-        style={styles.big}
-      >{`${t.profile.level(l.level, l.name)} · ${t.profile.xp(l.totalXp)}`}</Text>
-      <Text>
-        {l.nextLevelXp === null
-          ? t.profile.maxLevel
-          : t.profile.xpToNext(l.xpToNext ?? 0, nextName(l.level))}
-      </Text>
-    </View>
+    <>
+      <AppText variant="title">{t.profile.title}</AppText>
+      <AppText variant="small" tone="muted">
+        {sinceLabel(progress.records)}
+      </AppText>
+      <LevelCard level={progress.level} />
+      <StatsRow
+        streak={progress.streak}
+        activities={progress.records.length}
+        cities={progress.citiesCount}
+      />
+      <SectionHeader
+        title={grid.title}
+        aside={t.profile.monthSummary(activeInMonth, restInMonth)}
+      />
+      <MonthCalendar grid={grid} />
+      <SectionHeader
+        title={t.profile.achievements}
+        aside={t.profile.badges(unlocked, progress.badges.length)}
+      />
+      <BadgeGrid badges={progress.badges} />
+      <SectionHeader title={t.profile.history} />
+      <HistoryList records={progress.records} today={today} tomorrow={addDays(today, 1)} />
+    </>
   );
 }
-const nextName = (level: number): string =>
-  defaultEngineConfig.levels.find((x) => x.level === level + 1)?.name ?? '';
 
 export function ProfileScreen() {
   const { date: today } = useToday();
   const progress = useProgress(today);
 
-  if (!progress.data) return <Text style={styles.container}>{t.home.loading}</Text>;
-  const p = progress.data;
-  const unlocked = p.badges.filter((b) => b.unlocked).length;
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{t.profile.title}</Text>
-      <Level progress={p} />
-      <Text>{`${t.profile.streak(p.streak)} · ${t.profile.activities(p.records.length)} · ${t.profile.cities(p.citiesCount)}`}</Text>
-      <Text style={styles.section}>{t.profile.badges(unlocked, p.badges.length)}</Text>
-      {p.badges.map((b) => (
-        <Text key={b.id}>{`${b.unlocked ? '🏅' : '🔒'} ${t.badges[b.id]}${badgeProgress(b)}`}</Text>
-      ))}
-      <Text style={styles.section}>{t.profile.history}</Text>
-      {p.records.length === 0 ? <Text>{t.profile.empty}</Text> : null}
-      {[...p.records].reverse().map((r) => (
-        <Text
-          key={r.id}
-        >{`${r.date} · ${defaultEngineConfig.activities[r.activity].name} · ${r.hourLeft}h · +${r.xp.total} XP`}</Text>
-      ))}
-    </ScrollView>
+    <Sky phase="dusk">
+      <SafeAreaView style={styles.safe}>
+        <ScrollView contentContainerStyle={styles.container}>
+          {progress.data ? (
+            <ProfileContent progress={progress.data} today={today} />
+          ) : (
+            <AppText variant="small">{t.home.loading}</AppText>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Sky>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 8 },
-  title: { fontSize: 20, fontWeight: '700' },
-  big: { fontSize: 24, fontWeight: '700' },
-  section: { fontWeight: '700', marginTop: 16 },
+  safe: { flex: 1 },
+  container: { padding: tokens.space[4], gap: tokens.space[3] },
 });

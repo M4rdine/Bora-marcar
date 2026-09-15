@@ -133,6 +133,8 @@ export const t = {
   },
   profile: {
     title: 'Seu progresso',
+    since: (dateLabel: string) => `Desde ${dateLabel}`,
+    noHistory: 'Ainda sem histórico',
     level: (n: number, name: string) => `Nível ${n} · ${name}`,
     xp: (n: number) => `${n} XP`,
     xpToNext: (xp: number, name: string) => `${xp} XP para ${name}`,
@@ -140,8 +142,13 @@ export const t = {
     streak: (n: number) => streakDaysLabel(n),
     activities: (n: number) => `${n} atividades`,
     cities: (n: number) => `${n} cidades`,
-    badges: (unlocked: number, total: number) => `Conquistas · ${unlocked} de ${total}`,
+    achievements: 'Conquistas',
+    badges: (unlocked: number, total: number) => `${unlocked} de ${total}`,
     bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
+    monthSummary: (active: number, rest: number) =>
+      `${active} dias ativos · ${rest} folgas por chuva`,
+    calendarLegendActive: 'Atividade',
+    calendarLegendRest: 'Folga por mau tempo',
     history: 'Histórico',
     empty: 'Nenhuma atividade ainda.',
   },
@@ -170,6 +177,7 @@ export const t = {
       todayDone: 'hoje, atividade feita',
       rest: 'folga por mau tempo',
       none: 'sem atividade',
+      future: 'ainda não chegou',
     },
   },
   level: {
