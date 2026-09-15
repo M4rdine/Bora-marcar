@@ -137,3 +137,14 @@ condicional), dá para colocar `<dominio>` atrás dela em modo proxiado (nuvem l
 `stale-while-revalidate`) e `/assets/*` (Edge TTL 1 dia), bypass para o resto (API), e proteção
 extra (WAF, DDoS) na frente do nginx da VPS. Sem domínio próprio, isso fica como item de "o que
 faria com mais tempo".
+
+## App web de demonstração (`/app/`)
+
+`infra/publish-web.sh root@76.13.230.205` gera o export web do Expo já apontando para a API de
+produção (modo `bff`) e o envia para `/opt/bora-marcar/webapp`, servido pelo nginx em
+`https://${DOMAIN}/app/`. Os arquivos com hash no nome ganham cache de um ano; o `index.html`
+vai com `no-cache` para um deploy novo aparecer na hora. Qualquer rota do cliente cai no
+`index.html` (`try_files`), então `/app/day/2026-09-16` funciona.
+
+Web aqui é demonstração, não a entrega: o alvo oficial é Expo Go ou build nativo (spec §2), e
+as notificações locais não existem no navegador.

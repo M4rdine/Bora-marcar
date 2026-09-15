@@ -24,6 +24,27 @@ server {
         add_header X-Cache-Status $upstream_cache_status always;
     }
 
+    # App web estático (export do Expo com baseUrl /app): arquivos com hash no nome podem ter
+    # cache longo; o index.html não, senão um deploy novo demora a aparecer. O try_files devolve
+    # o index para qualquer rota do cliente (/app/day/2026-09-16, por exemplo).
+    location /app/ {
+        alias /opt/bora-marcar/webapp/;
+        try_files $uri $uri/ /app/index.html;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    location /app/_expo/ {
+        alias /opt/bora-marcar/webapp/_expo/;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    location = /app/index.html {
+        alias /opt/bora-marcar/webapp/index.html;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:8180;
         proxy_http_version 1.1;
