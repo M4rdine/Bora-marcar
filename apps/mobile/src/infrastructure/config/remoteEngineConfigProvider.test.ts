@@ -1,3 +1,4 @@
+import type { Clock } from '@/application/ports';
 import { fixedClock, silentLogger } from '@/application/testing/fakes';
 import { defaultEngineConfig } from '@/domain';
 
@@ -7,6 +8,7 @@ import { memoryKeyValue } from '../storage/memoryKeyValue';
 import {
   createRemoteEngineConfigProvider,
   ENGINE_CONFIG_KEY,
+  ENGINE_CONFIG_RETRY_MS,
   ENGINE_CONFIG_TTL_MS,
 } from './remoteEngineConfigProvider';
 
@@ -22,12 +24,23 @@ const fetching = (status: number, body: unknown) => {
   return { fetchFn, calls: () => calls };
 };
 
-const make = (fetchFn: FetchLike, storage = memoryKeyValue(), nowMs = T0) =>
+/** Relógio mutável: permite avançar o tempo entre chamadas de `get()` dentro de um mesmo teste. */
+const mutableClock = (start = T0): Clock & { advance(ms: number): void } => {
+  let nowMs = start;
+  return {
+    now: () => nowMs,
+    advance: (ms: number) => {
+      nowMs += ms;
+    },
+  };
+};
+
+const make = (fetchFn: FetchLike, storage = memoryKeyValue(), clock: Clock = fixedClock(T0)) =>
   createRemoteEngineConfigProvider({
     fetchFn,
     assetsUrl: 'https://assets.test',
     storage,
-    clock: fixedClock(nowMs),
+    clock,
     logger: silentLogger(),
     embedded: defaultEngineConfig,
   });
@@ -77,5 +90,39 @@ describe('remoteEngineConfigProvider', () => {
     await storage.setItem(ENGINE_CONFIG_KEY, '{not json');
     const f = fetching(200, remote);
     expect(await make(f.fetchFn, storage).get()).toEqual(remote);
+  });
+
+  it('falha de rede não é repetida dentro de 5 min', async () => {
+    const storage = memoryKeyValue();
+    const f = fetching(503, {});
+    const provider = make(f.fetchFn, storage);
+    expect(await provider.get()).toEqual(defaultEngineConfig);
+    expect(await provider.get()).toEqual(defaultEngineConfig);
+    expect(f.calls()).toBe(1);
+  });
+
+  it('depois de 5 min tenta de novo', async () => {
+    const storage = memoryKeyValue();
+    const f = fetching(503, {});
+    const clock = mutableClock();
+    const provider = make(f.fetchFn, storage, clock);
+    expect(await provider.get()).toEqual(defaultEngineConfig);
+    clock.advance(ENGINE_CONFIG_RETRY_MS);
+    expect(await provider.get()).toEqual(defaultEngineConfig);
+    expect(f.calls()).toBe(2);
+  });
+
+  it('chamadas simultâneas compartilham um único fetch', async () => {
+    const storage = memoryKeyValue();
+    let calls = 0;
+    const fetchFn: FetchLike = async () => {
+      calls += 1;
+      await Promise.resolve();
+      return { ok: true, status: 200, json: async () => remote };
+    };
+    const provider = make(fetchFn, storage);
+    const results = await Promise.all([provider.get(), provider.get(), provider.get()]);
+    expect(results).toEqual([remote, remote, remote]);
+    expect(calls).toBe(1);
   });
 });
