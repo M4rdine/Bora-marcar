@@ -80,7 +80,10 @@ if [ ! -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
   fi
 fi
 cd ${REMOTE_DIR}
-docker compose --env-file .env up -d --wait redis minio minio-init
+docker compose --env-file .env up -d --wait redis minio
+# `up --wait` trata um container de tarefa única que sai com 0 como falha; `run --rm` devolve o
+# código de saída do init (idempotente: mc mb --ignore-existing + anonymous set).
+docker compose --env-file .env run --rm --no-deps minio-init
 ./publish-config.sh
 if docker compose --env-file .env pull bff; then
   docker compose --env-file .env up -d --wait bff
