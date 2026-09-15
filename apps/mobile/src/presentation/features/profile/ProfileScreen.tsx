@@ -7,7 +7,7 @@ import { useToday } from '../../hooks/useToday';
 import { formatLongDate } from '../../i18n/dates';
 import { t } from '../../i18n/pt-BR';
 import { useProgress } from '../../queries/useProgress';
-import { AppText, SectionHeader, Sky, tokens } from '../../ui';
+import { AppText, screenPaddingBottom, SectionHeader, Sky, tokens } from '../../ui';
 
 import { BadgeGrid } from './components/BadgeGrid';
 import { HistoryList } from './components/HistoryList';
@@ -98,5 +98,9 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  container: { padding: tokens.space[4], gap: tokens.space[3] },
+  container: {
+    padding: tokens.space[4],
+    paddingBottom: screenPaddingBottom,
+    gap: tokens.space[3],
+  },
 });

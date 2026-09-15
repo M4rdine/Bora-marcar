@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import type { City } from '@/application/ports';
 
 import { t } from '../../../i18n/pt-BR';
-import { tokens } from '../../../ui';
+import { screenPaddingBottom, tokens } from '../../../ui';
 
 import { CityRow } from './CityRow';
 import { CitySection } from './CitySection';
@@ -62,6 +62,6 @@ export function CityResults({
 }
 
 const styles = StyleSheet.create({
-  list: { paddingHorizontal: tokens.space[4], paddingBottom: tokens.space[6] },
+  list: { paddingHorizontal: tokens.space[4], paddingBottom: screenPaddingBottom },
   gap: { height: tokens.space[2] },
 });

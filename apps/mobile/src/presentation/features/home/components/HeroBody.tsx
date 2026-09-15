@@ -2,7 +2,7 @@ import { REMINDER_MINUTES_BEFORE } from '@/application/useCases/planActivity';
 import type { BadgeState, HourScore, LevelProgress, LocalDateTime } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, LevelBar, Pill } from '../../../ui';
+import { AppText, CountUp, LevelBar, Pill, Reveal } from '../../../ui';
 import { countdown } from '../countdown';
 import type { HeroState } from '../heroState';
 import { hoursInWindow, windowFacts } from '../windowFacts';
@@ -97,7 +97,7 @@ function DoneBody({
       <AppText variant="kicker">
         {t.home.done(state.record.hourLeft, state.record.minuteLeft)}
       </AppText>
-      <AppText variant="xp">{t.home.xpEarned(state.record.xp.total)}</AppText>
+      <CountUp value={state.record.xp.total} format={t.home.xpEarned} />
       <XpReceipt receipt={receipt} />
       <LevelBar
         progress={level.progress}
@@ -105,7 +105,9 @@ function DoneBody({
         right={level.xpToNext !== null ? `${level.xpToNext} XP` : t.profile.maxLevel}
       />
       {unlockedToday.map((badge) => (
-        <UnlockCard key={badge.id} badge={badge} />
+        <Reveal key={badge.id}>
+          <UnlockCard badge={badge} />
+        </Reveal>
       ))}
     </>
   );

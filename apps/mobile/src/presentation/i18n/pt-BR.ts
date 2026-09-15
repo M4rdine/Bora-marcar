@@ -6,7 +6,12 @@ type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' |
 const streakDaysLabel = (n: number): string => (n === 1 ? '1 dia seguido' : `${n} dias seguidos`);
 
 export const t = {
-  tabs: { home: 'Hoje', cities: 'Cidades', profile: 'Perfil' },
+  tabs: {
+    home: 'Hoje',
+    cities: 'Cidades',
+    profile: 'Perfil',
+    icons: { home: '🌤', cities: '🔍', profile: '🏅' },
+  },
   labels: { great: 'Ótimo', good: 'Bom', fair: 'Razoável', poor: 'Ruim' } satisfies Record<
     ScoreLabel,
     string

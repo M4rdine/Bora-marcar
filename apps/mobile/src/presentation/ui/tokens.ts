@@ -22,9 +22,10 @@ export const tokens = {
     scoreInk: { great: '#0A4A2A', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
     shade: 'rgba(0,0,0,0.16)',
     shadow: '#000000',
+    tabBar: 'rgba(0,0,0,0.22)',
   },
   space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40 },
-  radius: { hero: 24, card: 16, inner: 12, pill: 999, cell: 8 },
+  radius: { hero: 24, card: 16, inner: 12, pill: 999, cell: 8, tabBar: 22 },
   font: { display: 52, xp: 56, title: 20, subtitle: 16, body: 14, small: 12, micro: 10 },
   size: {
     orb: 34,
@@ -38,6 +39,7 @@ export const tokens = {
     sunArc: 34,
     flag: 22,
     icon: 22,
+    tabBar: 64,
   },
   gradients: {
     dawn: ['#F6C9A0', '#E8927A', '#8E6AA6', '#4C4477'],

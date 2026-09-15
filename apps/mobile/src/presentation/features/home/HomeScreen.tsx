@@ -12,7 +12,7 @@ import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useOverview, type OverviewState } from '../../queries/useOverview';
 import { useProgress } from '../../queries/useProgress';
 import { usePreferences } from '../../state/preferencesStore';
-import { AppText, Button, phaseFor, Sky, tokens } from '../../ui';
+import { AppText, Button, phaseFor, screenPaddingBottom, Sky, tokens } from '../../ui';
 
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
@@ -205,6 +205,10 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  container: { padding: tokens.space[4], gap: tokens.space[3] },
+  container: {
+    padding: tokens.space[4],
+    paddingBottom: screenPaddingBottom,
+    gap: tokens.space[3],
+  },
   status: { gap: tokens.space[2] },
 });
