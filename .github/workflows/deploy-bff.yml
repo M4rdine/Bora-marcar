@@ -9,38 +9,65 @@ permissions:
   packages: write
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # `branches: [master]` só compara o nome do head branch: um PR de fork com branch `master`
+    # também casaria. Exige push no próprio repositório.
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'master' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      }}
     runs-on: ubuntu-latest
     environment: production
+    env:
+      IMAGE: ghcr.io/techmardine/melhor-hora-bff
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
       - id: meta
-        run: echo "tag=sha-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: echo "tag=sha-${HEAD_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/bff/Dockerfile
           push: true
           tags: |
-            ghcr.io/techmardine/melhor-hora-bff:${{ steps.meta.outputs.tag }}
-            ghcr.io/techmardine/melhor-hora-bff:latest
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: /opt/melhor-hora/deploy.sh ${{ steps.meta.outputs.tag }}
-      - name: Smoke
+      - name: Chave SSH restrita e host key fixada
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
-          curl -fsS "${{ vars.API_URL }}/health" | tee health.json
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Deploy na VPS (forced command → ci-entry.sh → deploy.sh)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: ssh -o BatchMode=yes "$VPS_USER@$VPS_HOST" deploy "$TAG"
+      - name: Smoke
+        env:
+          API_URL: ${{ vars.API_URL }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          curl -fsS "$API_URL/health" | tee health.json
           grep -q '"status":"ok"' health.json
+          grep -q "\"version\":\"$TAG\"" health.json
