@@ -6,7 +6,7 @@ import {
   mapForecast,
   openMeteoForecastSchema,
   openMeteoGeocodingSchema,
-} from '@melhor-hora/contracts';
+} from '@bora-marcar/contracts';
 import type { z } from 'zod';
 
 import type { Upstream, UpstreamError, UpstreamResult } from './types';

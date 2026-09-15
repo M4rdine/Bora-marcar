@@ -1,4 +1,4 @@
-import type { CityDto, ForecastDto } from '@melhor-hora/contracts';
+import type { CityDto, ForecastDto } from '@bora-marcar/contracts';
 
 export type UpstreamErrorCode =
   'upstream_timeout' | 'upstream_http' | 'upstream_schema' | 'upstream_network';

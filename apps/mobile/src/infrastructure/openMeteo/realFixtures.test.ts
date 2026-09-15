@@ -2,8 +2,8 @@ import {
   mapForecast,
   openMeteoForecastSchema,
   openMeteoGeocodingSchema,
-} from '@melhor-hora/contracts';
-import { forecastSaoPaulo, geocodingSaoPaulo } from '@melhor-hora/contracts/testing';
+} from '@bora-marcar/contracts';
+import { forecastSaoPaulo, geocodingSaoPaulo } from '@bora-marcar/contracts/testing';
 
 describe('fixtures reais da Open-Meteo', () => {
   it('geocoding real passa no schema e traz São Paulo', () => {

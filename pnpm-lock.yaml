@@ -26,12 +26,12 @@ importers:
 
   apps/bff:
     dependencies:
+      '@bora-marcar/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@hono/node-server':
         specifier: ^1.14.0
         version: 1.19.17(hono@4.13.8)
-      '@melhor-hora/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       hono:
         specifier: ^4.7.0
         version: 4.13.8
@@ -78,7 +78,7 @@ importers:
 
   apps/mobile:
     dependencies:
-      '@melhor-hora/contracts':
+      '@bora-marcar/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       '@react-native-async-storage/async-storage':

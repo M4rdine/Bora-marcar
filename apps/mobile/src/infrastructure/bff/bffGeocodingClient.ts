@@ -1,4 +1,4 @@
-import { cityDtoSchema } from '@melhor-hora/contracts';
+import { cityDtoSchema } from '@bora-marcar/contracts';
 import { z } from 'zod';
 
 import type { City, GeocodingProvider, ProviderError } from '@/application/ports';

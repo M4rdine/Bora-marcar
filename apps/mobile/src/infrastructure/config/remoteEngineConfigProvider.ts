@@ -1,4 +1,4 @@
-import { engineConfigSchema } from '@melhor-hora/contracts';
+import { engineConfigSchema } from '@bora-marcar/contracts';
 import { z } from 'zod';
 
 import type { Clock, EngineConfigProvider, KeyValueStorage, Logger } from '@/application/ports';

@@ -3,7 +3,7 @@ import {
   GEOCODING_COUNT,
   mapCity,
   openMeteoGeocodingSchema,
-} from '@melhor-hora/contracts';
+} from '@bora-marcar/contracts';
 
 import type { City, GeocodingProvider, ProviderError } from '@/application/ports';
 import { err, ok, type Result } from '@/domain';

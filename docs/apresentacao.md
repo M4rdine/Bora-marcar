@@ -54,8 +54,8 @@ and adapters demonstrado com um caso real, não teórico.
 
 ```bash
 pnpm --filter mobile start                                           # EXPO_PUBLIC_API_MODE ausente → direct
-EXPO_PUBLIC_API_MODE=bff EXPO_PUBLIC_BFF_URL=https://melhor-hora.duckdns.org \
-  EXPO_PUBLIC_ASSETS_URL=https://melhor-hora-assets.duckdns.org pnpm --filter mobile start  # bff
+EXPO_PUBLIC_API_MODE=bff EXPO_PUBLIC_BFF_URL=https://bora-marcar.duckdns.org \
+  EXPO_PUBLIC_ASSETS_URL=https://bora-marcar.duckdns.org pnpm --filter mobile start  # bff
 ```
 
 Trecho: `apps/mobile/src/infrastructure/adapters.ts` (`selectAdapters`) e ADR 0006.

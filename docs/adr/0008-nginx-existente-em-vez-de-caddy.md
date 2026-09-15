@@ -16,10 +16,10 @@ com um serviço que já está em produção para outra coisa.
 O `docker-compose.yml` publica todo serviço só em `127.0.0.1` (`bff` em `127.0.0.1:8180`,
 `minio` em `127.0.0.1:9000`/`9001`); nenhum container expõe porta ao mundo. O nginx do
 sistema operacional continua sendo a única borda: termina TLS (certificados emitidos por
-`certbot --nginx` em `setup-vps.sh`), roteia por `server_name`
-(`melhor-hora.duckdns.org` → BFF, `melhor-hora-assets.duckdns.org` → MinIO) e faz o cache de
-borda com `proxy_cache` (`infra/nginx/melhor-hora-cache.conf` define a zona,
-`melhor-hora.conf.template` aplica `proxy_cache_valid 5m` em `/config/*` e `1d` em
+`certbot --nginx` em `setup-vps.sh`), roteia por `server_name` (`bora-marcar.duckdns.org`,
+domínio único: `/config/` e `/assets/` → MinIO, o resto → BFF) e faz o cache de
+borda com `proxy_cache` (`infra/nginx/bora-marcar-cache.conf` define a zona,
+`bora-marcar.conf.template` aplica `proxy_cache_valid 5m` em `/config/*` e `1d` em
 `/assets/*`, no lugar do que seria o cache do Caddy). O Redis nunca sai da rede interna do
 Compose — só o BFF fala com ele. O nginx grava `X-Real-IP` no proxy; o BFF confia nesse
 header, não em `X-Forwarded-For` (que o cliente pode forjar), para o rate limit por IP

@@ -1,4 +1,4 @@
-import { buildForecastUrl, mapForecast, openMeteoForecastSchema } from '@melhor-hora/contracts';
+import { buildForecastUrl, mapForecast, openMeteoForecastSchema } from '@bora-marcar/contracts';
 
 import type { Coordinates, ForecastProvider, ProviderError } from '@/application/ports';
 import { err, ok, type Forecast, type Result } from '@/domain';

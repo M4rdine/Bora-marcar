@@ -1,4 +1,4 @@
-import { forecastSaoPaulo } from '@melhor-hora/contracts/testing';
+import { forecastSaoPaulo } from '@bora-marcar/contracts/testing';
 import { describe, expect, it } from 'vitest';
 
 import { createApp } from '../app';

@@ -1,4 +1,4 @@
-import { engineConfigSchema, type EngineConfigDto } from '@melhor-hora/contracts';
+import { engineConfigSchema, type EngineConfigDto } from '@bora-marcar/contracts';
 
 import { defaultEngineConfig, type EngineConfig } from '@/domain';
 

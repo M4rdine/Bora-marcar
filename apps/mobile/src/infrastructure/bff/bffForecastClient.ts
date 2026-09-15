@@ -1,4 +1,4 @@
-import { forecastDtoSchema } from '@melhor-hora/contracts';
+import { forecastDtoSchema } from '@bora-marcar/contracts';
 
 import type { Coordinates, ForecastProvider, ProviderError } from '@/application/ports';
 import { err, ok, type Forecast, type Result } from '@/domain';

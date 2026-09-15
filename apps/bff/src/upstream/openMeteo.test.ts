@@ -1,4 +1,4 @@
-import { forecastSaoPaulo, geocodingSaoPaulo } from '@melhor-hora/contracts/testing';
+import { forecastSaoPaulo, geocodingSaoPaulo } from '@bora-marcar/contracts/testing';
 import { describe, expect, it } from 'vitest';
 
 import { fakeFetch } from '../testing/fakeFetch';

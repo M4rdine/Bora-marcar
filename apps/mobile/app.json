@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Melhor Hora",
-    "slug": "melhor-hora",
+    "name": "Bora marcar",
+    "slug": "bora-marcar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "melhorhora",
+    "scheme": "boramarcar",
     "userInterfaceStyle": "light",
     "backgroundColor": "#2C2C5E",
     "splash": {

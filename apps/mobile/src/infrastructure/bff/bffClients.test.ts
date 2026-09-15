@@ -1,5 +1,5 @@
-import { mapCity, mapForecast } from '@melhor-hora/contracts';
-import { forecastSaoPaulo, geocodingSaoPaulo } from '@melhor-hora/contracts/testing';
+import { mapCity, mapForecast } from '@bora-marcar/contracts';
+import { forecastSaoPaulo, geocodingSaoPaulo } from '@bora-marcar/contracts/testing';
 
 import type { FetchLike } from '../openMeteo/http';
 

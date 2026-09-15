@@ -1,7 +1,7 @@
-# BFF — Melhor Hora
+# BFF — Bora marcar
 
 Proxy fino (Hono) na frente da Open-Meteo: normaliza a resposta no contrato de
-`@melhor-hora/contracts`, cacheia no Redis (cache-aside) e aplica rate limit por IP — para que mil
+`@bora-marcar/contracts`, cacheia no Redis (cache-aside) e aplica rate limit por IP — para que mil
 usuários na mesma cidade gerem **uma** chamada à Open-Meteo, não mil.
 
 ## Endpoints

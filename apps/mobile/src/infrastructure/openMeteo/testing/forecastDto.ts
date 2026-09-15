@@ -1,4 +1,4 @@
-import type { OpenMeteoForecast } from '@melhor-hora/contracts';
+import type { OpenMeteoForecast } from '@bora-marcar/contracts';
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 

@@ -1,4 +1,4 @@
-import { engineConfigSchema } from '@melhor-hora/contracts';
+import { engineConfigSchema } from '@bora-marcar/contracts';
 
 import published from '../../../../../infra/assets/config/v1/engine.json';
 
