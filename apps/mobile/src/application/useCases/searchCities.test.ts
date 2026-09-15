@@ -2,7 +2,7 @@ import { err, ok } from '@/domain';
 
 import { fakeGeocoding, saoPaulo } from '../testing/fakes';
 
-import { dedupeCities, searchCities } from './searchCities';
+import { MAX_QUERY_LENGTH, dedupeCities, searchCities } from './searchCities';
 
 describe('searchCities', () => {
   it('com menos de 2 caracteres devolve vazio sem consultar o provider', async () => {
@@ -17,6 +17,21 @@ describe('searchCities', () => {
     const result = await searchCities({ geocoding })('  São Paulo ');
     expect(result).toEqual(ok([saoPaulo]));
     expect(geocoding.calls).toEqual(['São Paulo']);
+  });
+
+  it('corta a consulta em MAX_QUERY_LENGTH (64, o teto do BFF) antes de chamar o provider', async () => {
+    const geocoding = fakeGeocoding(ok([saoPaulo]));
+    const long = `  ${'a'.repeat(MAX_QUERY_LENGTH)}bcdef  `;
+    await searchCities({ geocoding })(long);
+    expect(MAX_QUERY_LENGTH).toBe(64);
+    expect(geocoding.calls).toEqual(['a'.repeat(MAX_QUERY_LENGTH)]);
+  });
+
+  it('não deixa espaço sobrando no fim depois do corte', async () => {
+    const geocoding = fakeGeocoding(ok([saoPaulo]));
+    const query = `${'a'.repeat(MAX_QUERY_LENGTH - 1)} bcd`;
+    await searchCities({ geocoding })(query);
+    expect(geocoding.calls).toEqual(['a'.repeat(MAX_QUERY_LENGTH - 1)]);
   });
 
   it('remove o mesmo ponto devolvido com outro id (feature code), mantendo o primeiro', async () => {

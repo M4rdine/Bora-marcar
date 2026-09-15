@@ -3,6 +3,8 @@ import { ok, type Result } from '@/domain';
 import type { City, GeocodingProvider, ProviderError } from '../ports';
 
 export const MIN_QUERY_LENGTH = 2;
+/** Mesmo teto do BFF (`q` com `.max(64)` em `/v1/cities`): acima disso o BFF responderia 400. */
+export const MAX_QUERY_LENGTH = 64;
 
 type Deps = { readonly geocoding: GeocodingProvider };
 
@@ -27,7 +29,7 @@ export const dedupeCities = (cities: readonly City[]): readonly City[] =>
 export const searchCities =
   ({ geocoding }: Deps) =>
   async (query: string, signal?: AbortSignal): Promise<Result<readonly City[], ProviderError>> => {
-    const normalized = query.trim();
+    const normalized = query.trim().slice(0, MAX_QUERY_LENGTH).trim();
     if (normalized.length < MIN_QUERY_LENGTH) return ok([]);
     const result = await geocoding.search(normalized, signal);
     return result.ok ? ok(dedupeCities(result.value)) : result;

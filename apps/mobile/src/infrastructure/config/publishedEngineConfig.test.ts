@@ -1,15 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { engineConfigSchema } from '@melhor-hora/contracts';
 
-import { defaultEngineConfig } from '@/domain';
+import published from '../../../../../infra/assets/config/v1/engine.json';
 
-const PUBLISHED = join(__dirname, '../../../../../infra/assets/config/v1/engine.json');
-
+// Só o schema: a config remota existe justamente para poder divergir da embutida (ADR 0005).
 describe('infra/assets/config/v1/engine.json', () => {
-  it('é a config embutida, válida no schema (a remota começa igual à local)', () => {
-    const published: unknown = JSON.parse(readFileSync(PUBLISHED, 'utf8'));
-    expect(engineConfigSchema.parse(published)).toEqual(defaultEngineConfig);
+  it('passa no engineConfigSchema (schema e invariantes)', () => {
+    // `parse` (e não `safeParse`) para o CI mostrar qual invariante quebrou.
+    expect(() => engineConfigSchema.parse(published)).not.toThrow();
   });
 });
