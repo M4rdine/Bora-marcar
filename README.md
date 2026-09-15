@@ -1,4 +1,4 @@
-<!-- badge do CI após o push -->
+[![CI](https://github.com/M4rdine/Bora-marcar-/actions/workflows/ci.yml/badge.svg)](https://github.com/M4rdine/Bora-marcar-/actions/workflows/ci.yml)
 
 # Bora marcar
 
@@ -36,13 +36,21 @@ Em `bff`, o app fala com o BFF publicado e a config remota:
 ```bash
 # apps/mobile/.env (opcional)
 EXPO_PUBLIC_API_MODE=bff
-EXPO_PUBLIC_BFF_URL=https://bora-marcar.duckdns.org        # (após o deploy)
-EXPO_PUBLIC_ASSETS_URL=https://bora-marcar.duckdns.org      # (após o deploy)
+EXPO_PUBLIC_BFF_URL=https://bora-marcar.duckdns.org
+EXPO_PUBLIC_ASSETS_URL=https://bora-marcar.duckdns.org
 ```
 
-Domínio único: API na raiz, assets em `/config/` e `/assets/` do mesmo host. Essas duas
-URLs são o padrão planejado (`infra/.env.example`); a Task 15 atualiza este README se o
-domínio final mudar. Em `bff`, as duas variáveis são obrigatórias — sem
+Domínio único: API na raiz, assets em `/config/` e `/assets/` do mesmo host. O ambiente está
+no ar — dá para conferir sem clonar nada:
+
+```bash
+curl -s https://bora-marcar.duckdns.org/health
+curl -sI https://bora-marcar.duckdns.org/v1/forecast?lat=-23.55&lon=-46.63 | grep -i x-cache  # MISS
+curl -sI https://bora-marcar.duckdns.org/v1/forecast?lat=-23.55&lon=-46.63 | grep -i x-cache  # HIT
+curl -s https://bora-marcar.duckdns.org/config/v1/engine.json | head -c 80
+```
+
+Em `bff`, as duas variáveis são obrigatórias — sem
 elas, ou com uma URL inválida, o app falha alto com uma tela de erro em vez de cair para
 `direct` em silêncio (ADR 0006).
 
