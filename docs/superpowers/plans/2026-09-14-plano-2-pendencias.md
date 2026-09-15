@@ -22,13 +22,12 @@ gerado com sucesso, 1406 módulos) e removeu o diretório de saída em seguida.
 
 ## Obrigatórios no Plano 3 (app + design system)
 
-- **Perfil "hoje" usa fuso do aparelho**: `ProfileScreen` calcula o dia atual com o relógio/fuso do
-  device, não com o `utcOffsetSeconds` da última previsão da cidade selecionada. Guardar
-  `utcOffsetSeconds` nas preferências (`prefs:v1`) na última previsão bem-sucedida e usá-lo para
-  derivar "hoje" também no Perfil, como já é feito em Hoje.
-- **`/day/[date]` e planejar amanhã**: adicionar `activePlanFor(date)` (ou `plansByDate`) ao domínio
-  de gamificação para permitir planejar/consultar um dia diferente de hoje; hoje `deriveProgress`
-  só expõe o plano ativo do dia corrente implicitamente via eventos mais recentes.
+- resolvido no Plano 3: **Perfil "hoje" usa fuso do aparelho** — `utcOffsetSeconds` é guardado em
+  `prefs:v1` na última previsão bem-sucedida e `useToday` deriva "hoje" com ele tanto em Hoje quanto
+  no Perfil.
+- resolvido no Plano 3: **`/day/[date]` e planejar amanhã** — `plansByDate` no domínio de
+  gamificação permite planejar/consultar um dia diferente de hoje; a rota `/day/[date]` usa isso
+  para o detalhe de amanhã.
 - **`useBadWeatherRecorder` sem guarda por data repetida**: o hook chama
   `services.recordBadWeatherDay` sempre que `noWindow` for verdadeiro e a `date` mudar no `useEffect`,
   confiando inteiramente na idempotência do caso de uso/domínio (`recordBadWeatherDay.ts`,
@@ -43,26 +42,22 @@ gerado com sucesso, 1406 módulos) e removeu o diretório de saída em seguida.
   cobertura global (96–97 % agregado), mas vale endurecer ao construir o design system do Plano 3
   sobre esses componentes.
 - resolvido: `buildOverview` puro com `nowEpochMs`.
-- **Seletor de hora para "Registrar atividade"**: hoje `hourLeft` é sempre a hora atual
-  (`snapshot.now.hour`) quando o usuário toca "Registrar atividade" no `HomeScreen`. Não há como
-  registrar uma atividade feita numa hora diferente da atual; adicionar um seletor de hora ao fluxo
-  de registro livre no Plano 3.
-- **Minutos no texto "Concluído às"**: `t.home.done(hour, minute)` já aceita minuto, mas o registro
-  (`logActivity`/`confirmActivity`) só guarda `hourLeft` (hora inteira) — o minuto exibido é sempre
-  `00`. Guardar o minuto real do evento para exibir "Concluído às 14h37" em vez de "14h00".
-- **Funções de tela acima de 50 linhas**: `HomeScreen.tsx` e `CitiesScreen.tsx` têm funções de
-  componente acima do limite de 50 linhas do checklist de estilo; extrair subcomponentes ao
-  construir o design system do Plano 3.
-- **MSW para testes de tela com HTTP real**: os testes de `HomeScreen`/`CitiesScreen` usam
-  `fakeServices`/ports falsos (decisão documentada no Plano 2, seção 8.2 do spec). Adicionar MSW
-  (Mock Service Worker) para cobrir pelo menos um teste de tela ponta a ponta contra os adapters
-  reais de `infrastructure/openMeteo`, validando serialização de query params, parsing do DTO e
-  mapeamento de erros HTTP sem depender só dos testes unitários de `forecastClient`/`geocodingClient`.
+- resolvido no Plano 3: **Seletor de hora para "Registrar atividade"** — o registro livre abre um
+  seletor de hora (destacando a hora atual) em vez de assumir sempre `snapshot.now.hour`.
+- resolvido no Plano 3: **Minutos no texto "Concluído às"** — o evento de registro guarda o minuto
+  real do relógio (`minuteLeft`), exibido como "Concluído às 14h37" em vez de sempre "00".
+- resolvido no Plano 3: **Funções de tela acima de 50 linhas** — `HomeScreen.tsx` e
+  `CitiesScreen.tsx` tiveram subcomponentes extraídos ao construir o design system.
+- resolvido no Plano 3 (Tarefa 11): **MSW para testes de tela com HTTP real** —
+  `HomeScreen.msw.test.tsx` cobre caminho feliz, erro HTTP e resposta fora do schema contra
+  `createOpenMeteoGeocoding`/`createOpenMeteoForecast` de verdade; ver notas de ambiente em
+  `2026-09-14-plano-3-pendencias.md`.
 
 ## Herdado do Plano 1, ainda aberto
 
-- **`tsconfig.json`**: `baseUrl`/`ignoreDeprecations` seguem como decisão pendente herdada do
-  Plano 1 (não revisitada nesta tarefa).
+- resolvido no Plano 3 (Tarefa 12): **`tsconfig.json`** — `baseUrl`/`ignoreDeprecations` removidos;
+  `paths` mantido com prefixo `"./"` explícito; `tsc --noEmit` e `expo export --platform ios`
+  confirmados verdes.
 
 ## Para o Plano 4
 
