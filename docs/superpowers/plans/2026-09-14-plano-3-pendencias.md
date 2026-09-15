@@ -133,3 +133,5 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
   `Sky.tsx` fica em 100 % de linha e 90 % de ramo (falta só o `done === false` do callback). Os
   caminhos animados de `LevelBar`, `Reveal`, `NowOutline` e `CountUp` continuam sem cobertura
   dentro das telas; replicar a mesma receita de mock por arquivo para eles fica para o Plano 4.
+
+- **Hierarquia dos botões em "Sem janela boa"**: o CTA "Amanhã: 7h–9h, ótimo" (ação principal no spec 3.3) está `quiet` e "Saí em outro horário" `primary`; trocar os kinds no ciclo de QA visual.
