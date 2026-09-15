@@ -2950,7 +2950,7 @@ git commit -m "feat(app): modo bff com adapters do BFF, config remota do motor c
 **Files:**
 
 - Create: `infra/nginx/melhor-hora.conf.template`, `infra/nginx/melhor-hora-cache.conf`, `infra/setup-vps.sh`, `infra/deploy.sh`, `infra/publish-config.sh`, `infra/assets/config/v1/engine.json`, `infra/README.md`
-- Test: `apps/mobile/src/infrastructure/config/publishedEngineConfig.test.ts` (o JSON publicado é igual à config embutida e passa no schema)
+- Test: `apps/mobile/src/infrastructure/config/publishedEngineConfig.test.ts` (o JSON publicado passa no schema — atualizado na revisão final: a igualdade com a config embutida deixou de ser exigida, Ruling 24)
 
 **Interfaces:**
 
@@ -3134,15 +3134,28 @@ git commit -m "chore(infra): nginx como borda, compose na VPS, scripts de setup/
 
 - [ ] **Step 7: Provisionar — PARE e confirme com o usuário**
 
-Perguntar ao usuário, de uma vez: (a) confirmar os domínios `melhor-hora.duckdns.org` e `melhor-hora-assets.duckdns.org` (ou outros) e que já apontam para `76.13.230.205`; (b) e-mail para o certbot; (c) autorização para rodar `infra/setup-vps.sh root@76.13.230.205` (instala site no nginx, emite certificados, sobe containers). Só depois do sim: preencher `infra/.env` (senha do MinIO gerada com `openssl rand -base64 32`, **não** commitada), rodar o script, e verificar:
+> **Atualizado na revisão final (Rulings 22–27):** `setup-vps.sh` valida o `.env` antes de qualquer
+> `ssh`, preserva o `.env` da VPS, só grava o site do nginx e só chama o certbot enquanto não existe
+> `/etc/letsencrypt/live/${API_DOMAIN}` (certbot falhando = saída ≠ 0) e, **na primeira execução,
+> sobe só a infra** (`redis minio minio-init`) e publica o config; o `bff` só sobe se
+> `docker compose pull bff` funcionar — antes do primeiro deploy do CI a imagem não existe no GHCR.
+> Detalhes em `infra/README.md`.
+
+Ordem das etapas externas (esta é a 1 e a 2; as demais são a Task 15): **(1)** DuckDNS resolvendo os
+dois subdomínios para `76.13.230.205` → **(2)** `infra/setup-vps.sh` (infra apenas) → **(3)**
+repositório + chave restrita + secrets/vars → **(4)** push em `master` → **(5)** o primeiro "Deploy
+BFF" falha no `pull` até o pacote do GHCR ser tornado público **pela interface web** → **(6)**
+`gh run rerun` do deploy.
+
+Perguntar ao usuário, de uma vez: (a) confirmar os domínios `melhor-hora.duckdns.org` e `melhor-hora-assets.duckdns.org` (ou outros) e que já apontam para `76.13.230.205`; (b) e-mail para o certbot; (c) autorização para rodar `infra/setup-vps.sh root@76.13.230.205` (instala site no nginx, emite certificados, sobe redis/minio e publica o config). Só depois do sim: preencher `infra/.env` (senha do MinIO gerada com `openssl rand -base64 32`, **não** commitada; `CERTBOT_EMAIL` definido), rodar o script, e verificar:
 
 ```bash
-curl -s https://melhor-hora.duckdns.org/health
 curl -sI https://melhor-hora-assets.duckdns.org/config/v1/engine.json | grep -iE 'cache-control|x-cache-status|content-type'
 curl -sI https://melhor-hora-assets.duckdns.org/config/v1/engine.json | grep -i x-cache-status   # segunda vez: HIT
+ssh root@76.13.230.205 'cd /opt/melhor-hora && docker compose ps'   # redis e minio healthy; bff ainda ausente
 ```
 
-Expected: `"redis":"ok"`; `Cache-Control: public, max-age=300, stale-while-revalidate=86400`; `X-Cache-Status: MISS` depois `HIT`. Antes do primeiro deploy do CI a imagem `latest` não existe no GHCR: subir só `redis`/`minio`/`minio-init` (`docker compose up -d redis minio minio-init`) e deixar o `bff` para a Task 15, ou fazer um `docker build` + `docker save | ssh docker load` temporário com tag `local`.
+Expected: `Cache-Control: public, max-age=300, stale-while-revalidate=86400`; `X-Cache-Status: MISS` depois `HIT`; o script termina com "bff sobe no primeiro deploy do CI". `curl https://melhor-hora.duckdns.org/health` (`"redis":"ok"`) só passa depois do primeiro deploy (Task 15). Rodar `setup-vps.sh` de novo sempre que `docker-compose.yml` ou os scripts mudarem — o CI não copia esses arquivos.
 
 ---
 
@@ -3158,7 +3171,8 @@ Expected: `"redis":"ok"`; `Cache-Control: public, max-age=300, stale-while-reval
 - `ci.yml` (push e PR): jobs paralelos `contracts`, `bff` (com `services: redis` e `REDIS_URL=redis://localhost:6379`), `mobile` (lint, typecheck, `jest --coverage` com upload de `coverage/lcov.info`), `format` (`prettier --check .`).
 - `deploy-bff.yml` (`workflow_run` de "CI" concluído com sucesso em `master`): build da imagem com `docker/build-push-action` (contexto raiz, `apps/bff/Dockerfile`, tags `sha-<sha7>` e `latest`, cache GHA), push no GHCR com `GITHUB_TOKEN` (`packages: write`), SSH na VPS (`appleboy/ssh-action`) executando `/opt/melhor-hora/deploy.sh sha-<sha7>`, e `curl https://${API_URL}/health` final.
 - `publish-assets.yml` (`workflow_dispatch`): `scp` de `infra/assets` para `/opt/melhor-hora/assets` e `publish-config.sh` via SSH.
-- Secrets/vars do repositório: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (secrets); `API_URL` (variable, ex.: `https://melhor-hora.duckdns.org`).
+- Secrets/vars do repositório: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS` (secrets); `API_URL` (variable, ex.: `https://melhor-hora.duckdns.org`).
+- **Atualizado na revisão final (Ruling 25):** os passos com `appleboy/ssh-action`/`appleboy/scp-action` dos blocos abaixo foram substituídos por `run` com `ssh` puro — chave em `~/.ssh/id_ed25519` (0600), host key de `VPS_KNOWN_HOSTS` em `~/.ssh/known_hosts`, `ssh "$VPS_USER@$VPS_HOST" deploy "$TAG"`; assets por `tar -czf - -C infra assets | ssh … receive-assets` e `ssh … publish-config`. Na VPS a chave é restrita por `command="/opt/melhor-hora/ci-entry.sh"`. O deploy só roda para `push` do próprio repositório em `master`; ações de terceiros fixadas por SHA; `ci.yml` ganhou o job `docker` (build sem push). O estado final está nos arquivos de `.github/workflows/`.
 
 - [ ] **Step 1: `ci.yml`**
 
@@ -3351,21 +3365,36 @@ git commit -m "ci: workflows de CI (contracts, bff com redis, mobile), deploy do
 
 **Files:** nenhum novo; atualiza `README.md` com URLs finais se mudarem.
 
-- [ ] **Step 1: PARE e confirme com o usuário** — nome/visibilidade do repositório (proposta: `TechMardine/melhor-hora`, público, conta já autenticada no `gh`), e autorização para: criar o repositório e fazer push de `master`; gravar os secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (chave dedicada gerada agora, só leitura de deploy) e as vars `API_URL`/`ASSETS_URL`; instalar a chave pública em `/root/.ssh/authorized_keys` da VPS.
-- [ ] **Step 2: Chave de deploy** — `ssh-keygen -t ed25519 -N '' -f ~/.ssh/melhor-hora-deploy -C melhor-hora-ci`; `ssh-copy-id -i ~/.ssh/melhor-hora-deploy.pub root@76.13.230.205`.
+Pré-condição: Task 12 passo 7 concluído (DuckDNS resolvendo e `setup-vps.sh` já rodado — infra no ar, `bff` ainda ausente).
+
+- [ ] **Step 1: PARE e confirme com o usuário** — nome/visibilidade do repositório (proposta: `TechMardine/melhor-hora`, público, conta já autenticada no `gh`), e autorização para: criar o repositório e fazer push de `master`; gravar os secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (chave dedicada gerada agora), `VPS_KNOWN_HOSTS` e as vars `API_URL`/`ASSETS_URL`; instalar a chave pública **restrita** em `/root/.ssh/authorized_keys` da VPS; tornar o pacote do GHCR público pela interface web depois da primeira imagem.
+- [ ] **Step 2: Chave de deploy restrita** — `ssh-keygen -t ed25519 -N '' -f ~/.ssh/melhor-hora-deploy -C melhor-hora-ci`; acrescentar ao `authorized_keys` da VPS **uma linha com forced command** (não usar `ssh-copy-id`, que instala a chave sem restrição):
+
+```bash
+PUB="$(cat ~/.ssh/melhor-hora-deploy.pub)"
+ssh root@76.13.230.205 "printf '%s\n' 'command=\"/opt/melhor-hora/ci-entry.sh\",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding $PUB' >> /root/.ssh/authorized_keys"
+ssh-keyscan -t ed25519 76.13.230.205 > /tmp/melhor-hora-known-hosts   # conferir o fingerprint com `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` na VPS
+ssh -o IdentitiesOnly=yes -i ~/.ssh/melhor-hora-deploy root@76.13.230.205 bash; echo "exit=$?"   # esperado: "ci-entry: comando não permitido: 'bash'" e exit=1
+```
+
+`ci-entry.sh` (instalado pelo `setup-vps.sh`) só aceita `deploy sha-<7 hex>`, `publish-config` e `receive-assets` (tar.gz com raiz `assets/` pelo stdin).
+
 - [ ] **Step 3: Repositório e secrets**
 
 ```bash
-gh repo create TechMardine/melhor-hora --public --source . --remote origin --push
+gh repo create TechMardine/melhor-hora --public --source . --remote origin
 gh secret set VPS_HOST --body 76.13.230.205
 gh secret set VPS_USER --body root
 gh secret set VPS_SSH_KEY < ~/.ssh/melhor-hora-deploy
+gh secret set VPS_KNOWN_HOSTS < /tmp/melhor-hora-known-hosts
 gh variable set API_URL --body https://melhor-hora.duckdns.org
 gh variable set ASSETS_URL --body https://melhor-hora-assets.duckdns.org
-gh api -X PUT /user/packages/container/melhor-hora-bff/visibility -f visibility=public   # após a 1ª imagem existir
+git push -u origin master
 ```
 
-- [ ] **Step 4: Acompanhar** — `gh run watch` do CI e do "Deploy BFF"; se o pacote GHCR nascer privado, tornar público (comando acima) e reexecutar o deploy (`gh run rerun <id>`). Verificar `curl https://melhor-hora.duckdns.org/health` (`version` = `sha-…`), duas chamadas de previsão (`X-Cache: MISS` → `HIT`), `publish-assets` manual (`gh workflow run "Publish assets"`) e o `engine.json` público.
+Os secrets são gravados **antes** do push, para o primeiro "Deploy BFF" já ter a chave e a host key.
+
+- [ ] **Step 4: Acompanhar** — `gh run watch` do CI e do "Deploy BFF". O build publica a imagem, mas **o primeiro deploy falha no `docker compose pull bff`**: o pacote `melhor-hora-bff` nasce privado no GHCR e não há endpoint de API para mudar a visibilidade de pacote (`gh api … /visibility` não existe). Tornar público pela interface web: GitHub → perfil → Packages → `melhor-hora-bff` → Package settings → Change visibility → Public. Depois `gh run rerun <id do Deploy BFF>`. Verificar `curl https://melhor-hora.duckdns.org/health` (`"version":"sha-…"`, `"redis":"ok"` — o smoke do workflow já exige a versão), duas chamadas de previsão (`X-Cache: MISS` → `HIT`), `publish-assets` manual (`gh workflow run "Publish assets" --ref master`) e o `engine.json` público.
 - [ ] **Step 5: App em modo bff contra a produção** — `EXPO_PUBLIC_API_MODE=bff EXPO_PUBLIC_BFF_URL=https://melhor-hora.duckdns.org EXPO_PUBLIC_ASSETS_URL=https://melhor-hora-assets.duckdns.org` com o harness web (`tools/qa-web`) e, se o usuário puder, no Expo Go (`.env` em `apps/mobile`); conferir no log do BFF `cacheHit: true` na segunda abertura e no `/health` o `hitRate` subindo.
 - [ ] **Step 6:** Atualizar README (URLs, badge do CI) e memória do projeto; commit `docs: URLs públicas e badge de CI`; push.
 

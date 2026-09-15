@@ -34,6 +34,10 @@ não o app.
 Perfis, pesos, limiares e regras de XP/níveis são ajustáveis sem publicar versão nova; o
 app cacheia a última cópia válida e funciona offline.
 
+**Trade-off a citar:** XP e níveis são derivados dos eventos com a config atual, então mudar `xp`
+ou `levels` remotamente recalcula os totais passados. Próximo passo: gravar o detalhamento do XP
+nos eventos `confirmed`/`logged` (ADR 0005, Consequências).
+
 **Mostrar:**
 
 - `infra/assets/config/v1/engine.json` (o arquivo publicado no bucket).

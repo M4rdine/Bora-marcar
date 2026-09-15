@@ -36,3 +36,10 @@ publicar um ajuste de peso ou limiar é subir um JSON (`publish-assets.yml` +
 `publish-config.sh`), não uma nova versão do app; o app funciona offline com a última cópia
 válida; o avaliador, que roda em `direct`, nunca depende disso — usa sempre a config
 embutida.
+
+XP e níveis são **derivados** dos eventos com a config atual (`deriveProgress` sobre o log de
+eventos, ADR 0003): o XP de cada evento não fica gravado. Por isso uma mudança remota em `xp` ou
+`levels` recalcula os totais passados — o usuário pode subir ou descer de nível sem ter feito nada.
+Hoje isso é aceito porque a config remota começa igual à embutida e só muda com deploy
+consciente. O próximo passo seria gravar o detalhamento do XP concedido nos eventos `confirmed` e
+`logged`, para que ajustes futuros valham só daqui para frente.
