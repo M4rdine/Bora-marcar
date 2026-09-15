@@ -70,7 +70,7 @@ export function MonthCalendar({ grid }: Props) {
       <View style={styles.row}>
         {grid.weekdays.map((day) => (
           <AppText key={day} variant="micro" tone="muted" style={styles.headerCell}>
-            {day.charAt(0).toUpperCase()}
+            {day}
           </AppText>
         ))}
       </View>

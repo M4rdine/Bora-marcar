@@ -4,7 +4,7 @@ import { defaultEngineConfig, type ActivityRecord } from '@/domain';
 
 import { formatDayTitle } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, Surface, tokens } from '../../../ui';
+import { AppText, Emoji, Pill, Surface, tokens } from '../../../ui';
 
 type Props = {
   readonly records: readonly ActivityRecord[];
@@ -33,6 +33,7 @@ function HistoryRow({ record, today, tomorrow }: RowProps) {
         <AppText variant="micro" tone="muted">
           {formatDayTitle(record.date, today, tomorrow)}
         </AppText>
+        {record.planFulfilled ? <Pill label={t.profile.planFulfilled} tone="neutral" /> : null}
       </View>
       <AppText variant="small" weight="800" style={styles.xp}>
         {t.home.xpEarned(record.xp.total)}

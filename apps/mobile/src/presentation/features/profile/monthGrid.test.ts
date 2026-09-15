@@ -54,4 +54,13 @@ describe('monthGrid', () => {
     expect(grid.cells.find((c) => c?.date === '2026-09-20')?.state).toBe('future');
     expect(grid.cells.find((c) => c?.date === '2026-09-01')?.state).toBe('none');
   });
+
+  it('completa as semanas em múltiplos de 7 e preenche o fim do mês com null', () => {
+    const grid = monthGrid({ ...BASE, ...empty });
+    expect(grid.cells.length % 7).toBe(0);
+    const lastDayIndex = grid.cells.findIndex((c) => c?.date === '2026-09-30');
+    const trailing = grid.cells.slice(lastDayIndex + 1);
+    expect(trailing.length).toBeGreaterThan(0);
+    trailing.forEach((cell) => expect(cell).toBeNull());
+  });
 });

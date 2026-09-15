@@ -149,6 +149,7 @@ export const t = {
       `${active} dias ativos · ${rest} folgas por chuva`,
     calendarLegendActive: 'Atividade',
     calendarLegendRest: 'Folga por mau tempo',
+    planFulfilled: 'plano cumprido',
     history: 'Histórico',
     empty: 'Nenhuma atividade ainda.',
   },
