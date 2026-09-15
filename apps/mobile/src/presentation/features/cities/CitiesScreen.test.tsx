@@ -26,14 +26,30 @@ describe('CitiesScreen', () => {
     renderWithProviders(<CitiesScreen />, { services: fakeServices({ geocoding }) });
     expect(screen.getByText('Pelo menos 2 letras')).toBeTruthy();
     fireEvent.changeText(screen.getByLabelText('Digite o nome da cidade'), 'São');
-    await screen.findByText('São Paulo, São Paulo, Brasil', {}, { timeout: 2000 });
+    await screen.findByLabelText('São Paulo, São Paulo, Brasil', {}, { timeout: 2000 });
     expect(geocoding.calls).toEqual(['São']);
     expect(screen.queryByText('Pelo menos 2 letras')).toBeNull();
     await flushListBatching();
-    fireEvent.press(screen.getByText('São Paulo, São Paulo, Brasil'));
+    fireEvent.press(screen.getByLabelText('São Paulo, São Paulo, Brasil'));
     expect(usePreferences.getState().city?.id).toBe(saoPaulo.id);
     expect(usePreferences.getState().recents.map((c) => c.id)).toEqual([saoPaulo.id]);
     expect(mockPush).toHaveBeenCalledWith('/');
+  });
+
+  it('mostra a bandeira do país no resultado da busca', async () => {
+    const geocoding = fakeGeocoding(ok([saoPaulo]));
+    renderWithProviders(<CitiesScreen />, { services: fakeServices({ geocoding }) });
+    fireEvent.changeText(screen.getByLabelText('Digite o nome da cidade'), 'São');
+    await screen.findByLabelText('São Paulo, São Paulo, Brasil', {}, { timeout: 2000 });
+    expect(screen.getByLabelText('Bandeira: Brasil')).toBeTruthy();
+    await flushListBatching();
+  });
+
+  it('botão limpar esvazia a busca', () => {
+    renderWithProviders(<CitiesScreen />, { services: fakeServices() });
+    fireEvent.changeText(screen.getByLabelText('Digite o nome da cidade'), 'São');
+    fireEvent.press(screen.getByLabelText('Limpar'));
+    expect(screen.getByLabelText('Digite o nome da cidade').props.value).toBe('');
   });
 
   it('sem resultados mostra a mensagem', async () => {

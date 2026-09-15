@@ -36,6 +36,7 @@ export const tokens = {
     badgeGlyph: 26,
     glow: 160,
     sunArc: 34,
+    flag: 22,
   },
   gradients: {
     dawn: ['#F6C9A0', '#E8927A', '#8E6AA6', '#4C4477'],

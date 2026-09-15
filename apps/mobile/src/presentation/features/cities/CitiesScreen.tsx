@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { City } from '@/application/ports';
 
@@ -9,34 +10,30 @@ import { useCitySearch } from '../../queries/useCitySearch';
 import { useServices } from '../../services/ServicesProvider';
 import { isFavorite } from '../../state/preferences';
 import { usePreferences } from '../../state/preferencesStore';
+import { AppText, Button, Sky, Surface, tokens } from '../../ui';
 
-const cityLabel = (c: City): string =>
-  [c.name, c.admin1, c.country].filter((x): x is string => Boolean(x)).join(', ');
+import { CityRow } from './components/CityRow';
+import { CitySection } from './components/CitySection';
+import { SearchField } from './components/SearchField';
 
-function CityRow({
-  city,
-  favorite,
-  onSelect,
-  onToggleFavorite,
-}: {
-  city: City;
-  favorite: boolean;
-  onSelect: () => void;
-  onToggleFavorite: () => void;
-}) {
+type Search = ReturnType<typeof useCitySearch>;
+type StateMessage = { readonly text: string; readonly danger: boolean };
+
+function searchStateMessage(query: string, search: Search): StateMessage | null {
+  if (!search.isActive) return { text: t.cities.hint, danger: false };
+  if (search.isSearching) return { text: t.cities.searching, danger: false };
+  if (search.error) return { text: t.errors[search.error.code], danger: true };
+  if (search.results.length === 0) return { text: t.cities.noResults(query.trim()), danger: false };
+  return null;
+}
+
+function StateBanner({ message }: { readonly message: StateMessage }) {
   return (
-    <View style={styles.row}>
-      <Pressable accessibilityRole="button" onPress={onSelect} style={styles.rowMain}>
-        <Text>{cityLabel(city)}</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={favorite ? t.cities.unfavorite : t.cities.favorite}
-        onPress={onToggleFavorite}
-      >
-        <Text>{favorite ? '★' : '☆'}</Text>
-      </Pressable>
-    </View>
+    <Surface strength="soft" radius="card" padding={3}>
+      <AppText variant="small" tone="muted" style={message.danger ? styles.error : undefined}>
+        {message.text}
+      </AppText>
+    </Surface>
   );
 }
 
@@ -49,7 +46,7 @@ export function CitiesScreen() {
   const favorites = usePreferences((s) => s.favorites);
   const recents = usePreferences((s) => s.recents);
   const selectCity = usePreferences((s) => s.selectCity);
-  const toggleFavorite = usePreferences((s) => s.toggleFavorite);
+  const toggleFav = usePreferences((s) => s.toggleFavorite);
 
   const choose = (city: City) => {
     selectCity(city);
@@ -62,80 +59,63 @@ export function CitiesScreen() {
     else setLocationError(t.errors[r.error.code]);
   };
 
-  const section = (title: string, cities: readonly City[]) =>
-    cities.length === 0 ? null : (
-      <View>
-        <Text style={styles.section}>{title}</Text>
-        {cities.map((c) => (
-          <CityRow
-            key={c.id}
-            city={c}
-            favorite={isFavorite(favorites, c)}
-            onSelect={() => choose(c)}
-            onToggleFavorite={() => toggleFavorite(c)}
-          />
-        ))}
-      </View>
-    );
+  const message = searchStateMessage(query, search);
+  const cityIsFavorite = (city: City): boolean => isFavorite(favorites, city);
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        accessibilityLabel={t.cities.placeholder}
-        placeholder={t.cities.placeholder}
-        value={query}
-        onChangeText={setQuery}
-        style={styles.input}
-        autoCorrect={false}
-      />
-      <Pressable
-        accessibilityRole="button"
-        style={styles.button}
-        onPress={() => void resolveLocation()}
-      >
-        <Text style={styles.buttonText}>{t.home.useLocation}</Text>
-      </Pressable>
-      {locationError ? <Text style={styles.error}>{locationError}</Text> : null}
-      {!search.isActive ? <Text>{t.cities.hint}</Text> : null}
-      {search.isSearching ? <Text>{t.cities.searching}</Text> : null}
-      {search.error ? <Text style={styles.error}>{t.errors[search.error.code]}</Text> : null}
-      {search.isActive && !search.isSearching && !search.error && search.results.length === 0 ? (
-        <Text>{t.cities.noResults(query.trim())}</Text>
-      ) : null}
-      <FlatList
-        data={search.results}
-        keyExtractor={(c) => c.id}
-        renderItem={({ item }) => (
-          <CityRow
-            city={item}
-            favorite={isFavorite(favorites, item)}
-            onSelect={() => choose(item)}
-            onToggleFavorite={() => toggleFavorite(item)}
-          />
-        )}
-        ListFooterComponent={
-          <>
-            {section(t.cities.favorites, favorites)}
-            {section(t.cities.recents, recents)}
-          </>
-        }
-      />
-    </View>
+    <Sky phase="night">
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <SearchField value={query} onChangeText={setQuery} />
+          <Button kind="quiet" label={t.home.useLocation} onPress={() => void resolveLocation()} />
+          {locationError ? (
+            <AppText variant="small" style={styles.error}>
+              {locationError}
+            </AppText>
+          ) : null}
+          {message ? <StateBanner message={message} /> : null}
+        </View>
+        <FlatList
+          data={search.results}
+          keyExtractor={(c) => c.id}
+          renderItem={({ item }) => (
+            <CityRow
+              city={item}
+              favorite={cityIsFavorite(item)}
+              onSelect={() => choose(item)}
+              onToggleFavorite={() => toggleFav(item)}
+            />
+          )}
+          contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={styles.gap} />}
+          ListFooterComponent={
+            <>
+              <CitySection
+                title={t.cities.favorites}
+                cities={favorites}
+                isFavorite={cityIsFavorite}
+                onSelect={choose}
+                onToggleFavorite={toggleFav}
+              />
+              <CitySection
+                title={t.cities.recents}
+                cities={recents}
+                isFavorite={cityIsFavorite}
+                onSelect={choose}
+                onToggleFavorite={toggleFav}
+              />
+            </>
+          }
+        />
+      </SafeAreaView>
+    </Sky>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 12 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 12, padding: 12 },
-  button: { padding: 12, borderRadius: 12, backgroundColor: '#333', alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  rowMain: { flex: 1 },
-  section: { fontWeight: '700', marginTop: 16 },
-  error: { color: '#b00020' },
+  safe: { flex: 1 },
+  header: { padding: tokens.space[4], gap: tokens.space[3] },
+  list: { paddingHorizontal: tokens.space[4], paddingBottom: tokens.space[6] },
+  gap: { height: tokens.space[2] },
+  error: { color: tokens.color.danger },
 });

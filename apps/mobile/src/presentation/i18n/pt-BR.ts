@@ -130,6 +130,9 @@ export const t = {
     favorite: 'Favoritar',
     unfavorite: 'Remover dos favoritos',
     searching: 'Buscando…',
+    clear: 'Limpar',
+    searchIcon: 'Buscar',
+    flag: (country: string) => `Bandeira: ${country}`,
   },
   profile: {
     title: 'Seu progresso',
