@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 permissions:
   contents: read
@@ -26,9 +26,9 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @melhor-hora/contracts lint
-      - run: pnpm --filter @melhor-hora/contracts typecheck
-      - run: pnpm --filter @melhor-hora/contracts test
+      - run: pnpm --filter @bora-marcar/contracts lint
+      - run: pnpm --filter @bora-marcar/contracts typecheck
+      - run: pnpm --filter @bora-marcar/contracts test
   bff:
     runs-on: ubuntu-latest
     services:

@@ -23,7 +23,7 @@
 - Endpoints, chaves e TTLs do BFF exatamente como o spec 7.2: `GET /v1/cities?q=&lang=pt` → `geo:v1:{lang}:{q normalizado}` TTL 24 h; `GET /v1/forecast?lat=&lon=` → `fc:v1:{lat 2 casas}:{lon 2 casas}` TTL 15 min; `GET /health`; rate limit 60 req/min por IP (janela deslizante) com `429` + `Retry-After`; timeout upstream 5 s → `502` com `{ error: { code, message } }`; sem cachear resposta inválida; sem Redis segue sem cache e loga.
 - Variáveis (spec 7.5): mobile `EXPO_PUBLIC_API_MODE`, `EXPO_PUBLIC_BFF_URL`, `EXPO_PUBLIC_ASSETS_URL`; BFF `PORT`, `REDIS_URL`, `ALLOWED_ORIGINS`, `OPEN_METEO_BASE_URL`, `GEOCODING_BASE_URL`, `RATE_LIMIT_PER_MIN`, `UPSTREAM_TIMEOUT_MS`, `LOG_LEVEL`; todas validadas com Zod na inicialização; `.env.example` versionado.
 - Decisões deste plano (registrar em ADR): **nginx existente como borda, sem Caddy** (ADR 0008); **bucket só com `config/v1/engine.json`** — o app usa emoji, não imagens (spec 7.3 "o bucket é otimização"); **imagem do BFF pública no GHCR** (VPS não precisa de login); **Cloudflare condicional** a domínio registrado (spec 11.2).
-- Domínios padrão (DuckDNS, conta do usuário): API `melhor-hora.duckdns.org`, assets `melhor-hora-assets.duckdns.org`. Se o usuário informar outros, trocar só em `infra/.env` (variáveis `API_DOMAIN`, `ASSETS_DOMAIN`).
+- Domínio único padrão (DuckDNS, conta do usuário): `bora-marcar.duckdns.org` (API na raiz, assets em `/config/` e `/assets/`). Se o usuário informar outro, trocar só em `infra/.env` (variável `DOMAIN`).
 - Ações com efeito externo exigem confirmação explícita do usuário antes de executar: criar/pushar repositório, gravar secrets, mexer na VPS (`ssh root@76.13.230.205`), rodar certbot. Tudo o mais roda sem perguntar.
 - VPS (verificado em 2026-09-15): Ubuntu 24.04, Docker 29 + Compose v5, 2 vCPU, 7,9 GB RAM, nginx do sistema em 80/443 com certbot 2.9, portas locais livres para 8180 (bff), 9000/9001 (minio); `ufw` inativo — **todos os serviços novos escutam só em `127.0.0.1`**.
 
@@ -2949,13 +2949,13 @@ git commit -m "feat(app): modo bff com adapters do BFF, config remota do motor c
 
 **Files:**
 
-- Create: `infra/nginx/melhor-hora.conf.template`, `infra/nginx/melhor-hora-cache.conf`, `infra/setup-vps.sh`, `infra/deploy.sh`, `infra/publish-config.sh`, `infra/assets/config/v1/engine.json`, `infra/README.md`
+- Create: `infra/nginx/bora-marcar.conf.template`, `infra/nginx/bora-marcar-cache.conf`, `infra/setup-vps.sh`, `infra/deploy.sh`, `infra/publish-config.sh`, `infra/assets/config/v1/engine.json`, `infra/README.md`
 - Test: `apps/mobile/src/infrastructure/config/publishedEngineConfig.test.ts` (o JSON publicado passa no schema — atualizado na revisão final: a igualdade com a config embutida deixou de ser exigida, Ruling 24)
 
 **Interfaces:**
 
-- API em `https://${API_DOMAIN}` → `127.0.0.1:8180` (BFF); assets em `https://${ASSETS_DOMAIN}/config/v1/engine.json` → `127.0.0.1:9000/assets/config/v1/engine.json` com `Cache-Control: public, max-age=300, stale-while-revalidate=86400` e cache de borda do nginx (`proxy_cache`); `/assets/*` (reservado a imagens) com `max-age=86400`.
-- `deploy.sh <tag>`: atualiza `BFF_IMAGE` no `.env`, `docker compose pull bff && up -d --wait`, verifica `/health`. `publish-config.sh`: copia `engine.json` para o bucket com os metadados de cache. `setup-vps.sh` (roda da máquina local): cria `/opt/melhor-hora`, envia `docker-compose.yml`, `.env`, scripts e `assets/`, instala o site do nginx via `envsubst`, roda `certbot --nginx` para os dois domínios, sobe o Compose e publica o config.
+- Domínio único `${DOMAIN}` → `127.0.0.1:8180` (BFF, na raiz: `/v1/*`, `/health`); assets em `https://${DOMAIN}/config/v1/engine.json` → `127.0.0.1:9000/assets/config/v1/engine.json` com `Cache-Control: public, max-age=300, stale-while-revalidate=86400` e cache de borda do nginx (`proxy_cache`); `/assets/*` (reservado a imagens) com `max-age=86400`.
+- `deploy.sh <tag>`: atualiza `BFF_IMAGE` no `.env`, `docker compose pull bff && up -d --wait`, verifica `/health`. `publish-config.sh`: copia `engine.json` para o bucket com os metadados de cache. `setup-vps.sh` (roda da máquina local): cria `/opt/bora-marcar`, envia `docker-compose.yml`, `.env`, scripts e `assets/`, instala o site do nginx via `envsubst`, roda `certbot --nginx` para o domínio (e-mail opcional — a VPS já tem conta ACME registrada), sobe o Compose e publica o config.
 
 - [ ] **Step 1: `engine.json` publicado = config embutida (teste primeiro)**
 
@@ -2996,18 +2996,40 @@ Run: `pnpm --filter mobile exec jest src/infrastructure/config --coverage=false`
 
 - [ ] **Step 2: nginx**
 
-`infra/nginx/melhor-hora-cache.conf` (vai para `/etc/nginx/conf.d/`, contexto `http`):
+`infra/nginx/bora-marcar-cache.conf` (vai para `/etc/nginx/conf.d/`, contexto `http`):
 
 ```nginx
-proxy_cache_path /var/cache/nginx/melhor-hora levels=1:2 keys_zone=melhor_hora_assets:10m max_size=200m inactive=7d use_temp_path=off;
+proxy_cache_path /var/cache/nginx/bora-marcar levels=1:2 keys_zone=bora_marcar_assets:10m max_size=200m inactive=7d use_temp_path=off;
 ```
 
-`infra/nginx/melhor-hora.conf.template` (vai para `/etc/nginx/sites-available/melhor-hora` após `envsubst '${API_DOMAIN} ${ASSETS_DOMAIN}'`; o certbot acrescenta os blocos 443):
+`infra/nginx/bora-marcar.conf.template` (vai para `/etc/nginx/sites-available/bora-marcar` após `envsubst '${DOMAIN}'`; o certbot acrescenta o bloco 443) — **domínio único**, um só `server` para API e assets:
 
 ```nginx
 server {
     listen 80;
-    server_name ${API_DOMAIN};
+    server_name ${DOMAIN};
+
+    location /config/ {
+        proxy_pass http://127.0.0.1:9000/assets/config/;
+        proxy_set_header Host 127.0.0.1:9000;
+        proxy_hide_header Cache-Control;
+        proxy_cache bora_marcar_assets;
+        proxy_cache_valid 200 5m;
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+        add_header Cache-Control "public, max-age=300, stale-while-revalidate=86400" always;
+        add_header X-Cache-Status $upstream_cache_status always;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    location /assets/ {
+        proxy_pass http://127.0.0.1:9000/assets/assets/;
+        proxy_set_header Host 127.0.0.1:9000;
+        proxy_hide_header Cache-Control;
+        proxy_cache bora_marcar_assets;
+        proxy_cache_valid 200 1d;
+        add_header Cache-Control "public, max-age=86400" always;
+        add_header X-Cache-Status $upstream_cache_status always;
+    }
 
     location / {
         proxy_pass http://127.0.0.1:8180;
@@ -3020,40 +3042,11 @@ server {
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     }
 }
-
-server {
-    listen 80;
-    server_name ${ASSETS_DOMAIN};
-
-    location /config/ {
-        proxy_pass http://127.0.0.1:9000/assets/config/;
-        proxy_set_header Host 127.0.0.1:9000;
-        proxy_hide_header Cache-Control;
-        proxy_cache melhor_hora_assets;
-        proxy_cache_valid 200 5m;
-        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
-        add_header Cache-Control "public, max-age=300, stale-while-revalidate=86400" always;
-        add_header X-Cache-Status $upstream_cache_status always;
-        add_header X-Content-Type-Options nosniff always;
-    }
-
-    location /assets/ {
-        proxy_pass http://127.0.0.1:9000/assets/assets/;
-        proxy_set_header Host 127.0.0.1:9000;
-        proxy_hide_header Cache-Control;
-        proxy_cache melhor_hora_assets;
-        proxy_cache_valid 200 1d;
-        add_header Cache-Control "public, max-age=86400" always;
-        add_header X-Cache-Status $upstream_cache_status always;
-    }
-
-    location / { return 404; }
-}
 ```
 
 - [ ] **Step 3: Scripts**
 
-`infra/deploy.sh` (fica em `/opt/melhor-hora/deploy.sh` na VPS):
+`infra/deploy.sh` (fica em `/opt/bora-marcar/deploy.sh` na VPS):
 
 ```bash
 #!/usr/bin/env bash
@@ -3061,7 +3054,7 @@ server {
 set -euo pipefail
 cd "$(dirname "$0")"
 TAG="${1:?informe a tag da imagem (SHA)}"
-IMAGE="ghcr.io/techmardine/melhor-hora-bff:${TAG}"
+IMAGE="ghcr.io/m4rdine/bora-marcar-bff:${TAG}"
 sed -i "s#^BFF_IMAGE=.*#BFF_IMAGE=${IMAGE}#" .env
 sed -i "s#^APP_VERSION=.*#APP_VERSION=${TAG}#" .env
 docker compose --env-file .env pull bff
@@ -3081,7 +3074,7 @@ echo "bff não respondeu em /health" >&2; docker compose --env-file .env logs --
 set -euo pipefail
 cd "$(dirname "$0")"
 set -a; source ./.env; set +a
-docker run --rm --network melhor-hora_default -v "$PWD/assets:/assets:ro" \
+docker run --rm --network bora-marcar_default -v "$PWD/assets:/assets:ro" \
   -e MINIO_ROOT_USER -e MINIO_ROOT_PASSWORD minio/mc:latest sh -c '
     mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null &&
     mc cp --attr "Content-Type=application/json;Cache-Control=public, max-age=300, stale-while-revalidate=86400" \
@@ -3093,37 +3086,39 @@ echo "publicado: /config/v1/engine.json"
 
 ```bash
 #!/usr/bin/env bash
-# Uso: infra/setup-vps.sh root@76.13.230.205   — exige infra/.env preenchido (API_DOMAIN, ASSETS_DOMAIN, MINIO_*).
+# Uso: infra/setup-vps.sh root@76.13.230.205   — exige infra/.env preenchido (DOMAIN, MINIO_*).
 set -euo pipefail
 HOST="${1:?informe usuario@host}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 set -a; source "$HERE/.env"; set +a
-ssh "$HOST" 'mkdir -p /opt/melhor-hora/assets /var/cache/nginx/melhor-hora'
-scp "$HERE/docker-compose.yml" "$HERE/.env" "$HERE/deploy.sh" "$HERE/publish-config.sh" "$HOST:/opt/melhor-hora/"
-scp -r "$HERE/assets/." "$HOST:/opt/melhor-hora/assets/"
-scp "$HERE/nginx/melhor-hora-cache.conf" "$HOST:/etc/nginx/conf.d/melhor-hora-cache.conf"
-envsubst '${API_DOMAIN} ${ASSETS_DOMAIN}' < "$HERE/nginx/melhor-hora.conf.template" | ssh "$HOST" 'cat > /etc/nginx/sites-available/melhor-hora'
+ssh "$HOST" 'mkdir -p /opt/bora-marcar/assets /var/cache/nginx/bora-marcar'
+scp "$HERE/docker-compose.yml" "$HERE/.env" "$HERE/deploy.sh" "$HERE/publish-config.sh" "$HOST:/opt/bora-marcar/"
+scp -r "$HERE/assets/." "$HOST:/opt/bora-marcar/assets/"
+scp "$HERE/nginx/bora-marcar-cache.conf" "$HOST:/etc/nginx/conf.d/bora-marcar-cache.conf"
+envsubst '${DOMAIN}' < "$HERE/nginx/bora-marcar.conf.template" | ssh "$HOST" 'cat > /etc/nginx/sites-available/bora-marcar'
 ssh "$HOST" bash -s <<EOSSH
 set -euo pipefail
-chmod +x /opt/melhor-hora/*.sh
-ln -sf /etc/nginx/sites-available/melhor-hora /etc/nginx/sites-enabled/melhor-hora
+chmod +x /opt/bora-marcar/*.sh
+ln -sf /etc/nginx/sites-available/bora-marcar /etc/nginx/sites-enabled/bora-marcar
 nginx -t && systemctl reload nginx
-certbot --nginx --non-interactive --agree-tos --redirect -m "${CERTBOT_EMAIL:?defina CERTBOT_EMAIL no infra/.env}" \
-  -d "${API_DOMAIN}" -d "${ASSETS_DOMAIN}" || echo "certbot falhou: confira se os domínios já apontam para esta VPS"
-cd /opt/melhor-hora && docker compose --env-file .env up -d --wait && ./publish-config.sh
+if [ -n "${CERTBOT_EMAIL:-}" ]; then
+  certbot --nginx --non-interactive --agree-tos --redirect -m "${CERTBOT_EMAIL}" -d "${DOMAIN}" || echo "certbot falhou: confira se o domínio já aponta para esta VPS"
+else
+  certbot --nginx --non-interactive --agree-tos --redirect --register-unsafely-without-email -d "${DOMAIN}" || echo "certbot falhou: confira se o domínio já aponta para esta VPS"
+fi
+cd /opt/bora-marcar && docker compose --env-file .env up -d --wait && ./publish-config.sh
 EOSSH
-echo "API:    https://${API_DOMAIN}/health"
-echo "Assets: https://${ASSETS_DOMAIN}/config/v1/engine.json"
+echo "API e assets: https://${DOMAIN}/health"
 ```
 
-Acrescentar `CERTBOT_EMAIL=` ao `infra/.env.example`.
+`CERTBOT_EMAIL=` no `infra/.env.example` é **opcional** — a VPS já tem conta ACME registrada, então o certbot reaproveita; só passa `-m` quando a variável não está vazia.
 
 - [ ] **Step 4: Validar sem tocar na VPS**
 
-Run: `bash -n infra/*.sh && docker run --rm -v "$PWD/infra/nginx:/etc/nginx/mh:ro" nginx:alpine sh -c 'cp /etc/nginx/mh/melhor-hora-cache.conf /etc/nginx/conf.d/ && export API_DOMAIN=a.test ASSETS_DOMAIN=b.test && envsubst "\${API_DOMAIN} \${ASSETS_DOMAIN}" < /etc/nginx/mh/melhor-hora.conf.template > /etc/nginx/conf.d/mh.conf && mkdir -p /var/cache/nginx/melhor-hora && nginx -t'`
+Run: `bash -n infra/*.sh && docker run --rm -v "$PWD/infra/nginx:/etc/nginx/mh:ro" nginx:alpine sh -c 'cp /etc/nginx/mh/bora-marcar-cache.conf /etc/nginx/conf.d/ && export DOMAIN=a.test && envsubst "\${DOMAIN}" < /etc/nginx/mh/bora-marcar.conf.template > /etc/nginx/conf.d/mh.conf && mkdir -p /var/cache/nginx/bora-marcar && nginx -t'`
 Expected: `syntax is ok` / `test is successful`.
 
-- [ ] **Step 5: `infra/README.md`** — topologia (nginx do sistema → 127.0.0.1:8180 BFF / 127.0.0.1:9000 MinIO; Redis só interno), pré-requisitos (dois subdomínios DuckDNS apontando para `76.13.230.205`, `infra/.env` preenchido), passo a passo (`setup-vps.sh`, `deploy.sh`, `publish-config.sh`), como rotacionar a senha do MinIO, como ver logs (`docker compose logs -f bff`), por que não há Caddy (ADR 0008), o que a Cloudflare acrescentaria (Task 16).
+- [ ] **Step 5: `infra/README.md`** — topologia (nginx do sistema → 127.0.0.1:8180 BFF na raiz, 127.0.0.1:9000 MinIO em `/config/` e `/assets/`, um único domínio; Redis só interno), pré-requisitos (um subdomínio DuckDNS apontando para `76.13.230.205`, `infra/.env` preenchido, e-mail do certbot opcional), passo a passo (`setup-vps.sh`, `deploy.sh`, `publish-config.sh`), como rotacionar a senha do MinIO, como ver logs (`docker compose logs -f bff`), por que não há Caddy (ADR 0008), o que a Cloudflare acrescentaria (Task 16).
 
 - [ ] **Step 6: Commit (antes de provisionar)**
 
@@ -3136,26 +3131,26 @@ git commit -m "chore(infra): nginx como borda, compose na VPS, scripts de setup/
 
 > **Atualizado na revisão final (Rulings 22–27):** `setup-vps.sh` valida o `.env` antes de qualquer
 > `ssh`, preserva o `.env` da VPS, só grava o site do nginx e só chama o certbot enquanto não existe
-> `/etc/letsencrypt/live/${API_DOMAIN}` (certbot falhando = saída ≠ 0) e, **na primeira execução,
+> `/etc/letsencrypt/live/${DOMAIN}` (certbot falhando = saída ≠ 0) e, **na primeira execução,
 > sobe só a infra** (`redis minio minio-init`) e publica o config; o `bff` só sobe se
 > `docker compose pull bff` funcionar — antes do primeiro deploy do CI a imagem não existe no GHCR.
 > Detalhes em `infra/README.md`.
 
-Ordem das etapas externas (esta é a 1 e a 2; as demais são a Task 15): **(1)** DuckDNS resolvendo os
-dois subdomínios para `76.13.230.205` → **(2)** `infra/setup-vps.sh` (infra apenas) → **(3)**
-repositório + chave restrita + secrets/vars → **(4)** push em `master` → **(5)** o primeiro "Deploy
+Ordem das etapas externas (esta é a 1 e a 2; as demais são a Task 15): **(1)** DuckDNS resolvendo o
+subdomínio único para `76.13.230.205` → **(2)** `infra/setup-vps.sh` (infra apenas) → **(3)**
+repositório + chave restrita + secrets/vars → **(4)** push em `main` → **(5)** o primeiro "Deploy
 BFF" falha no `pull` até o pacote do GHCR ser tornado público **pela interface web** → **(6)**
 `gh run rerun` do deploy.
 
-Perguntar ao usuário, de uma vez: (a) confirmar os domínios `melhor-hora.duckdns.org` e `melhor-hora-assets.duckdns.org` (ou outros) e que já apontam para `76.13.230.205`; (b) e-mail para o certbot; (c) autorização para rodar `infra/setup-vps.sh root@76.13.230.205` (instala site no nginx, emite certificados, sobe redis/minio e publica o config). Só depois do sim: preencher `infra/.env` (senha do MinIO gerada com `openssl rand -base64 32`, **não** commitada; `CERTBOT_EMAIL` definido), rodar o script, e verificar:
+Perguntar ao usuário, de uma vez: (a) confirmar o domínio `bora-marcar.duckdns.org` (ou outro) e que já aponta para `76.13.230.205`; (b) e-mail para o certbot (opcional — a VPS já tem conta ACME registrada); (c) autorização para rodar `infra/setup-vps.sh root@76.13.230.205` (instala site no nginx, emite certificado, sobe redis/minio e publica o config). Só depois do sim: preencher `infra/.env` (senha do MinIO gerada com `openssl rand -base64 32`, **não** commitada; `CERTBOT_EMAIL` opcional), rodar o script, e verificar:
 
 ```bash
-curl -sI https://melhor-hora-assets.duckdns.org/config/v1/engine.json | grep -iE 'cache-control|x-cache-status|content-type'
-curl -sI https://melhor-hora-assets.duckdns.org/config/v1/engine.json | grep -i x-cache-status   # segunda vez: HIT
-ssh root@76.13.230.205 'cd /opt/melhor-hora && docker compose ps'   # redis e minio healthy; bff ainda ausente
+curl -sI https://bora-marcar.duckdns.org/config/v1/engine.json | grep -iE 'cache-control|x-cache-status|content-type'
+curl -sI https://bora-marcar.duckdns.org/config/v1/engine.json | grep -i x-cache-status   # segunda vez: HIT
+ssh root@76.13.230.205 'cd /opt/bora-marcar && docker compose ps'   # redis e minio healthy; bff ainda ausente
 ```
 
-Expected: `Cache-Control: public, max-age=300, stale-while-revalidate=86400`; `X-Cache-Status: MISS` depois `HIT`; o script termina com "bff sobe no primeiro deploy do CI". `curl https://melhor-hora.duckdns.org/health` (`"redis":"ok"`) só passa depois do primeiro deploy (Task 15). Rodar `setup-vps.sh` de novo sempre que `docker-compose.yml` ou os scripts mudarem — o CI não copia esses arquivos.
+Expected: `Cache-Control: public, max-age=300, stale-while-revalidate=86400`; `X-Cache-Status: MISS` depois `HIT`; o script termina com "bff sobe no primeiro deploy do CI". `curl https://bora-marcar.duckdns.org/health` (`"redis":"ok"`) só passa depois do primeiro deploy (Task 15). Rodar `setup-vps.sh` de novo sempre que `docker-compose.yml` ou os scripts mudarem — o CI não copia esses arquivos.
 
 ---
 
@@ -3169,10 +3164,10 @@ Expected: `Cache-Control: public, max-age=300, stale-while-revalidate=86400`; `X
 **Interfaces:**
 
 - `ci.yml` (push e PR): jobs paralelos `contracts`, `bff` (com `services: redis` e `REDIS_URL=redis://localhost:6379`), `mobile` (lint, typecheck, `jest --coverage` com upload de `coverage/lcov.info`), `format` (`prettier --check .`).
-- `deploy-bff.yml` (`workflow_run` de "CI" concluído com sucesso em `master`): build da imagem com `docker/build-push-action` (contexto raiz, `apps/bff/Dockerfile`, tags `sha-<sha7>` e `latest`, cache GHA), push no GHCR com `GITHUB_TOKEN` (`packages: write`), SSH na VPS (`appleboy/ssh-action`) executando `/opt/melhor-hora/deploy.sh sha-<sha7>`, e `curl https://${API_URL}/health` final.
-- `publish-assets.yml` (`workflow_dispatch`): `scp` de `infra/assets` para `/opt/melhor-hora/assets` e `publish-config.sh` via SSH.
-- Secrets/vars do repositório: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS` (secrets); `API_URL` (variable, ex.: `https://melhor-hora.duckdns.org`).
-- **Atualizado na revisão final (Ruling 25):** os passos com `appleboy/ssh-action`/`appleboy/scp-action` dos blocos abaixo foram substituídos por `run` com `ssh` puro — chave em `~/.ssh/id_ed25519` (0600), host key de `VPS_KNOWN_HOSTS` em `~/.ssh/known_hosts`, `ssh "$VPS_USER@$VPS_HOST" deploy "$TAG"`; assets por `tar -czf - -C infra assets | ssh … receive-assets` e `ssh … publish-config`. Na VPS a chave é restrita por `command="/opt/melhor-hora/ci-entry.sh"`. O deploy só roda para `push` do próprio repositório em `master`; ações de terceiros fixadas por SHA; `ci.yml` ganhou o job `docker` (build sem push). O estado final está nos arquivos de `.github/workflows/`.
+- `deploy-bff.yml` (`workflow_run` de "CI" concluído com sucesso em `main`): build da imagem com `docker/build-push-action` (contexto raiz, `apps/bff/Dockerfile`, tags `sha-<sha7>` e `latest`, cache GHA), push no GHCR com `GITHUB_TOKEN` (`packages: write`), SSH na VPS (`appleboy/ssh-action`) executando `/opt/bora-marcar/deploy.sh sha-<sha7>`, e `curl https://${API_URL}/health` final.
+- `publish-assets.yml` (`workflow_dispatch`): `scp` de `infra/assets` para `/opt/bora-marcar/assets` e `publish-config.sh` via SSH.
+- Secrets/vars do repositório: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS` (secrets); `API_URL` (variable, ex.: `https://bora-marcar.duckdns.org`).
+- **Atualizado na revisão final (Ruling 25):** os passos com `appleboy/ssh-action`/`appleboy/scp-action` dos blocos abaixo foram substituídos por `run` com `ssh` puro — chave em `~/.ssh/id_ed25519` (0600), host key de `VPS_KNOWN_HOSTS` em `~/.ssh/known_hosts`, `ssh "$VPS_USER@$VPS_HOST" deploy "$TAG"`; assets por `tar -czf - -C infra assets | ssh … receive-assets` e `ssh … publish-config`. Na VPS a chave é restrita por `command="/opt/bora-marcar/ci-entry.sh"`. O deploy só roda para `push` do próprio repositório em `main`; ações de terceiros fixadas por SHA; `ci.yml` ganhou o job `docker` (build sem push). O estado final está nos arquivos de `.github/workflows/`.
 
 - [ ] **Step 1: `ci.yml`**
 
@@ -3180,7 +3175,7 @@ Expected: `Cache-Control: public, max-age=300, stale-while-revalidate=86400`; `X
 name: CI
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 concurrency:
   group: ci-${{ github.ref }}
@@ -3248,7 +3243,7 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [master]
+    branches: [main]
 permissions:
   contents: read
   packages: write
@@ -3271,8 +3266,8 @@ jobs:
           file: apps/bff/Dockerfile
           push: true
           tags: |
-            ghcr.io/techmardine/melhor-hora-bff:${{ steps.meta.outputs.tag }}
-            ghcr.io/techmardine/melhor-hora-bff:latest
+            ghcr.io/m4rdine/bora-marcar-bff:${{ steps.meta.outputs.tag }}
+            ghcr.io/m4rdine/bora-marcar-bff:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - uses: appleboy/ssh-action@v1
@@ -3280,7 +3275,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: /opt/melhor-hora/deploy.sh ${{ steps.meta.outputs.tag }}
+          script: /opt/bora-marcar/deploy.sh ${{ steps.meta.outputs.tag }}
       - name: Smoke
         run: |
           curl -fsS "${{ vars.API_URL }}/health" | tee health.json
@@ -3304,14 +3299,14 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: infra/assets
-          target: /opt/melhor-hora/
+          target: /opt/bora-marcar/
           strip_components: 1
       - uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: /opt/melhor-hora/publish-config.sh
+          script: /opt/bora-marcar/publish-config.sh
       - run: curl -fsS "${{ vars.ASSETS_URL }}/config/v1/engine.json" | head -c 200
 ```
 
@@ -3367,35 +3362,34 @@ git commit -m "ci: workflows de CI (contracts, bff com redis, mobile), deploy do
 
 Pré-condição: Task 12 passo 7 concluído (DuckDNS resolvendo e `setup-vps.sh` já rodado — infra no ar, `bff` ainda ausente).
 
-- [ ] **Step 1: PARE e confirme com o usuário** — nome/visibilidade do repositório (proposta: `TechMardine/melhor-hora`, público, conta já autenticada no `gh`), e autorização para: criar o repositório e fazer push de `master`; gravar os secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (chave dedicada gerada agora), `VPS_KNOWN_HOSTS` e as vars `API_URL`/`ASSETS_URL`; instalar a chave pública **restrita** em `/root/.ssh/authorized_keys` da VPS; tornar o pacote do GHCR público pela interface web depois da primeira imagem.
-- [ ] **Step 2: Chave de deploy restrita** — `ssh-keygen -t ed25519 -N '' -f ~/.ssh/melhor-hora-deploy -C melhor-hora-ci`; acrescentar ao `authorized_keys` da VPS **uma linha com forced command** (não usar `ssh-copy-id`, que instala a chave sem restrição):
+- [ ] **Step 1: PARE e confirme com o usuário** — nome/visibilidade do repositório (`M4rdine/Bora-marcar-`, **privado**, conta já autenticada no `gh`; a imagem do BFF continua pública no GHCR), e autorização para: fazer push de `main`; gravar os secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (chave dedicada gerada agora), `VPS_KNOWN_HOSTS` e as vars `API_URL`/`ASSETS_URL`; instalar a chave pública **restrita** em `/root/.ssh/authorized_keys` da VPS; tornar o pacote do GHCR público pela interface web depois da primeira imagem.
+- [ ] **Step 2: Chave de deploy restrita** — `ssh-keygen -t ed25519 -N '' -f ~/.ssh/bora-marcar-deploy -C bora-marcar-ci`; acrescentar ao `authorized_keys` da VPS **uma linha com forced command** (não usar `ssh-copy-id`, que instala a chave sem restrição):
 
 ```bash
-PUB="$(cat ~/.ssh/melhor-hora-deploy.pub)"
-ssh root@76.13.230.205 "printf '%s\n' 'command=\"/opt/melhor-hora/ci-entry.sh\",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding $PUB' >> /root/.ssh/authorized_keys"
-ssh-keyscan -t ed25519 76.13.230.205 > /tmp/melhor-hora-known-hosts   # conferir o fingerprint com `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` na VPS
-ssh -o IdentitiesOnly=yes -i ~/.ssh/melhor-hora-deploy root@76.13.230.205 bash; echo "exit=$?"   # esperado: "ci-entry: comando não permitido: 'bash'" e exit=1
+PUB="$(cat ~/.ssh/bora-marcar-deploy.pub)"
+ssh root@76.13.230.205 "printf '%s\n' 'command=\"/opt/bora-marcar/ci-entry.sh\",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding $PUB' >> /root/.ssh/authorized_keys"
+ssh-keyscan -t ed25519 76.13.230.205 > /tmp/bora-marcar-known-hosts   # conferir o fingerprint com `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` na VPS
+ssh -o IdentitiesOnly=yes -i ~/.ssh/bora-marcar-deploy root@76.13.230.205 bash; echo "exit=$?"   # esperado: "ci-entry: comando não permitido: 'bash'" e exit=1
 ```
 
 `ci-entry.sh` (instalado pelo `setup-vps.sh`) só aceita `deploy sha-<7 hex>`, `publish-config` e `receive-assets` (tar.gz com raiz `assets/` pelo stdin).
 
-- [ ] **Step 3: Repositório e secrets**
+- [ ] **Step 3: Secrets e push** — repositório já existe (`M4rdine/Bora-marcar-`, privado); não recriar:
 
 ```bash
-gh repo create TechMardine/melhor-hora --public --source . --remote origin
 gh secret set VPS_HOST --body 76.13.230.205
 gh secret set VPS_USER --body root
-gh secret set VPS_SSH_KEY < ~/.ssh/melhor-hora-deploy
-gh secret set VPS_KNOWN_HOSTS < /tmp/melhor-hora-known-hosts
-gh variable set API_URL --body https://melhor-hora.duckdns.org
-gh variable set ASSETS_URL --body https://melhor-hora-assets.duckdns.org
-git push -u origin master
+gh secret set VPS_SSH_KEY < ~/.ssh/bora-marcar-deploy
+gh secret set VPS_KNOWN_HOSTS < /tmp/bora-marcar-known-hosts
+gh variable set API_URL --body https://bora-marcar.duckdns.org
+gh variable set ASSETS_URL --body https://bora-marcar.duckdns.org
+git push -u origin main
 ```
 
 Os secrets são gravados **antes** do push, para o primeiro "Deploy BFF" já ter a chave e a host key.
 
-- [ ] **Step 4: Acompanhar** — `gh run watch` do CI e do "Deploy BFF". O build publica a imagem, mas **o primeiro deploy falha no `docker compose pull bff`**: o pacote `melhor-hora-bff` nasce privado no GHCR e não há endpoint de API para mudar a visibilidade de pacote (`gh api … /visibility` não existe). Tornar público pela interface web: GitHub → perfil → Packages → `melhor-hora-bff` → Package settings → Change visibility → Public. Depois `gh run rerun <id do Deploy BFF>`. Verificar `curl https://melhor-hora.duckdns.org/health` (`"version":"sha-…"`, `"redis":"ok"` — o smoke do workflow já exige a versão), duas chamadas de previsão (`X-Cache: MISS` → `HIT`), `publish-assets` manual (`gh workflow run "Publish assets" --ref master`) e o `engine.json` público.
-- [ ] **Step 5: App em modo bff contra a produção** — `EXPO_PUBLIC_API_MODE=bff EXPO_PUBLIC_BFF_URL=https://melhor-hora.duckdns.org EXPO_PUBLIC_ASSETS_URL=https://melhor-hora-assets.duckdns.org` com o harness web (`tools/qa-web`) e, se o usuário puder, no Expo Go (`.env` em `apps/mobile`); conferir no log do BFF `cacheHit: true` na segunda abertura e no `/health` o `hitRate` subindo.
+- [ ] **Step 4: Acompanhar** — `gh run watch` do CI e do "Deploy BFF". O build publica a imagem, mas **o primeiro deploy falha no `docker compose pull bff`**: o pacote `bora-marcar-bff` nasce privado no GHCR e não há endpoint de API para mudar a visibilidade de pacote (`gh api … /visibility` não existe). Tornar público pela interface web: GitHub → perfil → Packages → `bora-marcar-bff` → Package settings → Change visibility → Public (o repositório em si permanece privado — só a imagem precisa ser pública, para a VPS puxar sem login). Depois `gh run rerun <id do Deploy BFF>`. Verificar `curl https://bora-marcar.duckdns.org/health` (`"version":"sha-…"`, `"redis":"ok"` — o smoke do workflow já exige a versão), duas chamadas de previsão (`X-Cache: MISS` → `HIT`), `publish-assets` manual (`gh workflow run "Publish assets" --ref main`) e o `engine.json` público.
+- [ ] **Step 5: App em modo bff contra a produção** — `EXPO_PUBLIC_API_MODE=bff EXPO_PUBLIC_BFF_URL=https://bora-marcar.duckdns.org EXPO_PUBLIC_ASSETS_URL=https://bora-marcar.duckdns.org` com o harness web (`tools/qa-web`) e, se o usuário puder, no Expo Go (`.env` em `apps/mobile`); conferir no log do BFF `cacheHit: true` na segunda abertura e no `/health` o `hitRate` subindo.
 - [ ] **Step 6:** Atualizar README (URLs, badge do CI) e memória do projeto; commit `docs: URLs públicas e badge de CI`; push.
 
 ---

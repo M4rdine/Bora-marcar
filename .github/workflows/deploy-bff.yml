@@ -3,25 +3,25 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [master]
+    branches: [main]
 permissions:
   contents: read
   packages: write
 jobs:
   deploy:
-    # `branches: [master]` só compara o nome do head branch: um PR de fork com branch `master`
+    # `branches: [main]` só compara o nome do head branch: um PR de fork com branch `main`
     # também casaria. Exige push no próprio repositório.
     if: >-
       ${{
         github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.event == 'push' &&
-        github.event.workflow_run.head_branch == 'master' &&
+        github.event.workflow_run.head_branch == 'main' &&
         github.event.workflow_run.head_repository.full_name == github.repository
       }}
     runs-on: ubuntu-latest
     environment: production
     env:
-      IMAGE: ghcr.io/techmardine/melhor-hora-bff
+      IMAGE: ghcr.io/m4rdine/bora-marcar-bff
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
