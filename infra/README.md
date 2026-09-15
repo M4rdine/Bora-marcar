@@ -27,7 +27,9 @@ rede interna do Compose.
   VPS antes de rodar `setup-vps.sh` (o certbot valida por HTTP-01).
 - `infra/.env` preenchido a partir de `infra/.env.example`, com `MINIO_ROOT_PASSWORD` trocado (ex.:
   `openssl rand -base64 32`) e `CERTBOT_EMAIL` definido. **Esse arquivo nunca é commitado** (está no
-  `.gitignore`) — só existe localmente e na VPS.
+  `.gitignore`) — só existe localmente e na VPS. `deploy.sh`, `publish-config.sh` e `setup-vps.sh`
+  carregam o `.env` com `source` (sem aspas), então `MINIO_ROOT_PASSWORD` precisa ser um token só,
+  sem espaços, `$`, crases ou `#` — o alfabeto do `openssl rand -base64 32` já é seguro para isso.
 - `ssh`, `scp` e `envsubst` disponíveis na máquina local; Docker Compose e nginx+certbot já
   instalados na VPS.
 
