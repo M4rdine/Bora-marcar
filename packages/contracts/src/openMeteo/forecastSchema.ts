@@ -36,11 +36,11 @@ const dailySchema = z
     message: 'arrays diários com comprimentos diferentes',
   });
 
-export const forecastResponseSchema = z.object({
+export const openMeteoForecastSchema = z.object({
   timezone: z.string(),
   utc_offset_seconds: z.number(),
   hourly: hourlySchema,
   daily: dailySchema,
 });
 
-export type ForecastResponse = z.infer<typeof forecastResponseSchema>;
+export type OpenMeteoForecast = z.infer<typeof openMeteoForecastSchema>;

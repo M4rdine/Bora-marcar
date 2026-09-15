@@ -1,8 +1,8 @@
-import type { City } from '@/application/ports';
+import type { CityDto } from '../dto';
 
-import type { GeocodingResult } from './geocodingSchema';
+import type { OpenMeteoGeocodingResult } from './geocodingSchema';
 
-export const mapCity = (dto: GeocodingResult): City => ({
+export const mapCity = (dto: OpenMeteoGeocodingResult): CityDto => ({
   id: String(dto.id),
   name: dto.name,
   admin1: dto.admin1 ?? null,

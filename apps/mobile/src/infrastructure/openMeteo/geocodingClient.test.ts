@@ -32,8 +32,10 @@ describe('createOpenMeteoGeocoding', () => {
   it('monta a URL com count=8, language=pt e a consulta codificada', async () => {
     const fetchFn = fetchWith(sample);
     await createOpenMeteoGeocoding({ fetchFn }).search('São Paulo');
+    // `buildGeocodingUrl` (contracts) monta a query com `URLSearchParams`, que codifica espaço
+    // como `+` em vez de `%20` (application/x-www-form-urlencoded); equivalente para o servidor.
     expect(fetchFn.urls[0]).toBe(
-      'https://geocoding-api.open-meteo.com/v1/search?name=S%C3%A3o%20Paulo&count=8&language=pt&format=json',
+      'https://geocoding-api.open-meteo.com/v1/search?name=S%C3%A3o+Paulo&count=8&language=pt&format=json',
     );
   });
 

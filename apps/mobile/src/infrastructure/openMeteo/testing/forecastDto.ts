@@ -1,9 +1,9 @@
-import type { ForecastResponse } from '../forecastSchema';
+import type { OpenMeteoForecast } from '@melhor-hora/contracts';
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 
 /** DTO no formato da Open-Meteo para os dias dados, 24 horas por dia, valores amenos. */
-export function makeForecastDto(dates: readonly string[]): ForecastResponse {
+export function makeForecastDto(dates: readonly string[]): OpenMeteoForecast {
   const time = dates.flatMap((d) => Array.from({ length: 24 }, (_, h) => `${d}T${pad(h)}:00`));
   const perHour = <T>(f: (h: number) => T): T[] =>
     dates.flatMap(() => Array.from({ length: 24 }, (_, h) => f(h)));
