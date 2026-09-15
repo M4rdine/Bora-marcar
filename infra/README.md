@@ -33,26 +33,70 @@ rede interna do Compose.
 - `ssh`, `scp` e `envsubst` disponíveis na máquina local; Docker Compose e nginx+certbot já
   instalados na VPS.
 
-## Os três scripts
+## Os scripts
 
-- **`setup-vps.sh <usuario@host>`** — roda na máquina local, é idempotente. Cria
-  `/opt/melhor-hora`, copia `docker-compose.yml`, `.env`, os outros dois scripts e `assets/`,
-  instala `melhor-hora-cache.conf` em `/etc/nginx/conf.d/`, gera o site em
-  `/etc/nginx/sites-available/melhor-hora` via `envsubst`, habilita, testa e recarrega o nginx,
-  emite certificado com `certbot --nginx` para os dois domínios, sobe o Compose e chama
-  `publish-config.sh`. Pode ser executado de novo com segurança (sobrescreve os mesmos arquivos).
-- **`deploy.sh <tag>`** — roda na VPS (`/opt/melhor-hora/deploy.sh <tag>`). Troca `BFF_IMAGE` e
-  `APP_VERSION` no `.env` para a tag informada (o SHA da imagem publicada pelo CI), faz
-  `docker compose pull bff && up -d --wait` e confere `/health` até 10 tentativas antes de falhar.
+- **`setup-vps.sh <usuario@host>`** — roda na máquina local. Valida o `infra/.env` antes de qualquer
+  `ssh` (`API_DOMAIN`, `ASSETS_DOMAIN`, `CERTBOT_EMAIL` e `MINIO_ROOT_PASSWORD` preenchidos, senha
+  diferente do placeholder `troque-esta-senha-longa`). Cria `/opt/melhor-hora`; copia o `.env` **só
+  se ainda não existir na VPS** (o deploy grava `BFF_IMAGE`/`APP_VERSION` nele) e aplica `chmod 600`;
+  sempre copia `docker-compose.yml`, `deploy.sh`, `publish-config.sh`, `ci-entry.sh` e `assets/`;
+  sempre instala `melhor-hora-cache.conf` em `/etc/nginx/conf.d/`; gera o site
+  `/etc/nginx/sites-available/melhor-hora` via `envsubst` **só enquanto não existe
+  `/etc/letsencrypt/live/${API_DOMAIN}`** (depois disso o certbot já acrescentou os blocos 443, que o
+  template apagaria); `nginx -t` e reload; roda `certbot --nginx` para os dois domínios só sem
+  certificado — se o certbot falhar o script sai com erro apontando para o DNS. Por fim sobe só
+  `redis minio minio-init` com `--wait`, chama `publish-config.sh` e tenta `docker compose pull bff`:
+  se a imagem existir e estiver acessível, sobe o `bff`; senão avisa que o `bff` sobe no primeiro
+  deploy do CI.
+- **Idempotência:** rodar de novo não desfaz o deploy (o `.env` da VPS é preservado), não apaga os
+  blocos TLS do nginx e não pede certificado novo. Para mudar algo no `.env` da VPS, edite
+  `/opt/melhor-hora/.env` lá (ou apague-o e rode o setup de novo). **Rode `setup-vps.sh` de novo
+  sempre que mudar `docker-compose.yml` ou algum script** — o CI não copia esses arquivos.
+- **`deploy.sh <tag>`** — roda na VPS (chamado pelo CI via `ci-entry.sh`). Lê o repositório da
+  imagem do `BFF_IMAGE` atual do `.env` e troca só a tag (e `APP_VERSION`) pela informada; faz
+  `docker compose pull bff && up -d --wait` e confere `/health` até 10 tentativas, exigindo
+  `"status":"ok"` **e** `"version":"<tag>"`.
 - **`publish-config.sh`** — roda na VPS. Copia `assets/config/v1/engine.json` para o bucket
   `assets` do MinIO com `Content-Type: application/json` e o mesmo `Cache-Control` servido pelo
   nginx (`public, max-age=300, stale-while-revalidate=86400`).
+- **`ci-entry.sh`** — forced command da chave de deploy do CI (abaixo). Lê `$SSH_ORIGINAL_COMMAND` e
+  aceita só `deploy sha-<7 hex>` (→ `deploy.sh`), `publish-config` (→ `publish-config.sh`) e
+  `receive-assets` (lê do stdin um `tar.gz` com raiz `assets/`, aceita só `assets/config/…` e
+  `assets/assets/…`, apenas arquivos e diretórios, exige `assets/config/v1/engine.json` e troca
+  `/opt/melhor-hora/assets` por rename); qualquer outra coisa sai com código 1 e mensagem no stderr.
+  `MELHOR_HORA_DIR` só serve para testar localmente com uma raiz falsa.
+
+## Chave de deploy restrita
+
+O CI entra na VPS com uma chave dedicada que só executa `ci-entry.sh`. Em `/root/.ssh/authorized_keys`:
+
+```
+command="/opt/melhor-hora/ci-entry.sh",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding ssh-ed25519 AAAA... melhor-hora-ci
+```
+
+Secrets do repositório: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (a chave privada dedicada) e
+`VPS_KNOWN_HOSTS` (saída de `ssh-keyscan -t ed25519 76.13.230.205`, conferida contra a host key da
+VPS — os workflows não usam `StrictHostKeyChecking=no`). Variables: `API_URL` e `ASSETS_URL`.
+
+## Ordem das etapas externas
+
+1. **DuckDNS:** os dois subdomínios resolvendo para `76.13.230.205`.
+2. **`infra/setup-vps.sh root@76.13.230.205`:** nginx, certificados, `redis`/`minio`/`minio-init` e o
+   `engine.json` publicado. O `bff` ainda não sobe (a imagem não existe no GHCR).
+3. **Repositório + secrets/vars:** criar o repositório, gerar a chave dedicada, instalar a linha
+   `command=...` acima no `authorized_keys`, gravar `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`,
+   `VPS_KNOWN_HOSTS`, `API_URL` e `ASSETS_URL`.
+4. **Push em `master`:** o CI roda e dispara o "Deploy BFF", que publica a imagem no GHCR.
+5. **O primeiro deploy falha no `pull`:** o pacote do GHCR nasce privado. Torne-o público pela
+   interface web (Package settings → Change visibility → Public; não há endpoint de API para isso).
+6. **`gh run rerun <id>`** do "Deploy BFF": agora o `pull` funciona e o smoke confere a versão.
 
 ## Rotacionar a senha do MinIO
 
 1. Gerar uma senha nova: `openssl rand -base64 32`.
-2. Editar `MINIO_ROOT_PASSWORD` em `infra/.env` (local) — e no `.env` da VPS, em
-   `/opt/melhor-hora/.env` (ou copiar o novo `.env` local via `scp`).
+2. Editar `MINIO_ROOT_PASSWORD` em `infra/.env` (local) e no `.env` da VPS, em
+   `/opt/melhor-hora/.env` — editar lá, não copiar o local por cima: o da VPS guarda a tag do
+   último deploy (`BFF_IMAGE`/`APP_VERSION`).
 3. Recriar os containers para aplicar a env nova: `docker compose --env-file .env up -d --wait`
    (na VPS, dentro de `/opt/melhor-hora`).
 4. `mc alias` usado por `publish-config.sh` é recriado a cada execução com as credenciais do
