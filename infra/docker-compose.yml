@@ -1,0 +1,79 @@
+name: melhor-hora
+
+services:
+  bff:
+    image: ${BFF_IMAGE:-ghcr.io/techmardine/melhor-hora-bff:latest}
+    restart: unless-stopped
+    environment:
+      PORT: '8080'
+      REDIS_URL: redis://redis:6379
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-60}
+      UPSTREAM_TIMEOUT_MS: ${UPSTREAM_TIMEOUT_MS:-5000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRUST_PROXY: 'true'
+      APP_VERSION: ${APP_VERSION:-unknown}
+    ports:
+      - '127.0.0.1:8180:8080'
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--maxmemory',
+        '256mb',
+        '--maxmemory-policy',
+        'allkeys-lru',
+      ]
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: quay.io/minio/minio:latest
+    command: ['server', '/data', '--console-address', ':9001']
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
+        mc mb --ignore-existing local/assets &&
+        mc anonymous set download local/assets
+    restart: 'no'
+
+volumes:
+  redis-data:
+  minio-data:

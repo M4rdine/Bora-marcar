@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+**/coverage
+.expo
+**/.expo
+.superpowers
+.git
+tools/qa-web/out
+docs
+**/.env
+**/.env.*
+!**/.env.example

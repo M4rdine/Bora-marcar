@@ -1,0 +1,6 @@
+services:
+  bff:
+    build:
+      context: ..
+      dockerfile: apps/bff/Dockerfile
+    image: melhor-hora-bff:local
