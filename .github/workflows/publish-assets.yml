@@ -1,0 +1,23 @@
+name: Publish assets
+on: { workflow_dispatch: {} }
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: infra/assets
+          target: /opt/melhor-hora/
+          strip_components: 1
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: /opt/melhor-hora/publish-config.sh
+      - run: curl -fsS "${{ vars.ASSETS_URL }}/config/v1/engine.json" | head -c 200
