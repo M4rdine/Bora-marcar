@@ -4,21 +4,32 @@ import type { ColorValue } from 'react-native';
 import { t } from '@/presentation/i18n/pt-BR';
 import { AppText, tokens } from '@/presentation/ui';
 
-type TabIconProps = { readonly color: ColorValue };
+type TabIconProps = { readonly color: ColorValue; readonly focused: boolean };
 
-// A acessibilidade do botão da aba já usa o título da tela; o emoji é só decoração.
-function HomeIcon({ color }: TabIconProps) {
-  return <AppText style={{ color, fontSize: tokens.font.subtitle }}>{t.tabs.icons.home}</AppText>;
+const INACTIVE_OPACITY = 0.55;
+const INACTIVE_SCALE = 0.92;
+
+// A acessibilidade do botão da aba já usa o título da tela; o emoji é só decoração. A aba
+// ativa fica visualmente distinguível por opacidade e escala além da cor do rótulo.
+function tabIconStyle({ color, focused }: TabIconProps) {
+  return {
+    color,
+    fontSize: tokens.font.subtitle,
+    opacity: focused ? 1 : INACTIVE_OPACITY,
+    transform: [{ scale: focused ? 1 : INACTIVE_SCALE }],
+  };
 }
 
-function CitiesIcon({ color }: TabIconProps) {
-  return <AppText style={{ color, fontSize: tokens.font.subtitle }}>{t.tabs.icons.cities}</AppText>;
+function HomeIcon(props: TabIconProps) {
+  return <AppText style={tabIconStyle(props)}>{t.tabs.icons.home}</AppText>;
 }
 
-function ProfileIcon({ color }: TabIconProps) {
-  return (
-    <AppText style={{ color, fontSize: tokens.font.subtitle }}>{t.tabs.icons.profile}</AppText>
-  );
+function CitiesIcon(props: TabIconProps) {
+  return <AppText style={tabIconStyle(props)}>{t.tabs.icons.cities}</AppText>;
+}
+
+function ProfileIcon(props: TabIconProps) {
+  return <AppText style={tabIconStyle(props)}>{t.tabs.icons.profile}</AppText>;
 }
 
 export default function TabsLayout() {

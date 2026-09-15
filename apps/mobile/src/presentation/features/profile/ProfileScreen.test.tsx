@@ -43,7 +43,7 @@ describe('ProfileScreen', () => {
 
     expect(screen.getByLabelText('Primeira saída: desbloqueada')).toBeTruthy();
     expect(screen.getByLabelText('Madrugador: desbloqueada')).toBeTruthy();
-    expect(screen.getByLabelText('Explorador: bloqueada')).toBeTruthy();
+    expect(screen.getByLabelText('Explorador: bloqueada, 2 de 5')).toBeTruthy();
 
     expect(screen.getByText('Corrida · 18h00')).toBeTruthy();
     expect(screen.getByText('+100 XP')).toBeTruthy();
@@ -51,8 +51,11 @@ describe('ProfileScreen', () => {
     expect(screen.getByText('Setembro 2026')).toBeTruthy();
     expect(screen.getByLabelText('13: hoje, atividade feita')).toBeTruthy();
 
+    // a fração "2/5" já aparece nas células bloqueadas com progresso; ao abrir o detalhe do
+    // Explorador ela aparece de novo lá dentro.
+    const beforeDetail = screen.getAllByText('2/5').length;
     fireEvent.press(screen.getByText('Explorador'));
-    expect(screen.getByText('2/5')).toBeTruthy();
+    expect(screen.getAllByText('2/5')).toHaveLength(beforeDetail + 1);
     expect(screen.getByText('Registrou atividades em 5 cidades diferentes.')).toBeTruthy();
   });
 

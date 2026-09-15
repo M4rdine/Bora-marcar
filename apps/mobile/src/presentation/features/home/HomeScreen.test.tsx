@@ -85,7 +85,7 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByText('Confirmar que fui'));
     await screen.findByText('Concluído · Caminhada · 14h00');
     expect(screen.getByText('+130 XP')).toBeTruthy(); // 50 + 50 (score 100) + 25 (plano) + 5 (1 dia)
-    expect(screen.getByText('🎯 Cumpriu o plano')).toBeTruthy();
+    expect(screen.getByLabelText('Cumpriu o plano: +25')).toBeTruthy();
     expect(screen.getByText('30 / 300 XP')).toBeTruthy(); // nível 2 vai de 100 a 400
     expect(screen.getByText('+25')).toBeTruthy();
     // concluído hoje: o atalho leva ao dia de amanhã, onde o plano é de fato criado.

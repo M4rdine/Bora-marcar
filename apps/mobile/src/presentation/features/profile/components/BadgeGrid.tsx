@@ -14,6 +14,12 @@ type Props = {
 
 const stateLabel = (unlocked: boolean): string => (unlocked ? 'desbloqueada' : 'bloqueada');
 
+function accessibilityLabel(badge: BadgeState): string {
+  const base = `${t.badges[badge.id]}: ${stateLabel(badge.unlocked)}`;
+  if (badge.unlocked || badge.progress === null) return base;
+  return `${base}, ${t.profile.badgeProgress(badge.progress.current, badge.progress.target)}`;
+}
+
 function BadgeIcon({ badge }: { readonly badge: BadgeState }) {
   return (
     <View style={[styles.icon, badge.unlocked ? styles.unlocked : styles.locked]}>
@@ -36,7 +42,7 @@ function BadgeItem({ badge, selected, onPress }: ItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${t.badges[badge.id]}: ${stateLabel(badge.unlocked)}`}
+      accessibilityLabel={accessibilityLabel(badge)}
       onPress={onPress}
       style={[styles.item, selected ? styles.selected : null]}
     >
@@ -49,6 +55,11 @@ function BadgeItem({ badge, selected, onPress }: ItemProps) {
       >
         {t.badges[badge.id]}
       </AppText>
+      {!badge.unlocked && badge.progress !== null ? (
+        <AppText variant="micro" tone="muted">
+          {`${badge.progress.current}/${badge.progress.target}`}
+        </AppText>
+      ) : null}
     </Pressable>
   );
 }

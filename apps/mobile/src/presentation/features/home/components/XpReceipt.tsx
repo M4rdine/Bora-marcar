@@ -13,10 +13,20 @@ export function XpReceipt({ receipt, activityEmoji }: Props) {
   return (
     <Surface strength="shade" padding={3} gap={2}>
       {receipt.rows.map((row) => (
-        <View key={row.key} style={styles.row}>
-          <AppText variant="small">
-            {`${row.key === 'base' ? activityEmoji : ROW_EMOJI[row.key]} ${row.label}`}
-          </AppText>
+        <View
+          key={row.key}
+          style={styles.row}
+          accessible
+          accessibilityLabel={`${row.label}: ${row.value}`}
+        >
+          <View style={styles.labelRow}>
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <AppText variant="small">
+                {row.key === 'base' ? activityEmoji : ROW_EMOJI[row.key]}
+              </AppText>
+            </View>
+            <AppText variant="small">{row.label}</AppText>
+          </View>
           <AppText variant="small" tabular weight="700">
             {row.value}
           </AppText>
@@ -36,6 +46,7 @@ export function XpReceipt({ receipt, activityEmoji }: Props) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between' },
+  labelRow: { flexDirection: 'row', gap: tokens.space[1] },
   total: {
     borderTopWidth: 1,
     borderStyle: 'dashed',

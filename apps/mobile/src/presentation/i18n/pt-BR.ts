@@ -182,6 +182,7 @@ export const t = {
     statLabels,
     achievements: 'Conquistas',
     badges: (unlocked: number, total: number) => `${unlocked} de ${total}`,
+    badgeProgress: (current: number, target: number) => `${current} de ${target}`,
     bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
     monthSummary: (active: number, rest: number) =>
       `${active} ${plural(active, 'dia ativo', 'dias ativos')} · ${rest} ${plural(rest, 'folga', 'folgas')} por chuva`,
