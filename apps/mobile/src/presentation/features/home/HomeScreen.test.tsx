@@ -35,6 +35,8 @@ describe('HomeScreen', () => {
     expect(screen.getByText('A melhor hora para sair, em uma frase.')).toBeTruthy();
     expect(screen.getByText('Como funciona')).toBeTruthy();
     expect(screen.getByLabelText('Passo 1')).toBeTruthy();
+    expect(screen.getByLabelText('Passo 2')).toBeTruthy();
+    expect(screen.getByLabelText('Passo 3')).toBeTruthy();
     fireEvent.press(screen.getByText('Buscar cidade'));
     expect(mockPush).toHaveBeenCalledWith('/cities');
   });
@@ -82,6 +84,8 @@ describe('HomeScreen', () => {
     expect(within(confirmHero).getByText('🚶 Caminhada · plano das 14h')).toBeTruthy();
     expect(within(confirmHero).getByText('Agora: Ótimo · 100')).toBeTruthy();
     expect(within(confirmHero).queryByText('Plano feito em outra cidade')).toBeNull();
+    // fatores da janela do plano também aparecem no estado "confirm" (fixture padrão: sensação 22°).
+    expect(within(confirmHero).getByText('22°')).toBeTruthy();
     fireEvent.press(screen.getByText('Confirmar que fui'));
     await screen.findByText('Concluído · Caminhada · 14h00');
     expect(screen.getByText('+130 XP')).toBeTruthy(); // 50 + 50 (score 100) + 25 (plano) + 5 (1 dia)
@@ -166,19 +170,19 @@ describe('HomeScreen', () => {
   it('dia sem janela boa mostra o motivo, permite registrar e marca o dia de folga', async () => {
     usePreferences.setState({ city: saoPaulo });
     const progress = memoryProgressRepository();
-    renderWithProviders(<HomeScreen />, {
-      services: fakeServices({
-        progress,
-        forecast: fakeForecast(
-          ok(
-            // só hoje chove: amanhã segue com janela boa, então o atalho "Amanhã: …" aparece.
-            makeForecast(DATES, (date) =>
-              date === '2026-09-13' ? { precipitationProbability: 95, precipitationMm: 2 } : {},
-            ),
+    const services = fakeServices({
+      progress,
+      forecast: fakeForecast(
+        ok(
+          // só hoje chove: amanhã segue com janela boa, então o atalho "Amanhã: …" aparece.
+          makeForecast(DATES, (date) =>
+            date === '2026-09-13' ? { precipitationProbability: 95, precipitationMm: 2 } : {},
           ),
         ),
-      }),
+      ),
     });
+    const recordBadWeatherDay = jest.spyOn(services, 'recordBadWeatherDay');
+    renderWithProviders(<HomeScreen />, { services });
     // "Sem janela boa hoje" também pode aparecer nas linhas de "Próximos dias", então a
     // verificação do herói é escopada por `getByLabelText`.
     const hero = await screen.findByLabelText('hero');
@@ -193,6 +197,12 @@ describe('HomeScreen', () => {
     await waitFor(() =>
       expect(progress.events().filter((e) => e.type === 'badWeatherDay')).toHaveLength(1),
     );
+    // trocar a atividade força um re-render no mesmo dia: a guarda por data do
+    // `useBadWeatherRecorder` deve manter um único evento e uma única chamada ao serviço.
+    fireEvent.press(screen.getByText('Corrida'));
+    await waitFor(() => expect(screen.getByText('Corrida')).toBeTruthy());
+    expect(progress.events().filter((e) => e.type === 'badWeatherDay')).toHaveLength(1);
+    expect(recordBadWeatherDay).toHaveBeenCalledTimes(1);
     fireEvent.press(within(hero).getByText('Amanhã: 6h–9h, ótimo'));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/day/[date]',

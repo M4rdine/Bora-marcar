@@ -57,6 +57,25 @@ describe('HomeScreen (MSW + adapters reais)', () => {
     expect(screen.getAllByText(/\d+h – \d+h/).length).toBeGreaterThan(0);
   });
 
+  it('pede a previsão com timezone=auto e forecast_days=5', async () => {
+    const urls: string[] = [];
+    const onRequestStart = ({ request }: { request: Request }) => urls.push(request.url);
+    server.events.on('request:start', onRequestStart);
+
+    try {
+      renderWithProviders(<HomeScreen />, { services: realServices() });
+      await screen.findByText('Seu dia, hora a hora', {}, { timeout: 5000 });
+
+      const forecastUrl = urls
+        .map((u) => new URL(u))
+        .find((u) => u.href.startsWith('https://api.open-meteo.com/v1/forecast'));
+      expect(forecastUrl?.searchParams.get('timezone')).toBe('auto');
+      expect(forecastUrl?.searchParams.get('forecast_days')).toBe('5');
+    } finally {
+      server.events.removeListener('request:start', onRequestStart);
+    }
+  });
+
   it('erro HTTP do serviço de previsão mostra mensagem e botão de tentar de novo', async () => {
     server.use(
       http.get('https://api.open-meteo.com/v1/forecast', () =>

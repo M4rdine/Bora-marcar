@@ -7,7 +7,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "lint": "expo lint",
+    "lint": "expo lint && eslint eslint.config.js jest.setup.js",
     "typecheck": "tsc --noEmit",
     "test": "jest --coverage --maxWorkers=50%",
     "test:watch": "jest --watch"
@@ -93,6 +93,12 @@
         "functions": 100,
         "lines": 100,
         "statements": 100
+      },
+      "./src/presentation/features/": {
+        "branches": 80,
+        "functions": 85,
+        "lines": 85,
+        "statements": 85
       }
     },
     "transformIgnorePatterns": [

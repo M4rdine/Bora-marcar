@@ -17,11 +17,23 @@
 declare module 'msw/node' {
   type RequestHandler = import('msw').RequestHandler;
 
+  /** Só o evento de ciclo de vida usado pelos testes (Tarefa 11): início da requisição. */
+  type RequestStartListener = (args: {
+    readonly request: Request;
+    readonly requestId: string;
+  }) => void;
+
+  type LifeCycleEventEmitter = {
+    on(event: 'request:start', listener: RequestStartListener): void;
+    removeListener(event: 'request:start', listener: RequestStartListener): void;
+  };
+
   export type SetupServerApi = {
     listen(options?: { readonly onUnhandledRequest?: 'error' | 'warn' | 'bypass' }): void;
     resetHandlers(...nextHandlers: readonly RequestHandler[]): void;
     use(...handlers: readonly RequestHandler[]): void;
     close(): void;
+    readonly events: LifeCycleEventEmitter;
   };
 
   export function setupServer(...handlers: readonly RequestHandler[]): SetupServerApi;

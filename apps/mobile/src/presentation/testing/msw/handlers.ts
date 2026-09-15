@@ -10,10 +10,5 @@ export const handlers = [
   http.get('https://geocoding-api.open-meteo.com/v1/search', () =>
     HttpResponse.json(geocodingSaoPaulo),
   ),
-  http.get('https://api.open-meteo.com/v1/forecast', ({ request }) => {
-    const url = new URL(request.url);
-    expect(url.searchParams.get('timezone')).toBe('auto');
-    expect(url.searchParams.get('forecast_days')).toBe('5');
-    return HttpResponse.json(forecastSaoPaulo);
-  }),
+  http.get('https://api.open-meteo.com/v1/forecast', () => HttpResponse.json(forecastSaoPaulo)),
 ];
