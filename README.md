@@ -50,6 +50,11 @@ curl -sI https://bora-marcar.duckdns.org/v1/forecast?lat=-23.55&lon=-46.63 | gre
 curl -s https://bora-marcar.duckdns.org/config/v1/engine.json | head -c 80
 ```
 
+**App rodando no navegador:** <https://bora-marcar.duckdns.org/app/> — é o mesmo código React
+Native compilado para web (`infra/publish-web.sh`), já em modo `bff` contra essa API. Serve para
+ver o app sem instalar nada; o alvo oficial continua sendo o Expo Go ou um build nativo, porque
+as notificações locais não existem no navegador.
+
 Em `bff`, as duas variáveis são obrigatórias — sem
 elas, ou com uma URL inválida, o app falha alto com uma tela de erro em vez de cair para
 `direct` em silêncio (ADR 0006).
