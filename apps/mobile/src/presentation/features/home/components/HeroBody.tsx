@@ -136,6 +136,9 @@ function NoWindowBody({ state }: { readonly state: Extract<HeroState, { kind: 'n
       {dominant ? (
         <AppText variant="small">{t.home.noWindowBecause(t.reasons[dominant])}</AppText>
       ) : null}
+      <AppText variant="small" tone="muted">
+        {t.home.restDayProtected}
+      </AppText>
       {score !== null ? <Pill label={`${t.labels.poor} · ${score}`} tone="poor" /> : null}
     </>
   );

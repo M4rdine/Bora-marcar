@@ -54,6 +54,12 @@ describe('HomeScreen', () => {
     expect(screen.getByText('+130 XP')).toBeTruthy(); // 50 + 50 (score 100) + 25 (plano) + 5 (1 dia)
     expect(screen.getByText('Cumpriu o plano')).toBeTruthy();
     expect(screen.getByText('+25')).toBeTruthy();
+    // concluído hoje: o atalho leva ao dia de amanhã, onde o plano é de fato criado.
+    fireEvent.press(screen.getByText('Planejar amanhã às 6h'));
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/day/[date]',
+      params: { date: '2026-09-14' },
+    });
   });
 
   it('erro de rede mostra mensagem e botão de tentar de novo', async () => {
@@ -112,18 +118,29 @@ describe('HomeScreen', () => {
       services: fakeServices({
         progress,
         forecast: fakeForecast(
-          ok(makeForecast(DATES, () => ({ precipitationProbability: 95, precipitationMm: 2 }))),
+          ok(
+            // só hoje chove: amanhã segue com janela boa, então o atalho "Amanhã: …" aparece.
+            makeForecast(DATES, (date) =>
+              date === '2026-09-13' ? { precipitationProbability: 95, precipitationMm: 2 } : {},
+            ),
+          ),
         ),
       }),
     });
-    // "Sem janela boa hoje" também aparece nas linhas de "Próximos dias" (mesma fixture uniforme
-    // de chuva para todos os dias), então a verificação do herói é escopada por `getByLabelText`.
+    // "Sem janela boa hoje" também pode aparecer nas linhas de "Próximos dias", então a
+    // verificação do herói é escopada por `getByLabelText`.
     const hero = await screen.findByLabelText('hero');
     expect(within(hero).getByText('Sem janela boa hoje')).toBeTruthy();
     expect(within(hero).getByText('Motivo principal: chuva.')).toBeTruthy();
+    expect(within(hero).getByText('Hoje não conta contra a sua sequência.')).toBeTruthy();
     await waitFor(() =>
       expect(progress.events().filter((e) => e.type === 'badWeatherDay')).toHaveLength(1),
     );
+    fireEvent.press(within(hero).getByText('Amanhã: 6h–9h, ótimo'));
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/day/[date]',
+      params: { date: '2026-09-14' },
+    });
     fireEvent.press(within(hero).getByText('Saí em outro horário'));
     // relógio falso: 14:00 em São Paulo → o seletor abre com a hora atual já em destaque.
     fireEvent.press(await screen.findByText('Registrar às 14h'));

@@ -53,6 +53,8 @@ type HeroSectionProps = {
  * incondicionalmente a cada renderização deste componente sem violar as regras de hooks.
  */
 function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: HeroSectionProps) {
+  const tomorrowDate = addDays(snapshot.now.date, 1);
+  const tomorrow = snapshot.overview.nextDays.find((d) => d.date === tomorrowDate) ?? null;
   const hero = deriveHeroState({
     today: snapshot.overview.today,
     now: snapshot.now,
@@ -69,9 +71,11 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
         config={config}
         now={snapshot.now}
         hours={snapshot.overview.today.hours}
+        tomorrow={tomorrow}
         level={progress.level}
         actions={actions}
         unlockedToday={unlockedToday}
+        onOpenTomorrow={() => onOpenDay(tomorrowDate)}
       />
       <HourlyTimeline
         hours={snapshot.overview.today.hours}
@@ -84,7 +88,7 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
         comparison={snapshot.overview.comparison}
         bestDate={snapshot.overview.bestDate}
         today={snapshot.now.date}
-        tomorrow={addDays(snapshot.now.date, 1)}
+        tomorrow={tomorrowDate}
         onOpenDay={onOpenDay}
       />
     </>

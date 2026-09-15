@@ -1,6 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 
-import type { BadgeState, EngineConfig, HourScore, LevelProgress, LocalDateTime } from '@/domain';
+import type {
+  BadgeState,
+  DayRecommendation,
+  EngineConfig,
+  HourScore,
+  LevelProgress,
+  LocalDateTime,
+} from '@/domain';
 
 import { AppText, Surface, tokens } from '../../../ui';
 import type { HeroState } from '../heroState';
@@ -15,12 +22,25 @@ type Props = {
   readonly now: LocalDateTime;
   /** Horas pontuadas do dia de hoje (para a previsão da janela no estado `planned`). */
   readonly hours: readonly HourScore[];
+  /** Primeiro dia da previsão depois de hoje, quando existe: fonte dos atalhos para amanhã. */
+  readonly tomorrow: DayRecommendation | null;
   readonly level: LevelProgress;
   readonly actions: HeroActionsResult;
   readonly unlockedToday: readonly BadgeState[];
+  readonly onOpenTomorrow: () => void;
 };
 
-export function HeroCard({ state, config, now, hours, level, actions, unlockedToday }: Props) {
+export function HeroCard({
+  state,
+  config,
+  now,
+  hours,
+  tomorrow,
+  level,
+  actions,
+  unlockedToday,
+  onOpenTomorrow,
+}: Props) {
   return (
     <Surface
       strength="strong"
@@ -36,12 +56,14 @@ export function HeroCard({ state, config, now, hours, level, actions, unlockedTo
         state={state}
         config={config}
         now={now}
+        tomorrow={tomorrow}
         busy={actions.busy}
         pickableHours={actions.pickableHours}
         onPlan={actions.onPlan}
         onCancel={actions.onCancel}
         onConfirm={actions.onConfirm}
         onLogNow={actions.onLogNow}
+        onOpenTomorrow={onOpenTomorrow}
       />
       {actions.errorMessage ? (
         <AppText variant="small" style={styles.error}>

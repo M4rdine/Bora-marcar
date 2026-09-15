@@ -1,11 +1,12 @@
 import { useState } from 'react';
 
-import type { EngineConfig, LocalDateTime } from '@/domain';
+import { labelFor, type DayRecommendation, type EngineConfig, type LocalDateTime } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
 import { Button } from '../../../ui';
 import type { HeroState } from '../heroState';
 import type { PickableHour } from '../pickableHours';
+import { tomorrowShortcut, type TomorrowShortcut } from '../tomorrowShortcut';
 
 import { HourPicker } from './HourPicker';
 
@@ -13,12 +14,16 @@ type Props = {
   readonly state: HeroState;
   readonly config: EngineConfig;
   readonly now: LocalDateTime;
+  /** Primeiro dia da previsão depois de hoje, quando existe: fonte dos atalhos para amanhã. */
+  readonly tomorrow: DayRecommendation | null;
   readonly busy: boolean;
   readonly pickableHours: readonly PickableHour[];
   readonly onPlan: () => void;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
   readonly onLogNow: (hour: number, minute: number, hourScore: number) => void;
+  /** Abre `/day/[date]` de amanhã, onde o planejamento de fato acontece. */
+  readonly onOpenTomorrow: () => void;
 };
 
 /** Minuto do registro: exato para a hora atual, senão a hora escolhida já foi inteira. */
@@ -73,26 +78,68 @@ function PickingHourActions({
   );
 }
 
+type TomorrowProps = {
+  readonly shortcut: TomorrowShortcut | null;
+  readonly config: EngineConfig;
+  readonly busy: boolean;
+  readonly onOpenTomorrow: () => void;
+};
+
+/** Atalho "Amanhã: 6h–9h, ótimo" mostrado quando hoje não tem janela boa. */
+function SeeTomorrowButton({ shortcut, config, busy, onOpenTomorrow }: TomorrowProps) {
+  if (shortcut === null) return null;
+  return (
+    <Button
+      label={t.home.seeTomorrow(
+        shortcut.startHour,
+        shortcut.endHour,
+        labelFor(shortcut.score, config),
+      )}
+      kind="quiet"
+      onPress={onOpenTomorrow}
+      disabled={busy}
+    />
+  );
+}
+
+/** Atalho "Planejar amanhã às 6h" no estado concluído; o plano em si é feito na tela do dia. */
+function PlanTomorrowButton({ shortcut, busy, onOpenTomorrow }: Omit<TomorrowProps, 'config'>) {
+  if (shortcut === null) return null;
+  return (
+    <Button
+      label={t.home.planTomorrowShortcut(shortcut.startHour)}
+      kind="quiet"
+      onPress={onOpenTomorrow}
+      disabled={busy}
+    />
+  );
+}
+
 type DefaultActionsProps = {
   readonly state: HeroState;
   readonly config: EngineConfig;
+  readonly shortcut: TomorrowShortcut | null;
   readonly busy: boolean;
   readonly onPlan: () => void;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
   readonly onOpenPicker: () => void;
+  readonly onOpenTomorrow: () => void;
 };
 
 /** Botões de cada estado do herói quando o seletor de hora está fechado. */
 function DefaultActions({
   state,
   config,
+  shortcut,
   busy,
   onPlan,
   onCancel,
   onConfirm,
   onOpenPicker,
+  onOpenTomorrow,
 }: DefaultActionsProps) {
+  const tomorrowProps = { shortcut, busy, onOpenTomorrow };
   switch (state.kind) {
     case 'plan': {
       const { base, planBonus } = config.xp;
@@ -124,9 +171,14 @@ function DefaultActions({
         </>
       );
     case 'noWindow':
-      return <Button label={t.home.logOther} onPress={onOpenPicker} disabled={busy} />;
+      return (
+        <>
+          <SeeTomorrowButton {...tomorrowProps} config={config} />
+          <Button label={t.home.logOther} onPress={onOpenPicker} disabled={busy} />
+        </>
+      );
     case 'done':
-      return null;
+      return <PlanTomorrowButton {...tomorrowProps} />;
   }
 }
 
@@ -134,12 +186,14 @@ export function HeroActions({
   state,
   config,
   now,
+  tomorrow,
   busy,
   pickableHours,
   onPlan,
   onCancel,
   onConfirm,
   onLogNow,
+  onOpenTomorrow,
 }: Props) {
   const picker = useHourPicker(now, pickableHours, onLogNow);
 
@@ -160,11 +214,13 @@ export function HeroActions({
     <DefaultActions
       state={state}
       config={config}
+      shortcut={tomorrowShortcut(tomorrow)}
       busy={busy}
       onPlan={onPlan}
       onCancel={onCancel}
       onConfirm={onConfirm}
       onOpenPicker={picker.open}
+      onOpenTomorrow={onOpenTomorrow}
     />
   );
 }

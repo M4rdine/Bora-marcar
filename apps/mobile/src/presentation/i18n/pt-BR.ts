@@ -5,6 +5,13 @@ type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' |
 
 const streakDaysLabel = (n: number): string => (n === 1 ? '1 dia seguido' : `${n} dias seguidos`);
 
+const LABELS = {
+  great: 'Ótimo',
+  good: 'Bom',
+  fair: 'Razoável',
+  poor: 'Ruim',
+} satisfies Record<ScoreLabel, string>;
+
 export const t = {
   tabs: {
     home: 'Hoje',
@@ -12,10 +19,7 @@ export const t = {
     profile: 'Perfil',
     icons: { home: '🌤', cities: '🔍', profile: '🏅' },
   },
-  labels: { great: 'Ótimo', good: 'Bom', fair: 'Razoável', poor: 'Ruim' } satisfies Record<
-    ScoreLabel,
-    string
-  >,
+  labels: LABELS,
   tips: {
     sunscreen: 'Use protetor',
     water: 'Leve água',
@@ -93,6 +97,10 @@ export const t = {
     bestToday: 'Melhor horário hoje',
     noWindow: 'Sem janela boa hoje',
     noWindowBecause: (reason: string) => `Motivo principal: ${reason}.`,
+    restDayProtected: 'Hoje não conta contra a sua sequência.',
+    seeTomorrow: (startHour: number, endHour: number, label: ScoreLabel) =>
+      `Amanhã: ${startHour}h–${endHour}h, ${LABELS[label].toLowerCase()}`,
+    planTomorrowShortcut: (startHour: number) => `Planejar amanhã às ${startHour}h`,
     windowPassed: 'Sua janela de hoje já passou',
     planExpired: (hour: number) => `O plano das ${hour}h expirou`,
     logNow: 'Registrar atividade',
