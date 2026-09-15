@@ -25,6 +25,7 @@ import { DayHeader } from './components/DayHeader';
 import { DayHero } from './components/DayHero';
 import { DayNotFound } from './components/DayNotFound';
 import { dayScreenState } from './dayScreenState';
+import { routeDate } from './routeDate';
 import { useDayActions, type DayActionsResult } from './useDayActions';
 
 type ContentProps = {
@@ -120,7 +121,8 @@ function DayScreenBody(props: BodyProps) {
 
 export function DayScreen() {
   const router = useRouter();
-  const { date } = useLocalSearchParams<'/day/[date]'>();
+  const { date: rawDate } = useLocalSearchParams();
+  const date = routeDate(rawDate);
   const city = usePreferences((s) => s.city);
   const activity = usePreferences((s) => s.activity);
   const config = useEngineConfig();
