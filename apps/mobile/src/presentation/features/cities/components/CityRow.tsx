@@ -19,10 +19,19 @@ type Props = {
   readonly onToggleFavorite: () => void;
 };
 
+/**
+ * Selecionar a cidade e favoritar são dois botões IRMÃOS dentro da superfície da linha (nunca
+ * aninhados): um leitor de tela precisa focar e acionar cada um separadamente.
+ */
 export function CityRow({ city, favorite, onSelect, onToggleFavorite }: Props) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={cityLabel(city)} onPress={onSelect}>
-      <Surface strength="soft" radius="card" padding={3} style={styles.row}>
+    <Surface strength="soft" radius="card" padding={3} style={styles.row}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={cityLabel(city)}
+        onPress={onSelect}
+        style={styles.main}
+      >
         <Emoji
           symbol={countryFlag(city.countryCode)}
           size={tokens.size.flag}
@@ -34,20 +43,21 @@ export function CityRow({ city, favorite, onSelect, onToggleFavorite }: Props) {
             {cityDetail(city)}
           </AppText>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={favorite ? t.cities.unfavorite : t.cities.favorite}
-          onPress={onToggleFavorite}
-          hitSlop={tokens.space[2]}
-        >
-          <AppText variant="title">{favorite ? '★' : '☆'}</AppText>
-        </Pressable>
-      </Surface>
-    </Pressable>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={favorite ? t.cities.unfavorite : t.cities.favorite}
+        onPress={onToggleFavorite}
+        hitSlop={tokens.space[2]}
+      >
+        <AppText variant="title">{favorite ? '★' : '☆'}</AppText>
+      </Pressable>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   info: { flex: 1, gap: tokens.space[1] },
 });
