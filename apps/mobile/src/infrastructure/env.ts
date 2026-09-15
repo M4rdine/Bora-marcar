@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export type RawEnv = {
-  readonly apiMode?: string;
-  readonly bffUrl?: string;
-  readonly assetsUrl?: string;
+  readonly apiMode?: string | undefined;
+  readonly bffUrl?: string | undefined;
+  readonly assetsUrl?: string | undefined;
 };
 export type AppEnv = {
   readonly apiMode: 'direct' | 'bff';
