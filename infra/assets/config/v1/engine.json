@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "activities": {
+    "walk": {
+      "id": "walk",
+      "name": "Caminhada",
+      "emoji": "🚶",
+      "thermal": {
+        "idealMin": 17,
+        "idealMax": 26,
+        "tolMin": 8,
+        "tolMax": 33
+      },
+      "wind": {
+        "ok": 20,
+        "max": 45
+      },
+      "uv": {
+        "ok": 5,
+        "max": 9
+      },
+      "nightFactor": 0.7,
+      "weights": {
+        "thermal": 0.4,
+        "rain": 0.3,
+        "wind": 0.15,
+        "uv": 0.1,
+        "sun": 0.05
+      }
+    },
+    "run": {
+      "id": "run",
+      "name": "Corrida",
+      "emoji": "🏃",
+      "thermal": {
+        "idealMin": 12,
+        "idealMax": 21,
+        "tolMin": 3,
+        "tolMax": 29
+      },
+      "wind": {
+        "ok": 20,
+        "max": 45
+      },
+      "uv": {
+        "ok": 5,
+        "max": 9
+      },
+      "nightFactor": 0.6,
+      "weights": {
+        "thermal": 0.45,
+        "rain": 0.25,
+        "wind": 0.15,
+        "uv": 0.15,
+        "sun": 0
+      }
+    },
+    "cycle": {
+      "id": "cycle",
+      "name": "Ciclismo",
+      "emoji": "🚴",
+      "thermal": {
+        "idealMin": 15,
+        "idealMax": 25,
+        "tolMin": 6,
+        "tolMax": 32
+      },
+      "wind": {
+        "ok": 15,
+        "max": 35
+      },
+      "uv": {
+        "ok": 5,
+        "max": 9
+      },
+      "nightFactor": 0.3,
+      "weights": {
+        "thermal": 0.3,
+        "rain": 0.3,
+        "wind": 0.3,
+        "uv": 0.1,
+        "sun": 0
+      }
+    },
+    "beach": {
+      "id": "beach",
+      "name": "Praia",
+      "emoji": "🏖",
+      "thermal": {
+        "idealMin": 25,
+        "idealMax": 32,
+        "tolMin": 20,
+        "tolMax": 38
+      },
+      "wind": {
+        "ok": 15,
+        "max": 35
+      },
+      "uv": {
+        "ok": 6,
+        "max": 10
+      },
+      "nightFactor": 0,
+      "weights": {
+        "thermal": 0.3,
+        "rain": 0.25,
+        "wind": 0.15,
+        "uv": 0.1,
+        "sun": 0.2
+      }
+    },
+    "picnic": {
+      "id": "picnic",
+      "name": "Piquenique",
+      "emoji": "🧺",
+      "thermal": {
+        "idealMin": 19,
+        "idealMax": 27,
+        "tolMin": 12,
+        "tolMax": 33
+      },
+      "wind": {
+        "ok": 15,
+        "max": 40
+      },
+      "uv": {
+        "ok": 5,
+        "max": 9
+      },
+      "nightFactor": 0.2,
+      "weights": {
+        "thermal": 0.35,
+        "rain": 0.35,
+        "wind": 0.15,
+        "uv": 0.05,
+        "sun": 0.1
+      }
+    }
+  },
+  "scores": {
+    "great": 80,
+    "good": 65,
+    "fair": 45
+  },
+  "window": {
+    "sizes": [1, 2, 3],
+    "minHourScore": 45,
+    "lengthBonus": 3,
+    "minRemainingMinutes": 30,
+    "graceHoursAfterEnd": 2,
+    "quietHoursEnd": 5
+  },
+  "tips": {
+    "uvProtect": 6,
+    "waterApparent": 28,
+    "coolDropDeg": 4,
+    "rainNextPct": 40,
+    "coatApparent": 14
+  },
+  "xp": {
+    "base": 50,
+    "planBonus": 25,
+    "streakPerDay": 5,
+    "streakMaxDays": 10
+  },
+  "levels": [
+    {
+      "level": 1,
+      "xp": 0,
+      "name": "Brisa"
+    },
+    {
+      "level": 2,
+      "xp": 100,
+      "name": "Garoa"
+    },
+    {
+      "level": 3,
+      "xp": 400,
+      "name": "Sol"
+    },
+    {
+      "level": 4,
+      "xp": 900,
+      "name": "Ventania"
+    },
+    {
+      "level": 5,
+      "xp": 1600,
+      "name": "Aurora"
+    },
+    {
+      "level": 6,
+      "xp": 2500,
+      "name": "Tempestade"
+    },
+    {
+      "level": 7,
+      "xp": 3600,
+      "name": "Furacão"
+    },
+    {
+      "level": 8,
+      "xp": 4900,
+      "name": "Clima Perfeito"
+    }
+  ]
+}
