@@ -24,6 +24,7 @@ export function HourPicker({ options, selected, onSelect }: Props) {
           label={`${option.hour}h`}
           active={option.hour === selected}
           score={option.score}
+          scoreLabel={option.label}
           onPress={() => onSelect(option.hour)}
         />
       ))}

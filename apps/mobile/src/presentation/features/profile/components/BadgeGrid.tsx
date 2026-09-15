@@ -41,7 +41,12 @@ function BadgeItem({ badge, selected, onPress }: ItemProps) {
       style={[styles.item, selected ? styles.selected : null]}
     >
       <BadgeIcon badge={badge} />
-      <AppText variant="micro" weight="700" style={styles.label}>
+      <AppText
+        variant="micro"
+        weight="700"
+        tone={badge.unlocked ? 'default' : 'muted'}
+        style={styles.label}
+      >
         {t.badges[badge.id]}
       </AppText>
     </Pressable>
@@ -88,10 +93,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   unlocked: { backgroundColor: tokens.color.gold, borderColor: tokens.color.gold },
-  locked: {
-    backgroundColor: tokens.color.surface,
-    borderColor: tokens.color.border,
-    opacity: 0.35,
-  },
+  // Bloqueada: a superfície apagada e o rótulo suave já distinguem o estado; o glifo fica em
+  // opacidade cheia para continuar legível (o `opacity: 0.35` anterior o apagava junto).
+  locked: { backgroundColor: tokens.color.surface, borderColor: tokens.color.border },
   label: { textAlign: 'center' },
 });

@@ -3,7 +3,7 @@ import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 import { tokens } from './tokens';
 
 type Variant = 'display' | 'xp' | 'title' | 'subtitle' | 'body' | 'small' | 'micro' | 'kicker';
-type Tone = 'default' | 'muted' | 'ink';
+type Tone = 'default' | 'muted' | 'ink' | 'mint';
 type Props = TextProps & {
   readonly variant?: Variant;
   readonly tone?: Tone;
@@ -64,5 +64,6 @@ const styles = StyleSheet.create<Record<StyleKey, TextStyle>>({
   tone_default: {},
   tone_muted: { color: tokens.color.textMuted },
   tone_ink: { color: tokens.color.ink },
+  tone_mint: { color: tokens.color.mint },
   tabular: { fontVariant: ['tabular-nums'] },
 });

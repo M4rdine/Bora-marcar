@@ -2,7 +2,7 @@ import { addDays } from '@/domain';
 
 import { weekdayIndex, weekdayShort } from '../../i18n/dates';
 
-export type WeekDayState = 'done' | 'today' | 'rest' | 'todayDone' | 'none';
+export type WeekDayState = 'done' | 'today' | 'rest' | 'todayDone' | 'future' | 'none';
 
 export type WeekStripDay = {
   readonly date: string;
@@ -25,10 +25,14 @@ function stateFor(date: string, input: Input): WeekDayState {
   if (isToday) return 'today';
   if (isDone) return 'done';
   if (input.restDates.has(date)) return 'rest';
+  if (date > input.today) return 'future';
   return 'none';
 }
 
-/** Os 7 dias da semana (segunda a domingo) de `today`, com o estado de cada um. */
+/**
+ * Prioridade: `todayDone` > `today` > `done` > `rest` > `future` > `none`. `future` distingue os
+ * dias da semana que ainda não chegaram dos dias passados sem registro (`none`).
+ */
 export function weekStrip(input: Input): readonly WeekStripDay[] {
   const monday = addDays(input.today, -((weekdayIndex(input.today) + 6) % DAYS_IN_WEEK));
   return Array.from({ length: DAYS_IN_WEEK }, (_, i) => {

@@ -123,6 +123,7 @@ export const t = {
     axisLabels: ['0h', '6h', '12h', '18h', '24h'],
     legend: { great: 'Ótimo', fair: 'Ok', poor: 'Evite' },
     bestOfWeek: 'melhor da semana',
+    chipScore: (label: string, score: number) => `${label}, score ${score}`,
     sunLabel: 'Sol',
     moonLabel: 'Lua',
   },

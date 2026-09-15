@@ -34,7 +34,7 @@ export function DayRow({ day, title, glyph, isBest, onPress }: Props) {
       style={[styles.row, isBest ? styles.best : null]}
     >
       {isBest ? (
-        <AppText variant="micro" weight="800" tone="muted">
+        <AppText variant="micro" weight="800" tone="mint">
           {t.home.bestOfWeek}
         </AppText>
       ) : null}

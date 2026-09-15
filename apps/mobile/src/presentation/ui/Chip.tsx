@@ -1,5 +1,9 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import type { ScoreLabel } from '@/domain';
+
+import { t } from '../i18n/pt-BR';
+
 import { AppText } from './Text';
 import { tokens } from './tokens';
 
@@ -8,14 +12,23 @@ type Props = {
   readonly emoji?: string;
   readonly active?: boolean;
   readonly score?: number | null;
+  /** Rótulo do score: define a cor da mini-pílula e entra no rótulo de acessibilidade. */
+  readonly scoreLabel?: ScoreLabel | undefined;
   readonly onPress: () => void;
 };
 
-export function Chip({ label, emoji, active = false, score = null, onPress }: Props) {
+/** Sem rótulo de score o chip cai no tom "good" (menta), a cor histórica da mini-pílula. */
+const DEFAULT_SCORE_LABEL: ScoreLabel = 'good';
+
+export function Chip({ label, emoji, active = false, score = null, scoreLabel, onPress }: Props) {
+  const shownScore = active ? score : null;
+  const tone = scoreLabel ?? DEFAULT_SCORE_LABEL;
+  const ariaLabel =
+    shownScore !== null && scoreLabel !== undefined ? t.home.chipScore(label, shownScore) : label;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={ariaLabel}
       accessibilityState={{ selected: active }}
       onPress={onPress}
       style={[styles.base, active ? styles.active : styles.inactive]}
@@ -24,10 +37,10 @@ export function Chip({ label, emoji, active = false, score = null, onPress }: Pr
       <AppText variant="small" weight="600" style={active ? styles.activeText : undefined}>
         {label}
       </AppText>
-      {active && score !== null ? (
-        <View style={styles.scorePill}>
-          <AppText variant="micro" weight="800" style={styles.scoreText}>
-            {score}
+      {shownScore !== null ? (
+        <View style={[styles.scorePill, { backgroundColor: tokens.color.score[tone] }]}>
+          <AppText variant="micro" weight="800" style={{ color: tokens.color.scoreInk[tone] }}>
+            {shownScore}
           </AppText>
         </View>
       ) : null}
@@ -48,10 +61,8 @@ const styles = StyleSheet.create({
   active: { backgroundColor: tokens.color.accent },
   activeText: { color: tokens.color.accentInk },
   scorePill: {
-    backgroundColor: tokens.color.mint,
     borderRadius: tokens.radius.pill,
     paddingVertical: tokens.space[1],
     paddingHorizontal: tokens.space[1],
   },
-  scoreText: { color: tokens.color.mintInk },
 });

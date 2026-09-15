@@ -15,6 +15,7 @@ const BG_BY_STATE: Record<WeekDayState, string> = {
   todayDone: tokens.color.mint,
   today: tokens.color.gold,
   rest: tokens.color.surface,
+  future: tokens.color.surface,
   none: tokens.color.surface,
 };
 
@@ -23,6 +24,7 @@ const TEXT_BY_STATE: Record<WeekDayState, string> = {
   todayDone: tokens.color.mintInk,
   today: tokens.color.goldInk,
   rest: tokens.color.textMuted,
+  future: tokens.color.textMuted,
   none: tokens.color.textMuted,
 };
 
@@ -72,7 +74,7 @@ const styles = StyleSheet.create({
   square: {
     width: SQUARE,
     height: SQUARE,
-    borderRadius: tokens.radius.inner,
+    borderRadius: tokens.radius.cell,
     alignItems: 'center',
     justifyContent: 'center',
   },

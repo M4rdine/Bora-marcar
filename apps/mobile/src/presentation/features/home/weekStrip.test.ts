@@ -29,7 +29,7 @@ describe('weekStrip', () => {
     ]);
   });
 
-  it('hoje com atividade registrada vira todoDone; dias futuros da semana viram none', () => {
+  it('hoje com atividade registrada vira todayDone; dias depois de hoje viram future', () => {
     // 2026-09-08 é uma terça-feira dentro da mesma semana.
     const days = weekStrip({
       today: '2026-09-08',
@@ -38,7 +38,9 @@ describe('weekStrip', () => {
     });
     const byDate = new Map(days.map((d) => [d.date, d.state]));
     expect(byDate.get('2026-09-08')).toBe('todayDone');
-    expect(byDate.get('2026-09-09')).toBe('none');
-    expect(byDate.get('2026-09-13')).toBe('none');
+    expect(byDate.get('2026-09-09')).toBe('future');
+    expect(byDate.get('2026-09-13')).toBe('future');
+    // dia passado da semana, sem registro e sem folga: `none`, não `future`.
+    expect(byDate.get('2026-09-07')).toBe('none');
   });
 });

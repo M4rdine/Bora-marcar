@@ -92,7 +92,7 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
 }
 
 /** Score da atividade ATIVA na melhor janela de hoje; inativas não recebem score (ver ActivityPicker). */
-function useActiveScore(overview: OverviewState, config: EngineConfig, activity: ActivityId) {
+function useActiveScore(overview: OverviewState, config: EngineConfig) {
   const now = overview.snapshot?.now ?? null;
   const forecast = overview.forecast;
   return useMemo(() => {
@@ -114,7 +114,7 @@ function HomeContent({ city, config, overview, progress }: ContentProps) {
   const activity = usePreferences((s) => s.activity);
   const selectActivity = usePreferences((s) => s.selectActivity);
   const now = overview.snapshot?.now ?? null;
-  const scoreFor = useActiveScore(overview, config, activity);
+  const scoreFor = useActiveScore(overview, config);
   return (
     <>
       {progress && now ? (

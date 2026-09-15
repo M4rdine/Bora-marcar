@@ -34,7 +34,11 @@ export function SunArc({ sunrise, sunset, nowMinutes }: Props) {
   return (
     <View style={styles.arc}>
       <View style={[styles.marker, { left: `${pct * 100}%` }]}>
-        <Emoji symbol={isDay ? '☀️' : '🌙'} label={isDay ? t.home.sunLabel : t.home.moonLabel} />
+        <Emoji
+          symbol={isDay ? '☀️' : '🌙'}
+          size={tokens.size.sunMarker}
+          label={isDay ? t.home.sunLabel : t.home.moonLabel}
+        />
       </View>
       <View style={styles.labels}>
         <AppText variant="micro" tone="muted">
@@ -58,7 +62,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: tokens.radius.pill,
     justifyContent: 'flex-end',
   },
-  marker: { position: 'absolute', top: -tokens.space[2] },
+  // `left` é a borda esquerda do marcador; deslocar meia largura centraliza o emoji no ponto do
+  // "agora" e impede que ele vaze para fora do arco em `pct` 0 (nascer) e 1 (pôr do sol).
+  marker: {
+    position: 'absolute',
+    top: -tokens.space[2],
+    transform: [{ translateX: -tokens.size.sunMarker / 2 }],
+  },
   labels: {
     flexDirection: 'row',
     justifyContent: 'space-between',

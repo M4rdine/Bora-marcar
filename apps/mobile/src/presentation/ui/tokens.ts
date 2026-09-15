@@ -5,7 +5,7 @@ export const tokens = {
     text: '#FFFFFF',
     textMuted: 'rgba(255,255,255,0.78)',
     surface: 'rgba(255,255,255,0.14)',
-    surfaceStrong: 'rgba(255,255,255,0.22)',
+    surfaceStrong: 'rgba(255,255,255,0.16)',
     border: 'rgba(255,255,255,0.28)',
     ink: '#2C2C5E',
     accent: '#FFFFFF',
@@ -37,6 +37,8 @@ export const tokens = {
     badgeGlyph: 26,
     glow: 160,
     sunArc: 34,
+    /** Corpo do marcador ☀️/🌙 do arco do sol: igual ao `fontSize` padrão do `Emoji`. */
+    sunMarker: 16,
     flag: 22,
     icon: 22,
     tabBar: 64,
