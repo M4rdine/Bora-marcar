@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { StyleSheet, type ViewProps } from 'react-native';
 import Animated, {
   runOnJS,
@@ -28,7 +28,9 @@ export function Sky({ phase, style, children, ...rest }: Props) {
     setPrevious(phase);
   }
 
-  useEffect(() => {
+  // `useLayoutEffect` (e não `useEffect`): o zero da opacidade precisa valer no MESMO frame em
+  // que o gradiente novo entra na árvore, senão ele aparece opaco por um frame antes do fade.
+  useLayoutEffect(() => {
     if (reduced) return;
     if (phase === previous) return;
     opacity.value = 0;

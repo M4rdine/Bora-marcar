@@ -100,6 +100,10 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
 
 - `presentation/queries/useOverview.ts` (88,88 % linha/statement) e `useForecast.ts` (88,88 %) têm
   ramos de erro sem teste direto de hook isolado (cobertos indiretamente pelas telas).
-- `presentation/ui/Sky.tsx` (66,66 % linha): o caminho animado (sem `useReducedMotion`) só é
-  exercitado por um teste dedicado que sobrescreve o mock padrão; vale um segundo caso cobrindo o
-  callback `runOnJS(setPrevious)` ao fim da transição.
+- Caminhos animados e o mock global de movimento reduzido: `jest.setup.js` força
+  `useReducedMotion() === true` em toda a suíte, então nenhum teste de tela passa pelas animações.
+  Só `presentation/ui/Sky.motion.test.tsx` desliga esse padrão (mock por arquivo) e cobre o
+  crossfade do céu de ponta a ponta, incluindo o `runOnJS(setPrevious)` do fim da transição —
+  `Sky.tsx` fica em 100 % de linha e 90 % de ramo (falta só o `done === false` do callback). Os
+  caminhos animados de `LevelBar`, `Reveal`, `NowOutline` e `CountUp` continuam sem cobertura
+  dentro das telas; replicar a mesma receita de mock por arquivo para eles fica para o Plano 4.
