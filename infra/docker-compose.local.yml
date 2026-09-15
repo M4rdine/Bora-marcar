@@ -3,4 +3,4 @@ services:
     build:
       context: ..
       dockerfile: apps/bff/Dockerfile
-    image: melhor-hora-bff:local
+    image: bora-marcar-bff:local

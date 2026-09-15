@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Forced command da chave de deploy do CI (authorized_keys: command="/opt/melhor-hora/ci-entry.sh",...).
+# Forced command da chave de deploy do CI (authorized_keys: command="/opt/bora-marcar/ci-entry.sh",...).
 # O sshd põe o comando pedido pelo cliente em SSH_ORIGINAL_COMMAND; só três formas são aceitas:
 #   deploy sha-<7 hex>   → deploy.sh sha-<7 hex>
 #   publish-config       → publish-config.sh
 #   receive-assets       → lê um tar.gz do stdin com raiz assets/ (só config/ e assets/) e troca o diretório
-# MELHOR_HORA_DIR existe só para testar localmente; o sshd não repassa essa variável ao cliente.
+# BORA_MARCAR_DIR existe só para testar localmente; o sshd não repassa essa variável ao cliente.
 set -euo pipefail
 
-readonly BASE_DIR="${MELHOR_HORA_DIR:-/opt/melhor-hora}"
+readonly BASE_DIR="${BORA_MARCAR_DIR:-/opt/bora-marcar}"
 readonly MAX_UPLOAD_BYTES=$((10 * 1024 * 1024))
 readonly REQUEST="${SSH_ORIGINAL_COMMAND:-}"
 

@@ -1,8 +1,8 @@
-name: melhor-hora
+name: bora-marcar
 
 services:
   bff:
-    image: ${BFF_IMAGE:-ghcr.io/techmardine/melhor-hora-bff:latest}
+    image: ${BFF_IMAGE:-ghcr.io/m4rdine/bora-marcar-bff:latest}
     restart: unless-stopped
     environment:
       PORT: '8080'
