@@ -1,10 +1,10 @@
-import { defaultEngineConfig, deriveProgress, type Progress } from '@/domain';
+import { deriveProgress, type Progress } from '@/domain';
 
-import type { ProgressRepository } from '../ports';
+import type { EngineConfigProvider, ProgressRepository } from '../ports';
 
-type Deps = { readonly progress: ProgressRepository };
+type Deps = { readonly progress: ProgressRepository; readonly config: EngineConfigProvider };
 
 export const getProgress =
-  ({ progress }: Deps) =>
+  ({ progress, config }: Deps) =>
   async (today: string): Promise<Progress> =>
-    deriveProgress(await progress.load(), defaultEngineConfig, today);
+    deriveProgress(await progress.load(), await config.get(), today);

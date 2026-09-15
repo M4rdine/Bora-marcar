@@ -1,13 +1,15 @@
-import { err, ok, type GamificationEvent } from '@/domain';
+import { defaultEngineConfig, err, ok, type GamificationEvent } from '@/domain';
 
 import {
   fixedClock,
+  fixedConfig,
   memoryProgressRepository,
   recordingScheduler,
   saoPaulo,
   sequentialIds,
 } from '../testing/fakes';
 
+import { getProgress } from './getProgress';
 import { logActivity } from './logActivity';
 
 const NOW = Date.UTC(2026, 8, 13, 21, 0, 0);
@@ -26,6 +28,7 @@ const setup = (initial: readonly GamificationEvent[] = []) => {
     notifications,
     clock: fixedClock(NOW),
     ids: sequentialIds('evt'),
+    config: fixedConfig(),
   });
   return { progress, notifications, run };
 };
@@ -87,5 +90,25 @@ describe('logActivity', () => {
     const { notifications, run } = setup([plan]);
     expect(await run(input)).toEqual(ok({ eventId: 'evt-1' }));
     expect(notifications.cancelled).toEqual(['plan-1']);
+  });
+
+  it('usa a config injetada (não a estática) ao derivar o progresso', async () => {
+    const config = fixedConfig({
+      ...defaultEngineConfig,
+      xp: { ...defaultEngineConfig.xp, base: 60 },
+    });
+    const progress = memoryProgressRepository();
+    const notifications = recordingScheduler();
+    const run = logActivity({
+      progress,
+      notifications,
+      clock: fixedClock(NOW),
+      ids: sequentialIds('evt'),
+      config,
+    });
+    const result = await run(input);
+    expect(result.ok).toBe(true);
+    const p = await getProgress({ progress, config })(input.date);
+    expect(p.todayRecord?.xp.base).toBe(60);
   });
 });

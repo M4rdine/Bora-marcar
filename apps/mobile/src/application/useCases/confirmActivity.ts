@@ -1,6 +1,12 @@
-import { defaultEngineConfig, deriveProgress, err, ok, type Result } from '@/domain';
+import { deriveProgress, err, ok, type Result } from '@/domain';
 
-import type { Clock, IdGenerator, NotificationScheduler, ProgressRepository } from '../ports';
+import type {
+  Clock,
+  EngineConfigProvider,
+  IdGenerator,
+  NotificationScheduler,
+  ProgressRepository,
+} from '../ports';
 
 export type ConfirmError = { readonly code: 'planNotFound' | 'alreadyDoneToday' };
 export type ConfirmInput = {
@@ -15,14 +21,14 @@ type Deps = {
   readonly notifications: NotificationScheduler;
   readonly clock: Clock;
   readonly ids: IdGenerator;
+  readonly config: EngineConfigProvider;
 };
 
 export const confirmActivity =
-  ({ progress, notifications, clock, ids }: Deps) =>
+  ({ progress, notifications, clock, ids, config }: Deps) =>
   async (input: ConfirmInput): Promise<Result<{ eventId: string }, ConfirmError>> => {
     const events = await progress.load();
-    // defaultEngineConfig: ver comentário equivalente em planActivity.ts.
-    const current = deriveProgress(events, defaultEngineConfig, input.date);
+    const current = deriveProgress(events, await config.get(), input.date);
     if (current.activePlan === null || current.activePlan.planId !== input.planId)
       return err({ code: 'planNotFound' });
     if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });

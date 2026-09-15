@@ -1,14 +1,13 @@
-import {
-  defaultEngineConfig,
-  deriveProgress,
-  err,
-  ok,
-  type ActivityId,
-  type Result,
-  type TimeWindow,
-} from '@/domain';
+import { deriveProgress, err, ok, type ActivityId, type Result, type TimeWindow } from '@/domain';
 
-import type { City, Clock, IdGenerator, NotificationScheduler, ProgressRepository } from '../ports';
+import type {
+  City,
+  Clock,
+  EngineConfigProvider,
+  IdGenerator,
+  NotificationScheduler,
+  ProgressRepository,
+} from '../ports';
 
 import { localEpochMs } from './localEpoch';
 
@@ -28,6 +27,7 @@ type Deps = {
   readonly notifications: NotificationScheduler;
   readonly clock: Clock;
   readonly ids: IdGenerator;
+  readonly config: EngineConfigProvider;
 };
 
 const reminderEpoch = (input: PlanInput): number =>
@@ -35,12 +35,10 @@ const reminderEpoch = (input: PlanInput): number =>
   REMINDER_MINUTES_BEFORE * 60_000;
 
 export const planActivity =
-  ({ progress, notifications, clock, ids }: Deps) =>
+  ({ progress, notifications, clock, ids, config }: Deps) =>
   async (input: PlanInput): Promise<Result<{ planId: string }, PlanError>> => {
     const events = await progress.load();
-    // defaultEngineConfig: deriveProgress só usa xp/levels/window.graceHoursAfterEnd aqui;
-    // quando a config remota existir (Plano 4), este caso de uso receberá `config` por dependência.
-    const current = deriveProgress(events, defaultEngineConfig, input.window.date);
+    const current = deriveProgress(events, await config.get(), input.window.date);
     // Precedência intencional: registro do dia é estado terminal, então prevalece mesmo
     // havendo um plano pendente para o mesmo dia.
     if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });

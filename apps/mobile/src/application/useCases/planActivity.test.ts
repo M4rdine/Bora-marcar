@@ -1,13 +1,16 @@
-import { err, ok } from '@/domain';
+import { defaultEngineConfig, err, ok } from '@/domain';
 
 import {
   fixedClock,
+  fixedConfig,
   memoryProgressRepository,
   recordingScheduler,
   saoPaulo,
   sequentialIds,
 } from '../testing/fakes';
 
+import { confirmActivity } from './confirmActivity';
+import { getProgress } from './getProgress';
 import { planActivity } from './planActivity';
 
 const window = { date: '2026-09-13', startHour: 17, endHour: 19 };
@@ -28,6 +31,7 @@ const setup = (initial: Parameters<typeof memoryProgressRepository>[0] = []) => 
     notifications,
     clock: fixedClock(NOW),
     ids: sequentialIds('plan'),
+    config: fixedConfig(),
   });
   return { progress, notifications, run };
 };
@@ -113,5 +117,27 @@ describe('planActivity', () => {
       createdAt: NOW + 1,
     });
     expect(await run(base)).toEqual(ok({ planId: 'plan-2' }));
+  });
+
+  it('usa a config injetada (não a estática) ao derivar o progresso', async () => {
+    const config = fixedConfig({
+      ...defaultEngineConfig,
+      xp: { ...defaultEngineConfig.xp, base: 60 },
+    });
+    const progress = memoryProgressRepository();
+    const notifications = recordingScheduler();
+    const clock = fixedClock(NOW);
+    const ids = sequentialIds('plan');
+    const planned = await planActivity({ progress, notifications, clock, ids, config })(base);
+    if (!planned.ok) throw new Error('esperava ok');
+    const confirmed = await confirmActivity({ progress, notifications, clock, ids, config })({
+      planId: planned.value.planId,
+      date: window.date,
+      hourLeft: window.startHour,
+      hourScore: 90,
+    });
+    if (!confirmed.ok) throw new Error('esperava ok');
+    const p = await getProgress({ progress, config })(window.date);
+    expect(p.todayRecord?.xp.base).toBe(60);
   });
 });

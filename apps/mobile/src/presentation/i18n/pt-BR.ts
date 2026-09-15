@@ -90,7 +90,8 @@ export const t = {
     alreadyPlanned: 'Já existe um plano para hoje.',
     planNotFound: 'Plano não encontrado.',
     alreadyConfirmed: 'Esse plano já foi confirmado.',
-  } satisfies Record<ProviderErrorCode | LocationError['code'] | UseCaseErrorCode, string>,
+    env: 'Configuração do app inválida: modo bff sem as URLs do servidor.',
+  } satisfies Record<ProviderErrorCode | LocationError['code'] | UseCaseErrorCode | 'env', string>,
   unexpected: {
     title: 'Algo deu errado',
     body: 'Feche e abra o app de novo. Se continuar, avise a gente.',

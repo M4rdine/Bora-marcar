@@ -1,13 +1,13 @@
-import {
-  defaultEngineConfig,
-  deriveProgress,
-  err,
-  ok,
-  type ActivityId,
-  type Result,
-} from '@/domain';
+import { deriveProgress, err, ok, type ActivityId, type Result } from '@/domain';
 
-import type { City, Clock, IdGenerator, NotificationScheduler, ProgressRepository } from '../ports';
+import type {
+  City,
+  Clock,
+  EngineConfigProvider,
+  IdGenerator,
+  NotificationScheduler,
+  ProgressRepository,
+} from '../ports';
 
 export type LogError = { readonly code: 'alreadyDoneToday' };
 export type LogInput = {
@@ -23,14 +23,14 @@ type Deps = {
   readonly notifications: NotificationScheduler;
   readonly clock: Clock;
   readonly ids: IdGenerator;
+  readonly config: EngineConfigProvider;
 };
 
 export const logActivity =
-  ({ progress, notifications, clock, ids }: Deps) =>
+  ({ progress, notifications, clock, ids, config }: Deps) =>
   async (input: LogInput): Promise<Result<{ eventId: string }, LogError>> => {
     const events = await progress.load();
-    // defaultEngineConfig: ver comentário equivalente em planActivity.ts.
-    const current = deriveProgress(events, defaultEngineConfig, input.date);
+    const current = deriveProgress(events, await config.get(), input.date);
     if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });
     const pendingPlan = current.activePlan;
     const eventId = ids.next();
