@@ -1,17 +1,21 @@
 import { Component, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from './i18n/pt-BR';
+import { AppText, Button, Sky, Surface, tokens } from './ui';
 
 export function ErrorScreen({ onRetry }: { onRetry: () => void }) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{t.unexpected.title}</Text>
-      <Text>{t.unexpected.body}</Text>
-      <Pressable accessibilityRole="button" style={styles.button} onPress={onRetry}>
-        <Text style={styles.buttonText}>{t.home.retry}</Text>
-      </Pressable>
-    </View>
+    <Sky phase="rainy">
+      <SafeAreaView style={styles.safe}>
+        <Surface strength="strong" radius="hero" padding={5} gap={3}>
+          <AppText variant="title">{t.unexpected.title}</AppText>
+          <AppText variant="body">{t.unexpected.body}</AppText>
+          <Button label={t.home.retry} kind="quiet" onPress={onRetry} />
+        </Surface>
+      </SafeAreaView>
+    </Sky>
   );
 }
 
@@ -33,8 +37,5 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, State> 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 12, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 20, fontWeight: '700' },
-  button: { padding: 12, borderRadius: 12, backgroundColor: '#333', alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: '600' },
+  safe: { flex: 1, padding: tokens.space[4], justifyContent: 'center' },
 });
