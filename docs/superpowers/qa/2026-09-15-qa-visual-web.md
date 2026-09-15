@@ -117,3 +117,12 @@ tela do dia com kicker neutro e horários do sol, Perfil com plurais corretos.
 
 Mantido como alvo de QA (não de entrega): `react-native-web` e `react-dom` ficam em
 `devDependencies`, e o harness em `tools/qa-web/` documenta como repetir as capturas.
+
+## Residuais da revisão (baixa severidade, para o Plano 4)
+
+- `XpReceipt`: o emoji embutido na string é narrado pelo leitor de tela ("alvo direto no alvo,
+  Cumpriu o plano"); separar o emoji num `Emoji` decorativo.
+- `tools/qa-web/cdp.js` depende do `ws` transitivo do Metro (resolve por `node-linker=hoisted`).
+- Testes: fatores da janela no estado `confirm` e os passos 2 e 3 de "Como funciona" não são
+  afirmados.
+- Verificação em aparelho (Android) do `HeroGlow`, `SunArc` e `HourPicker` no smoke manual.
