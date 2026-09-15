@@ -6,11 +6,19 @@ import { AppText, tokens } from '@/presentation/ui';
 
 type TabIconProps = { readonly color: ColorValue };
 
-/** A acessibilidade do botão da aba já usa o título da tela; o emoji é só decoração. */
-function tabIcon(symbol: string) {
-  return function TabIcon({ color }: TabIconProps) {
-    return <AppText style={{ color, fontSize: tokens.font.subtitle }}>{symbol}</AppText>;
-  };
+// A acessibilidade do botão da aba já usa o título da tela; o emoji é só decoração.
+function HomeIcon({ color }: TabIconProps) {
+  return <AppText style={{ color, fontSize: tokens.font.subtitle }}>{t.tabs.icons.home}</AppText>;
+}
+
+function CitiesIcon({ color }: TabIconProps) {
+  return <AppText style={{ color, fontSize: tokens.font.subtitle }}>{t.tabs.icons.cities}</AppText>;
+}
+
+function ProfileIcon({ color }: TabIconProps) {
+  return (
+    <AppText style={{ color, fontSize: tokens.font.subtitle }}>{t.tabs.icons.profile}</AppText>
+  );
 }
 
 export default function TabsLayout() {
@@ -34,18 +42,9 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: tokens.gradients.dusk[3] },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{ title: t.tabs.home, tabBarIcon: tabIcon(t.tabs.icons.home) }}
-      />
-      <Tabs.Screen
-        name="cities"
-        options={{ title: t.tabs.cities, tabBarIcon: tabIcon(t.tabs.icons.cities) }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{ title: t.tabs.profile, tabBarIcon: tabIcon(t.tabs.icons.profile) }}
-      />
+      <Tabs.Screen name="index" options={{ title: t.tabs.home, tabBarIcon: HomeIcon }} />
+      <Tabs.Screen name="cities" options={{ title: t.tabs.cities, tabBarIcon: CitiesIcon }} />
+      <Tabs.Screen name="profile" options={{ title: t.tabs.profile, tabBarIcon: ProfileIcon }} />
     </Tabs>
   );
 }

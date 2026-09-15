@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -39,16 +40,20 @@ function NowOutline() {
   const opacity = useSharedValue(1);
 
   useEffect(() => {
-    if (reduced) return;
-    opacity.value = withRepeat(
-      withTiming(PULSE_MIN_OPACITY, { duration: motion.normal, easing: motion.easing }),
-      -1,
-      true,
-    );
+    if (!reduced) {
+      opacity.value = withRepeat(
+        withTiming(PULSE_MIN_OPACITY, { duration: motion.normal, easing: motion.easing }),
+        -1,
+        true,
+      );
+    }
+    return () => cancelAnimation(opacity);
   }, [reduced, opacity]);
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return <Animated.View pointerEvents="none" style={[styles.nowOutline, style]} />;
+  return (
+    <Animated.View testID="now-outline" pointerEvents="none" style={[styles.nowOutline, style]} />
+  );
 }
 
 function Bar({ hour, nowHour }: { readonly hour: HourScore; readonly nowHour: number | null }) {
