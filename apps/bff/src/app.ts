@@ -8,6 +8,8 @@ import type { Env } from './config/env';
 import { AppError, errorBody, errorResponse } from './http/errors';
 import { requestLog, type AppEnv } from './http/requestLog';
 import type { Logger } from './logger';
+import { citiesRoute } from './routes/cities';
+import { forecastRoute } from './routes/forecast';
 import { healthRoute } from './routes/health';
 import type { Upstream } from './upstream/types';
 
@@ -30,6 +32,8 @@ export function createApp(deps: AppDeps) {
   app.use('*', cors({ origin: (origin) => (allowed.has(origin) ? origin : null) }));
 
   app.route('/health', healthRoute(deps));
+  app.route('/v1/cities', citiesRoute(deps));
+  app.route('/v1/forecast', forecastRoute(deps));
 
   app.notFound((c) => c.json(errorBody('not_found', 'Rota não encontrada'), 404));
   app.onError((e, c) => {

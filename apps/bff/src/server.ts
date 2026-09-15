@@ -5,7 +5,7 @@ import { createCache } from './cache/createCache';
 import { createMeter } from './cache/meter';
 import { loadEnv } from './config/env';
 import { createLogger } from './logger';
-import { unusedUpstream } from './testing/deps';
+import { createOpenMeteoUpstream } from './upstream/openMeteo';
 
 const env = loadEnv(process.env);
 const logger = createLogger(env.LOG_LEVEL);
@@ -14,7 +14,12 @@ const app = createApp({
   env,
   logger,
   cache,
-  upstream: unusedUpstream, // Task 5 troca pelo cliente da Open-Meteo
+  upstream: createOpenMeteoUpstream({
+    fetchFn: (url, init) => fetch(url, init),
+    forecastBaseUrl: env.OPEN_METEO_BASE_URL,
+    geocodingBaseUrl: env.GEOCODING_BASE_URL,
+    timeoutMs: env.UPSTREAM_TIMEOUT_MS,
+  }),
   meter: createMeter(),
   now: () => Date.now(),
   startedAt: Date.now(),
