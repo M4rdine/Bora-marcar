@@ -103,7 +103,7 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
   afirma `timezone=auto` e `forecast_days=5` dentro do handler. Uma falha ali vira erro de rede no
   teste em vez de asserção legível; mover as asserções de parâmetro para o corpo do teste
   (capturando a URL requisitada) no Plano 4.
-- **`Welcome.tsx` sem teste dos CTAs**: o teste de tela só confere os textos. Nenhum caso pressiona
+- ~~**`Welcome.tsx` sem teste dos CTAs**~~ (resolvido na rodada de QA visual: `HomeScreen.test.tsx` pressiona os dois CTAs): o teste de tela só confere os textos. Nenhum caso pressiona
   "Buscar cidade" (`router.push('/cities')`) nem "Usar minha localização" (caminho de sucesso e o
   ramo de erro que preenche `error`).
 - **Desmarcar uma conquista**: `ProfileScreen.test.tsx` cobre tocar numa badge e ver o detalhe, mas
@@ -134,4 +134,4 @@ gerado com sucesso, 1831 módulos) e removeu o diretório de saída em seguida.
   caminhos animados de `LevelBar`, `Reveal`, `NowOutline` e `CountUp` continuam sem cobertura
   dentro das telas; replicar a mesma receita de mock por arquivo para eles fica para o Plano 4.
 
-- **Hierarquia dos botões em "Sem janela boa"**: o CTA "Amanhã: 7h–9h, ótimo" (ação principal no spec 3.3) está `quiet` e "Saí em outro horário" `primary`; trocar os kinds no ciclo de QA visual.
+- ~~**Hierarquia dos botões em "Sem janela boa"**~~: resolvido na rodada de QA visual (`docs/superpowers/qa/2026-09-15-qa-visual-web.md`, item 7): o atalho de amanhã é o primário quando existe; "Saí em outro horário" fica `quiet`.
