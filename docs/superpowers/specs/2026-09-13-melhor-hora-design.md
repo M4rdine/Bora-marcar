@@ -204,6 +204,7 @@ Cada fator vira um conforto em [0, 1] por curva linear por partes:
 | `precipitation_probability ≥ 80` ou `precipitation ≥ 1 mm` | score ≤ 20  |
 | Neve (71–77, 85, 86)                                       | score ≤ 20  |
 | Sensação fora da faixa de tolerância                       | score ≤ 30  |
+| Madrugada (hora < 5h), qualquer atividade                  | score ≤ 20  |
 | Nevoeiro (45, 48) e atividade Ciclismo                     | score × 0,6 |
 
 Rótulos: Ótimo ≥ 80, Bom 65–79, Razoável 45–64, Ruim < 45.

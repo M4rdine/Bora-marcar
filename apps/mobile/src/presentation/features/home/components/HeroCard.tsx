@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import type {
   BadgeState,
@@ -15,10 +15,12 @@ import type { HeroActionsResult } from '../useHeroActions';
 
 import { HeroActions } from './HeroActions';
 import { HeroBody } from './HeroBody';
+import { HeroGlow } from './HeroGlow';
 
 type Props = {
   readonly state: HeroState;
   readonly config: EngineConfig;
+  readonly cityId: string;
   readonly now: LocalDateTime;
   /** Horas pontuadas do dia de hoje (para a previsão da janela no estado `planned`). */
   readonly hours: readonly HourScore[];
@@ -33,6 +35,7 @@ type Props = {
 export function HeroCard({
   state,
   config,
+  cityId,
   now,
   hours,
   tomorrow,
@@ -50,8 +53,16 @@ export function HeroCard({
       style={styles.card}
       accessibilityLabel="hero"
     >
-      <View pointerEvents="none" style={styles.glow} />
-      <HeroBody state={state} now={now} hours={hours} level={level} unlockedToday={unlockedToday} />
+      <HeroGlow />
+      <HeroBody
+        state={state}
+        now={now}
+        hours={hours}
+        level={level}
+        config={config}
+        cityId={cityId}
+        unlockedToday={unlockedToday}
+      />
       <HeroActions
         state={state}
         config={config}
@@ -74,19 +85,7 @@ export function HeroCard({
   );
 }
 
-const GLOW = tokens.size.glow;
-
 const styles = StyleSheet.create({
   card: { overflow: 'hidden' },
-  glow: {
-    position: 'absolute',
-    top: -tokens.space[10],
-    right: -tokens.space[10],
-    width: GLOW,
-    height: GLOW,
-    borderRadius: GLOW / 2,
-    backgroundColor: tokens.color.gold,
-    opacity: 0.35,
-  },
   error: { color: tokens.color.danger },
 });

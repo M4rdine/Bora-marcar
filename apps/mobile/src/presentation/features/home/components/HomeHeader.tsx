@@ -16,8 +16,14 @@ type Props = {
   readonly onOpenCities: () => void;
 };
 
+/** "Campinas, São Paulo"; quando o estado repete o nome (capitais) ou falta, usa o país. */
+export function cityLabelOf(city: City): string {
+  const region = city.admin1 && city.admin1 !== city.name ? city.admin1 : city.country;
+  return region ? `${city.name}, ${region}` : city.name;
+}
+
 export function HomeHeader({ city, now, level, onOpenCities }: Props) {
-  const cityLabel = `${city.name}${city.admin1 ? `, ${city.admin1}` : ''}`;
+  const cityLabel = cityLabelOf(city);
   return (
     <View style={styles.row}>
       <Pressable accessibilityRole="button" onPress={onOpenCities} style={styles.cityButton}>
@@ -25,7 +31,9 @@ export function HomeHeader({ city, now, level, onOpenCities }: Props) {
           <AppText variant="subtitle" weight="700">
             {cityLabel}
           </AppText>
-          <AppText variant="subtitle"> ⌄</AppText>
+          <AppText variant="subtitle" tone="muted">
+            {' ▾'}
+          </AppText>
         </View>
         <AppText variant="small" tone="muted">
           {`${formatLongDate(now.date)} · ${now.hour}h`}

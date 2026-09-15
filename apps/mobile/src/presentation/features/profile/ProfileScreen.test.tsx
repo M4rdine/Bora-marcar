@@ -38,7 +38,8 @@ describe('ProfileScreen', () => {
     renderWithProviders(<ProfileScreen />, { services: fakeServices({ progress }) });
 
     await screen.findByText(/Nível 2 · Garoa/);
-    expect(screen.getByText(/2 dias seguidos/)).toBeTruthy();
+    expect(screen.getByLabelText('2 dias seguidos')).toBeTruthy();
+    expect(screen.getByText('dias seguidos')).toBeTruthy();
 
     expect(screen.getByLabelText('Primeira saída: desbloqueada')).toBeTruthy();
     expect(screen.getByLabelText('Madrugador: desbloqueada')).toBeTruthy();

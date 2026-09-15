@@ -79,7 +79,7 @@ export function LevelOrb({ level, name, progress, size = DEFAULT_SIZE }: Props) 
       <RingHalf side="right" size={size} degrees={rightDegrees} />
       <RingHalf side="left" size={size} degrees={leftDegrees} />
       <View style={[styles.inner, { margin: BORDER, borderRadius: size / 2 - BORDER }]}>
-        <AppText variant={isLarge ? 'title' : 'small'} weight="800" tone="ink">
+        <AppText variant={isLarge ? 'title' : 'small'} weight="800">
           {level}
         </AppText>
       </View>

@@ -10,15 +10,17 @@ type Props = {
 };
 
 /** Chips horizontais de horas passadas do dia, usados para registrar uma atividade "em outro
- * horário": o selecionado fica em destaque e mostra o score daquela hora. */
+ * horário": o selecionado fica em destaque e mostra o score daquela hora. A ordem é decrescente
+ * para a hora atual (pré-selecionada) aparecer primeiro, sem rolar. */
 export function HourPicker({ options, selected, onSelect }: Props) {
+  const latestFirst = [...options].sort((a, b) => b.hour - a.hour);
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
     >
-      {options.map((option) => (
+      {latestFirst.map((option) => (
         <Chip
           key={option.hour}
           label={`${option.hour}h`}

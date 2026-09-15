@@ -3,7 +3,8 @@ import type { BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 
 type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
-const streakDaysLabel = (n: number): string => (n === 1 ? '1 dia seguido' : `${n} dias seguidos`);
+const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
+const streakDaysLabel = (n: number): string => `${n} ${plural(n, 'dia seguido', 'dias seguidos')}`;
 
 const LABELS = {
   great: 'Ótimo',
@@ -35,6 +36,7 @@ export const t = {
     sun: 'céu fechado',
     storm: 'trovoada',
     snow: 'neve',
+    night: 'madrugada',
   } satisfies Record<FactorId | VetoId, string>,
   badges: {
     first: 'Primeira saída',
@@ -94,8 +96,17 @@ export const t = {
     welcomeBody: 'Escolha uma cidade e uma atividade. O resto é com a previsão.',
     searchCity: 'Buscar cidade',
     useLocation: 'Usar minha localização',
+    howTitle: 'Como funciona',
+    howSteps: [
+      { emoji: '🔍', text: 'Escolha uma cidade ou use a sua localização.' },
+      { emoji: '🌤', text: 'A previsão vira um score por hora para a sua atividade.' },
+      { emoji: '🏅', text: 'Planeje a melhor janela, saia e ganhe XP, níveis e conquistas.' },
+    ],
+    stepLabel: (n: number) => `Passo ${n}`,
     bestToday: 'Melhor horário hoje',
     noWindow: 'Sem janela boa hoje',
+    noWindowRow: (reason: string | null) =>
+      reason ? `Sem janela boa · ${reason}` : 'Sem janela boa',
     noWindowBecause: (reason: string) => `Motivo principal: ${reason}.`,
     restDayProtected: 'Hoje não conta contra a sua sequência.',
     seeTomorrow: (startHour: number, endHour: number, label: ScoreLabel) =>
@@ -106,14 +117,17 @@ export const t = {
     logNow: 'Registrar atividade',
     now: 'Agora',
     plan: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,
-    planned: (hour: number) => `Planejado para as ${hour}h`,
+    plannedTitle: (activity: string, hour: number) => `${activity} às ${hour}h`,
+    planOf: (emoji: string, activity: string, hour: number) =>
+      `${emoji} ${activity} · plano das ${hour}h`,
+    otherCityPlan: 'Plano feito em outra cidade',
     cancelPlan: 'Desfazer plano',
     confirm: 'Confirmar que fui',
     logOther: 'Saí em outro horário',
     confirmHour: (hour: number) => `Registrar às ${hour}h`,
     cancelPick: 'Cancelar',
-    done: (hour: number, minute: number) =>
-      `Concluído às ${hour}h${String(minute).padStart(2, '0')}`,
+    doneKicker: (activity: string, hour: number, minute: number) =>
+      `Concluído · ${activity} · ${hour}h${String(minute).padStart(2, '0')}`,
     xpEarned: (xp: number) => `+${xp} XP`,
     hourly: 'Seu dia, hora a hora',
     nextDays: 'Próximos dias',
@@ -157,13 +171,18 @@ export const t = {
     xpToNext: (xp: number, name: string) => `${xp} XP para ${name}`,
     maxLevel: 'Nível máximo',
     streak: (n: number) => streakDaysLabel(n),
-    activities: (n: number) => `${n} atividades`,
-    cities: (n: number) => `${n} cidades`,
+    activities: (n: number) => `${n} ${plural(n, 'atividade', 'atividades')}`,
+    cities: (n: number) => `${n} ${plural(n, 'cidade', 'cidades')}`,
+    statLabels: {
+      streak: (n: number) => plural(n, 'dia seguido', 'dias seguidos'),
+      activities: (n: number) => plural(n, 'atividade', 'atividades'),
+      cities: (n: number) => plural(n, 'cidade', 'cidades'),
+    },
     achievements: 'Conquistas',
     badges: (unlocked: number, total: number) => `${unlocked} de ${total}`,
     bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
     monthSummary: (active: number, rest: number) =>
-      `${active} dias ativos · ${rest} folgas por chuva`,
+      `${active} ${plural(active, 'dia ativo', 'dias ativos')} · ${rest} ${plural(rest, 'folga', 'folgas')} por chuva`,
     calendarLegendActive: 'Atividade',
     calendarLegendRest: 'Folga por mau tempo',
     planFulfilled: 'plano cumprido',
@@ -200,9 +219,11 @@ export const t = {
   },
   level: {
     short: (n: number) => `Nível ${n}`,
+    xpWithin: (into: number, needed: number) => `${into} / ${needed} XP`,
     aria: (n: number, name: string, pct: number) => `Nível ${n}, ${name}, ${pct}% para o próximo`,
   },
   day: {
+    best: 'Melhor horário',
     back: 'Voltar',
     backGlyph: '‹',
     planTomorrow: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,

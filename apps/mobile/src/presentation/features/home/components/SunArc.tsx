@@ -25,21 +25,26 @@ function markerPosition(
   return { pct: (nowMinutes - start) / Math.max(1, end - start), isDay: true };
 }
 
-/** Arco do sol: rótulos de nascer/pôr do sol e um marcador (☀️/🌙) na posição do "agora". */
+function NowMarker({ pct, isDay }: { readonly pct: number; readonly isDay: boolean }) {
+  return (
+    <View style={[styles.marker, { left: `${pct * 100}%` }]}>
+      <Emoji
+        symbol={isDay ? '☀️' : '🌙'}
+        size={tokens.size.sunMarker}
+        label={isDay ? t.home.sunLabel : t.home.moonLabel}
+      />
+    </View>
+  );
+}
+
+/** Arco do sol: rótulos de nascer/pôr do sol e, quando há um "agora" (só hoje), o marcador
+ * ☀️/🌙 na posição dele. Dias futuros mostram só o arco com os horários. */
 export function SunArc({ sunrise, sunset, nowMinutes }: Props) {
-  if (sunrise === null || sunset === null || nowMinutes === null) {
-    return <View style={styles.arc} />;
-  }
-  const { pct, isDay } = markerPosition(sunrise, sunset, nowMinutes);
+  if (sunrise === null || sunset === null) return <View style={styles.arc} />;
+  const marker = nowMinutes === null ? null : markerPosition(sunrise, sunset, nowMinutes);
   return (
     <View style={styles.arc}>
-      <View style={[styles.marker, { left: `${pct * 100}%` }]}>
-        <Emoji
-          symbol={isDay ? '☀️' : '🌙'}
-          size={tokens.size.sunMarker}
-          label={isDay ? t.home.sunLabel : t.home.moonLabel}
-        />
-      </View>
+      {marker ? <NowMarker pct={marker.pct} isDay={marker.isDay} /> : null}
       <View style={styles.labels}>
         <AppText variant="micro" tone="muted">
           {timeLabel(sunrise)}

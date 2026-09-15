@@ -23,6 +23,7 @@ type DayHeroBodyProps = {
   readonly now: LocalDateTime;
   readonly level: LevelProgress;
   readonly activityName: string;
+  readonly config: EngineConfig;
   readonly hours: readonly HourScore[];
   readonly city: City;
   readonly activity: ActivityId;
@@ -31,8 +32,18 @@ type DayHeroBodyProps = {
 };
 
 function DayHeroBody(props: DayHeroBodyProps) {
-  const { heroState, now, level, activityName, hours, city, activity, utcOffsetSeconds, actions } =
-    props;
+  const {
+    heroState,
+    now,
+    level,
+    activityName,
+    config,
+    hours,
+    city,
+    activity,
+    utcOffsetSeconds,
+    actions,
+  } = props;
   switch (heroState.kind) {
     case 'plan':
       return (
@@ -41,6 +52,7 @@ function DayHeroBody(props: DayHeroBodyProps) {
           now={now}
           level={level}
           activityName={activityName}
+          config={config}
           city={city}
           activity={activity}
           utcOffsetSeconds={utcOffsetSeconds}
@@ -48,9 +60,9 @@ function DayHeroBody(props: DayHeroBodyProps) {
         />
       );
     case 'planned':
-      return <PlannedSection state={heroState} hours={hours} actions={actions} />;
+      return <PlannedSection state={heroState} hours={hours} config={config} actions={actions} />;
     case 'noWindow':
-      return <NoWindowSection state={heroState} now={now} level={level} />;
+      return <NoWindowSection state={heroState} now={now} level={level} config={config} />;
     case 'viewOnly':
       return <ViewOnlySection />;
   }
@@ -92,6 +104,7 @@ export function DayHero({
           now={now}
           level={progress.level}
           activityName={activityName}
+          config={config}
           hours={day.hours}
           city={city}
           activity={activity}

@@ -1,5 +1,5 @@
 import type { City } from '@/application/ports';
-import type { ActivityId, HourScore, LevelProgress, LocalDateTime } from '@/domain';
+import type { ActivityId, EngineConfig, HourScore, LevelProgress, LocalDateTime } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
 import { AppText, Button } from '../../../ui';
@@ -15,6 +15,7 @@ type PlanSectionProps = {
   readonly now: LocalDateTime;
   readonly level: LevelProgress;
   readonly activityName: string;
+  readonly config: EngineConfig;
   readonly city: City;
   readonly activity: ActivityId;
   readonly utcOffsetSeconds: number;
@@ -26,6 +27,7 @@ export function PlanSection({
   now,
   level,
   activityName,
+  config,
   city,
   activity,
   utcOffsetSeconds,
@@ -52,6 +54,9 @@ export function PlanSection({
         now={now}
         hours={state.day.hours}
         level={level}
+        config={config}
+        cityId={null}
+        kicker={t.day.best}
         unlockedToday={[]}
       />
       <Button
@@ -66,15 +71,21 @@ export function PlanSection({
 type PlannedSectionProps = {
   readonly state: Extract<DayHeroState, { kind: 'planned' }>;
   readonly hours: readonly HourScore[];
+  readonly config: EngineConfig;
   readonly actions: DayActionsResult;
 };
 
-export function PlannedSection({ state, hours, actions }: PlannedSectionProps) {
+export function PlannedSection({ state, hours, config, actions }: PlannedSectionProps) {
   const windowHours = hoursInWindow(hours, state.plan.window.startHour, state.plan.window.endHour);
   return (
     <>
       <AppText variant="kicker">{t.home.plannedKicker}</AppText>
-      <AppText variant="display">{t.home.planned(state.plan.window.startHour)}</AppText>
+      <AppText variant="display">
+        {t.home.plannedTitle(
+          config.activities[state.plan.activity].name,
+          state.plan.window.startHour,
+        )}
+      </AppText>
       <FactsRow facts={windowFacts(windowHours)} />
       <Button
         label={t.home.cancelPlan}
@@ -90,11 +101,20 @@ type NoWindowSectionProps = {
   readonly state: Extract<DayHeroState, { kind: 'noWindow' }>;
   readonly now: LocalDateTime;
   readonly level: LevelProgress;
+  readonly config: EngineConfig;
 };
 
-export function NoWindowSection({ state, now, level }: NoWindowSectionProps) {
+export function NoWindowSection({ state, now, level, config }: NoWindowSectionProps) {
   return (
-    <HeroBody state={state} now={now} hours={state.day.hours} level={level} unlockedToday={[]} />
+    <HeroBody
+      state={state}
+      now={now}
+      hours={state.day.hours}
+      level={level}
+      config={config}
+      cityId={null}
+      unlockedToday={[]}
+    />
   );
 }
 

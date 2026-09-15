@@ -19,6 +19,20 @@ describe('searchCities', () => {
     expect(geocoding.calls).toEqual(['São Paulo']);
   });
 
+  it('remove duplicatas de nome + estado + país, mantendo a primeira', async () => {
+    const twin = { ...saoPaulo, id: '999', latitude: -23.6 };
+    const other = {
+      ...saoPaulo,
+      id: '42',
+      name: 'São Paulo',
+      admin1: 'Coimbra',
+      countryCode: 'PT',
+    };
+    const geocoding = fakeGeocoding(ok([saoPaulo, twin, other]));
+    const result = await searchCities({ geocoding })('São Paulo');
+    expect(result).toEqual(ok([saoPaulo, other]));
+  });
+
   it('repassa erro do provider', async () => {
     const failure = err({ code: 'network' as const, message: 'offline' });
     const result = await searchCities({ geocoding: fakeGeocoding(failure) })('Rio');

@@ -85,7 +85,7 @@ type TomorrowProps = {
   readonly onOpenTomorrow: () => void;
 };
 
-/** Atalho "Amanhã: 6h–9h, ótimo" mostrado quando hoje não tem janela boa. */
+/** Atalho "Amanhã: 6h–9h, ótimo", o botão primário quando hoje não tem janela boa. */
 function SeeTomorrowButton({ shortcut, config, busy, onOpenTomorrow }: TomorrowProps) {
   if (shortcut === null) return null;
   return (
@@ -95,7 +95,6 @@ function SeeTomorrowButton({ shortcut, config, busy, onOpenTomorrow }: TomorrowP
         shortcut.endHour,
         labelFor(shortcut.score, config),
       )}
-      kind="quiet"
       onPress={onOpenTomorrow}
       disabled={busy}
     />
@@ -171,10 +170,16 @@ function DefaultActions({
         </>
       );
     case 'noWindow':
+      // Sem atalho para amanhã, registrar é a única ação e volta a ser o botão primário.
       return (
         <>
           <SeeTomorrowButton {...tomorrowProps} config={config} />
-          <Button label={t.home.logOther} onPress={onOpenPicker} disabled={busy} />
+          <Button
+            label={t.home.logOther}
+            kind={shortcut === null ? 'primary' : 'quiet'}
+            onPress={onOpenPicker}
+            disabled={busy}
+          />
         </>
       );
     case 'done':

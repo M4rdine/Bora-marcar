@@ -11,6 +11,7 @@ import { defaultEngineConfig, err, ok, recommendDay } from '@/domain';
 import { logged, planned } from '@/domain/gamification/testing/fixtures';
 import { makeForecast } from '@/domain/recommendation/testing/fixtures';
 
+import { t } from '../../i18n/pt-BR';
 import { usePreferences } from '../../state/preferencesStore';
 import { renderWithProviders } from '../../testing/renderWithProviders';
 
@@ -31,14 +32,23 @@ describe('HomeScreen', () => {
   it('sem cidade mostra as boas-vindas', () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     expect(screen.getByText('A melhor hora para sair, em uma frase.')).toBeTruthy();
-    expect(screen.getByText('Buscar cidade')).toBeTruthy();
+    expect(screen.getByText('Como funciona')).toBeTruthy();
+    expect(screen.getByLabelText('Passo 1')).toBeTruthy();
+    fireEvent.press(screen.getByText('Buscar cidade'));
+    expect(mockPush).toHaveBeenCalledWith('/cities');
+  });
+
+  it('nas boas-vindas, "Usar minha localização" negada mostra o erro traduzido', async () => {
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    fireEvent.press(screen.getByText('Usar minha localização'));
+    await screen.findByText(t.errors.denied);
   });
 
   it('com cidade mostra a janela de hoje e permite planejar e confirmar', async () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     // cabeçalho: cidade e nível (progresso ainda carregado do zero-estado).
-    await screen.findByText('São Paulo, São Paulo');
+    await screen.findByText('São Paulo, Brasil');
     expect(screen.getByText('Nível 1')).toBeTruthy();
     // relógio falso: 14:00 em São Paulo → janela 14h–17h
     await screen.findByText('14h – 17h', {}, { timeout: 3000 });
@@ -50,9 +60,10 @@ describe('HomeScreen', () => {
     // 14:00 está dentro da janela → estado "confirm"
     await screen.findByText('Confirmar que fui');
     fireEvent.press(screen.getByText('Confirmar que fui'));
-    await screen.findByText('Concluído às 14h00');
+    await screen.findByText('Concluído · Caminhada · 14h00');
     expect(screen.getByText('+130 XP')).toBeTruthy(); // 50 + 50 (score 100) + 25 (plano) + 5 (1 dia)
-    expect(screen.getByText('Cumpriu o plano')).toBeTruthy();
+    expect(screen.getByText('🎯 Cumpriu o plano')).toBeTruthy();
+    expect(screen.getByText('30 / 300 XP')).toBeTruthy(); // nível 2 vai de 100 a 400
     expect(screen.getByText('+25')).toBeTruthy();
     // concluído hoje: o atalho leva ao dia de amanhã, onde o plano é de fato criado.
     fireEvent.press(screen.getByText('Planejar amanhã às 6h'));
@@ -102,7 +113,8 @@ describe('HomeScreen', () => {
       }),
     });
     // 08:00 em São Paulo, antes da janela 17h–19h → estado "planned"
-    await screen.findByText('Planejado para as 17h');
+    // o plano da fixture é de corrida; o título usa a atividade do plano, não a selecionada.
+    await screen.findByText('Corrida às 17h');
     // previsão da janela (17h–19h), fixture padrão: sensação 22°, chuva 5%.
     expect(screen.getAllByText('22°').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('5%')).toBeTruthy();
@@ -144,7 +156,7 @@ describe('HomeScreen', () => {
     fireEvent.press(within(hero).getByText('Saí em outro horário'));
     // relógio falso: 14:00 em São Paulo → o seletor abre com a hora atual já em destaque.
     fireEvent.press(await screen.findByText('Registrar às 14h'));
-    await screen.findByText(/Concluído às 14h00/);
+    await screen.findByText(/Concluído · .+ · 14h00/);
     expect(screen.getByText(/\+\d+ XP/)).toBeTruthy();
   });
 
@@ -163,7 +175,7 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByText('Registrar atividade'));
     // relógio falso: 20:00 em São Paulo → o seletor abre com a hora atual já em destaque.
     fireEvent.press(await screen.findByText('Registrar às 20h'));
-    await screen.findByText(/Concluído às 20h00/);
+    await screen.findByText(/Concluído · .+ · 20h00/);
     expect(progress.events().some((e) => e.type === 'badWeatherDay')).toBe(false);
   });
 
@@ -183,7 +195,7 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByText('Registrar atividade'));
     fireEvent.press(await screen.findByText('7h'));
     fireEvent.press(screen.getByText('Registrar às 7h'));
-    await screen.findByText('Concluído às 7h00');
+    await screen.findByText(/Concluído · .+ · 7h00/);
     const expectedScore = recommendDay(
       forecast,
       defaultEngineConfig.activities.beach,
@@ -215,7 +227,7 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByText('Saí em outro horário'));
     // seletor abre com a hora atual (14h) já em destaque; confirmar sem trocar a seleção.
     fireEvent.press(await screen.findByText('Registrar às 14h'));
-    await screen.findByText('Concluído às 14h37');
+    await screen.findByText(/Concluído · .+ · 14h37/);
   });
 
   it('sem histórico, a faixa de streak mostra 0 dias seguidos', async () => {

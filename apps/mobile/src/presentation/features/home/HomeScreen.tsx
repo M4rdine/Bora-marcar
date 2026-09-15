@@ -69,6 +69,7 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
       <HeroCard
         state={hero}
         config={config}
+        cityId={city.id}
         now={snapshot.now}
         hours={snapshot.overview.today.hours}
         tomorrow={tomorrow}

@@ -15,7 +15,9 @@ type Props = {
 };
 
 function summaryOf(day: DayRecommendation, glyph: WeatherGlyph): string {
-  if (day.result.kind !== 'window') return t.home.noWindow;
+  if (day.result.kind !== 'window') {
+    return t.home.noWindowRow(day.result.dominant ? t.reasons[day.result.dominant] : null);
+  }
   const { startHour, endHour } = day.result.window;
   const tempMax = day.daily?.tempMax ?? null;
   const temperature = tempMax !== null ? `${tempMax}°, ` : '';

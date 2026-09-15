@@ -1,5 +1,12 @@
 import { REMINDER_MINUTES_BEFORE } from '@/application/useCases/planActivity';
-import type { BadgeState, HourScore, LevelProgress, LocalDateTime } from '@/domain';
+import {
+  labelFor,
+  type BadgeState,
+  type EngineConfig,
+  type HourScore,
+  type LevelProgress,
+  type LocalDateTime,
+} from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
 import { AppText, CountUp, LevelBar, Pill, Reveal } from '../../../ui';
@@ -18,14 +25,44 @@ type Props = {
   readonly now: LocalDateTime;
   readonly hours: readonly HourScore[];
   readonly level: LevelProgress;
+  readonly config: EngineConfig;
   readonly unlockedToday: readonly BadgeState[];
+  /** Cidade em foco; um plano feito em outra cidade ganha um aviso discreto. `null` fora da Home. */
+  readonly cityId: string | null;
+  /** Kicker do estado `plan`; a tela do dia troca "Melhor horário hoje" por "Melhor horário". */
+  readonly kicker?: string;
 };
 
-function PlanBody({ state }: { readonly state: Extract<HeroState, { kind: 'plan' }> }) {
+const MINUTES_PER_HOUR = 60;
+
+/** O plano é por dia, não por cidade (spec §5): ao trocar de cidade ele continua valendo, mas
+ * o herói avisa de onde ele veio para o horário não parecer desta cidade. */
+function OtherCityNote({
+  planCityId,
+  cityId,
+}: {
+  readonly planCityId: string;
+  readonly cityId: string | null;
+}) {
+  if (cityId === null || planCityId === cityId) return null;
+  return (
+    <AppText variant="small" tone="muted">
+      {t.home.otherCityPlan}
+    </AppText>
+  );
+}
+
+function PlanBody({
+  state,
+  kicker,
+}: {
+  readonly state: Extract<HeroState, { kind: 'plan' }>;
+  readonly kicker: string;
+}) {
   const hours = state.day.result.kind === 'window' ? state.day.result.hours : [];
   return (
     <>
-      <AppText variant="kicker">{t.home.bestToday}</AppText>
+      <AppText variant="kicker">{kicker}</AppText>
       <Pill
         label={`${t.labels[state.day.label ?? 'poor']} · ${state.score}`}
         tone={state.day.label ?? 'poor'}
@@ -47,62 +84,102 @@ function PlannedBody({
   state,
   now,
   hours,
+  config,
+  cityId,
 }: {
   readonly state: Extract<HeroState, { kind: 'planned' }>;
   readonly now: LocalDateTime;
   readonly hours: readonly HourScore[];
+  readonly config: EngineConfig;
+  readonly cityId: string | null;
 }) {
-  const left = countdown(now, state.plan.window.startHour);
-  const reminderTotal = state.plan.window.startHour * 60 - REMINDER_MINUTES_BEFORE;
-  const reminderHour = Math.floor(reminderTotal / 60);
-  const reminderMinute = reminderTotal % 60;
-  const windowHours = hoursInWindow(hours, state.plan.window.startHour, state.plan.window.endHour);
+  const { plan } = state;
+  const left = countdown(now, plan.window.startHour);
+  const reminderTotal = plan.window.startHour * MINUTES_PER_HOUR - REMINDER_MINUTES_BEFORE;
+  const reminderHour = Math.floor(reminderTotal / MINUTES_PER_HOUR);
+  const reminderMinute = reminderTotal % MINUTES_PER_HOUR;
+  const windowHours = hoursInWindow(hours, plan.window.startHour, plan.window.endHour);
   return (
     <>
       <AppText variant="kicker">{t.home.plannedKicker}</AppText>
-      <AppText variant="display">{t.home.planned(state.plan.window.startHour)}</AppText>
+      <AppText variant="display">
+        {t.home.plannedTitle(config.activities[plan.activity].name, plan.window.startHour)}
+      </AppText>
       {left ? <AppText variant="body">{t.home.startsIn(left.hours, left.minutes)}</AppText> : null}
       <AppText variant="small" tone="muted">
         {t.home.reminderAt(reminderHour, reminderMinute)}
       </AppText>
+      <OtherCityNote planCityId={plan.cityId} cityId={cityId} />
       <FactsRow facts={windowFacts(windowHours)} />
     </>
   );
 }
 
-function ConfirmBody({ state }: { readonly state: Extract<HeroState, { kind: 'confirm' }> }) {
+function ConfirmBody({
+  state,
+  hours,
+  config,
+  cityId,
+}: {
+  readonly state: Extract<HeroState, { kind: 'confirm' }>;
+  readonly hours: readonly HourScore[];
+  readonly config: EngineConfig;
+  readonly cityId: string | null;
+}) {
+  const { plan } = state;
+  const activity = config.activities[plan.activity];
+  const windowHours = hoursInWindow(hours, plan.window.startHour, plan.window.endHour);
+  const nowLabel = state.nowScore === null ? null : labelFor(state.nowScore, config);
   return (
     <>
       <AppText variant="kicker">{t.home.windowStarted}</AppText>
-      <AppText variant="display">
-        {`${state.plan.window.startHour}h – ${state.plan.window.endHour}h`}
+      <AppText variant="display">{`${plan.window.startHour}h – ${plan.window.endHour}h`}</AppText>
+      <AppText variant="body">
+        {t.home.planOf(activity.emoji, activity.name, plan.window.startHour)}
       </AppText>
-      {state.nowScore !== null ? <Pill label={`${t.home.now} · ${state.nowScore}`} /> : null}
+      {nowLabel !== null && state.nowScore !== null ? (
+        <Pill label={`${t.home.now}: ${t.labels[nowLabel]} · ${state.nowScore}`} tone={nowLabel} />
+      ) : null}
+      <OtherCityNote planCityId={plan.cityId} cityId={cityId} />
+      <FactsRow facts={windowFacts(windowHours)} />
     </>
+  );
+}
+
+/** "90 / 100 XP" dentro do nível atual; no último nível, "Nível máximo". */
+function levelBarRight(level: LevelProgress): string {
+  if (level.nextLevelXp === null) return t.profile.maxLevel;
+  return t.level.xpWithin(
+    level.totalXp - level.levelStartXp,
+    level.nextLevelXp - level.levelStartXp,
   );
 }
 
 function DoneBody({
   state,
   level,
+  config,
   unlockedToday,
 }: {
   readonly state: Extract<HeroState, { kind: 'done' }>;
   readonly level: LevelProgress;
+  readonly config: EngineConfig;
   readonly unlockedToday: readonly BadgeState[];
 }) {
-  const receipt = xpReceipt(state.record);
+  const { record } = state;
+  const activity = config.activities[record.activity];
+  const receipt = xpReceipt(record);
   return (
     <>
       <AppText variant="kicker">
-        {t.home.done(state.record.hourLeft, state.record.minuteLeft)}
+        {t.home.doneKicker(activity.name, record.hourLeft, record.minuteLeft)}
       </AppText>
-      <CountUp value={state.record.xp.total} format={t.home.xpEarned} />
-      <XpReceipt receipt={receipt} />
+      <CountUp value={record.xp.total} format={t.home.xpEarned} />
+      <XpReceipt receipt={receipt} activityEmoji={activity.emoji} />
       <LevelBar
         progress={level.progress}
         left={t.level.short(level.level)}
-        right={level.xpToNext !== null ? `${level.xpToNext} XP` : t.profile.maxLevel}
+        right={levelBarRight(level)}
       />
       {unlockedToday.map((badge) => (
         <Reveal key={badge.id}>
@@ -144,16 +221,25 @@ function NoWindowBody({ state }: { readonly state: Extract<HeroState, { kind: 'n
   );
 }
 
-export function HeroBody({ state, now, hours, level, unlockedToday }: Props) {
+export function HeroBody({
+  state,
+  now,
+  hours,
+  level,
+  config,
+  unlockedToday,
+  cityId,
+  kicker,
+}: Props) {
   switch (state.kind) {
     case 'plan':
-      return <PlanBody state={state} />;
+      return <PlanBody state={state} kicker={kicker ?? t.home.bestToday} />;
     case 'planned':
-      return <PlannedBody state={state} now={now} hours={hours} />;
+      return <PlannedBody state={state} now={now} hours={hours} config={config} cityId={cityId} />;
     case 'confirm':
-      return <ConfirmBody state={state} />;
+      return <ConfirmBody state={state} hours={hours} config={config} cityId={cityId} />;
     case 'done':
-      return <DoneBody state={state} level={level} unlockedToday={unlockedToday} />;
+      return <DoneBody state={state} level={level} config={config} unlockedToday={unlockedToday} />;
     case 'logNoPlan':
       return <LogNoPlanBody state={state} />;
     case 'noWindow':
