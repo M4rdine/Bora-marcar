@@ -3,9 +3,12 @@ export type SkyPhase = 'dawn' | 'day' | 'dusk' | 'night' | 'rainy';
 export const tokens = {
   color: {
     text: '#FFFFFF',
-    textMuted: 'rgba(255,255,255,0.78)',
-    surface: 'rgba(255,255,255,0.14)',
-    surfaceStrong: 'rgba(255,255,255,0.16)',
+    textMuted: 'rgba(255,255,255,0.82)',
+    // Superfícies escuras, não claras. Vidro branco sobre um céu claro deixa o fundo MAIS claro e
+    // derruba o contraste do texto branco; escurecer separa a superfície do céu e ainda ajuda a ler.
+    // Os três materiais também passam a diferir de verdade, em vez de 2% de alfa entre eles.
+    surface: 'rgba(0,0,0,0.18)',
+    surfaceStrong: 'rgba(0,0,0,0.30)',
     border: 'rgba(255,255,255,0.28)',
     ink: '#2C2C5E',
     accent: '#FFFFFF',
@@ -20,7 +23,8 @@ export const tokens = {
     dangerInk: '#5A1A0F',
     score: { great: '#8FF0B6', good: '#8FF0B6', fair: '#FFD66B', poor: '#FF9B8A' },
     scoreInk: { great: '#0A4A2A', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
-    shade: 'rgba(0,0,0,0.16)',
+    // Encaixe dentro de uma superfície (trilhos, medalhas): mais fundo que `surface`.
+    shade: 'rgba(0,0,0,0.22)',
     shadow: '#000000',
     // Quase opaca de propósito: a 0.22 o conteúdo da tela atravessava a barra e parecia defeito.
     tabBar: 'rgba(12,16,28,0.94)',
@@ -51,6 +55,12 @@ export const tokens = {
     night: ['#3B3F7A', '#23264F', '#101230'],
     rainy: ['#B6BCC8', '#7C8597', '#444B5A'],
   } satisfies Record<SkyPhase, readonly [string, string, ...string[]]>,
+  /**
+   * Véu entre o céu e o conteúdo. É um gradiente, e não um preto chapado, porque os tons claros
+   * de cada fase ficam sempre no topo: escurecendo mais em cima e menos embaixo, o texto branco
+   * passa a ser legível em toda a tela sem apagar a cor da base do céu.
+   */
+  scrim: ['rgba(0,0,0,0.50)', 'rgba(0,0,0,0.26)'] as const,
 } as const;
 
 export type ScoreTone = keyof typeof tokens.color.score;

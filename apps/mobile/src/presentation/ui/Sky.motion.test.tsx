@@ -30,8 +30,8 @@ describe('Sky com movimento ligado', () => {
         <Text>Conteúdo</Text>
       </Sky>,
     );
-    // Durante a transição o gradiente de baixo ainda é o anterior (dia) e o de cima entra em fade.
-    expect(UNSAFE_getAllByType(LinearGradient)).toHaveLength(2);
+    // Durante a transição: fase anterior embaixo, fase nova em fade, véu por cima das duas.
+    expect(UNSAFE_getAllByType(LinearGradient)).toHaveLength(3);
     expect(colorsOfBottomGradient()).toEqual(tokens.gradients.day);
 
     act(() => {
@@ -40,7 +40,7 @@ describe('Sky com movimento ligado', () => {
 
     // Fim da animação: o callback `runOnJS(setPrevious)` promoveu a noite a fase corrente.
     expect(colorsOfBottomGradient()).toEqual(tokens.gradients.night);
-    expect(UNSAFE_getAllByType(LinearGradient)).toHaveLength(2);
+    expect(UNSAFE_getAllByType(LinearGradient)).toHaveLength(3);
     expect(getByText('Conteúdo')).toBeTruthy();
   });
 });
