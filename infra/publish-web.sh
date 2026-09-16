@@ -17,7 +17,8 @@ set +a
 OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
 
-EXPO_PUBLIC_API_MODE=bff \
+WEB_BASE_URL=/app \
+  EXPO_PUBLIC_API_MODE=bff \
   EXPO_PUBLIC_BFF_URL="https://${DOMAIN}" \
   EXPO_PUBLIC_ASSETS_URL="https://${DOMAIN}" \
   EXPO_NO_TELEMETRY=1 \

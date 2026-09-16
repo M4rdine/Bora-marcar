@@ -18,7 +18,7 @@ module.exports = defineConfig([
   {
     // Jest setup script (CommonJS, runs outside the TypeScript/`src` tree): needs the
     // Jest global so `jest.mock(...)` doesn't trip `no-undef`.
-    files: ['jest.setup.js'],
+    files: ['jest.setup.js', 'app.config.js'],
     languageOptions: { globals: { ...globals.node, ...globals.jest } },
   },
   {

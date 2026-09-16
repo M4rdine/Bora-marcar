@@ -7,7 +7,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "lint": "expo lint && eslint eslint.config.js jest.setup.js",
+    "lint": "expo lint && eslint eslint.config.js jest.setup.js app.config.js",
     "typecheck": "tsc --noEmit",
     "test": "jest --coverage --maxWorkers=50%",
     "test:watch": "jest --watch"
@@ -25,6 +25,7 @@
     "expo-notifications": "~57.0.18",
     "expo-router": "~57.0.21",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.22",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-reanimated": "4.5.1",
@@ -35,6 +36,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@expo/ngrok": "^4.1.0",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
