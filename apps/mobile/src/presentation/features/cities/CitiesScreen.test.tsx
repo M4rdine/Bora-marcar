@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Linking } from 'react-native';
 
 import { fakeGeocoding, fakeLocation, fakeServices, saoPaulo } from '@/application/testing/fakes';
 import { err, ok } from '@/domain';
@@ -75,6 +76,28 @@ describe('CitiesScreen', () => {
     });
     fireEvent.press(screen.getByText('Usar minha localização'));
     await screen.findByText('Sem permissão de localização. Busque a cidade pelo nome.');
+    await flushListBatching();
+  });
+
+  it('permissão negada oferece abrir os ajustes do sistema, a única saída no iOS', async () => {
+    const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
+    renderWithProviders(<CitiesScreen />, {
+      services: fakeServices({ location: fakeLocation(err({ code: 'denied' })) }),
+    });
+    fireEvent.press(screen.getByText('Usar minha localização'));
+    fireEvent.press(await screen.findByText('Abrir ajustes do sistema'));
+    expect(openSettings).toHaveBeenCalled();
+    await flushListBatching();
+    openSettings.mockRestore();
+  });
+
+  it('localização indisponível não oferece ajustes: não é questão de permissão', async () => {
+    renderWithProviders(<CitiesScreen />, {
+      services: fakeServices({ location: fakeLocation(err({ code: 'unavailable' })) }),
+    });
+    fireEvent.press(screen.getByText('Usar minha localização'));
+    await screen.findByText('Não foi possível obter sua localização.');
+    expect(screen.queryByText('Abrir ajustes do sistema')).toBeNull();
     await flushListBatching();
   });
 

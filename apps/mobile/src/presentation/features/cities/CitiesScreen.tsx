@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { City } from '@/application/ports';
+import type { City, LocationError } from '@/application/ports';
 
 import { t } from '../../i18n/pt-BR';
 import { useCitySearch } from '../../queries/useCitySearch';
@@ -20,7 +20,7 @@ export function CitiesScreen() {
   const router = useRouter();
   const services = useServices();
   const [query, setQuery] = useState('');
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<LocationError['code'] | null>(null);
   const search = useCitySearch(query);
   const favorites = usePreferences((s) => s.favorites);
   const recents = usePreferences((s) => s.recents);
@@ -35,7 +35,7 @@ export function CitiesScreen() {
     setLocationError(null);
     const r = await services.resolveMyLocation();
     if (r.ok) choose(r.value);
-    else setLocationError(t.errors[r.error.code]);
+    else setLocationError(r.error.code);
   };
 
   return (

@@ -165,6 +165,7 @@ export const t = {
     favorite: 'Favoritar',
     unfavorite: 'Remover dos favoritos',
     searching: 'Buscando…',
+    openSettings: 'Abrir ajustes do sistema',
     clear: 'Limpar',
     searchIcon: 'Ícone de busca',
     flag: (country: string) => `Bandeira: ${country}`,

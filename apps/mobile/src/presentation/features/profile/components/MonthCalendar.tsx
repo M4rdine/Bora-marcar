@@ -35,6 +35,9 @@ function DayCell({ cell }: { readonly cell: MonthCell }) {
         styles.cell,
         { backgroundColor: BG_BY_STATE[cell.state] },
         cell.state === 'rest' ? styles.restBorder : null,
+        // Sem este anel, cumprir a atividade apagava a marca de "hoje": a célula virava
+        // indistinguível de qualquer outro dia já cumprido do mês.
+        cell.state === 'today' || cell.state === 'todayDone' ? styles.todayRing : null,
       ]}
     >
       <AppText variant="micro" weight="700" style={{ color: TEXT_BY_STATE[cell.state] }}>
@@ -103,6 +106,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   restBorder: { borderWidth: 1, borderColor: tokens.color.border, borderStyle: 'dashed' },
+  todayRing: { borderWidth: 2, borderColor: tokens.color.gold },
   legend: { flexDirection: 'row', gap: tokens.space[3] },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
   legendDot: {

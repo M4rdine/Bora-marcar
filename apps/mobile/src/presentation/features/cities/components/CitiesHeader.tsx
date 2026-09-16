@@ -1,4 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
+
+import type { LocationError } from '@/application/ports';
 
 import { t } from '../../../i18n/pt-BR';
 import type { useCitySearch } from '../../../queries/useCitySearch';
@@ -23,7 +25,7 @@ type Props = {
   readonly onChangeQuery: (text: string) => void;
   readonly onUseLocation: () => void;
   readonly onRetry: () => void;
-  readonly locationError: string | null;
+  readonly locationError: LocationError['code'] | null;
   readonly message: CitiesStateMessage | null;
 };
 
@@ -40,9 +42,20 @@ export function CitiesHeader({
       <SearchField value={query} onChangeText={onChangeQuery} />
       <Button kind="quiet" label={t.home.useLocation} onPress={onUseLocation} />
       {locationError ? (
-        <AppText variant="small" style={styles.error}>
-          {locationError}
-        </AppText>
+        <View style={styles.locationError}>
+          <AppText variant="small" style={styles.error}>
+            {t.errors[locationError]}
+          </AppText>
+          {/* Uma vez negada no iOS, a permissão só volta pelos ajustes do sistema: sem esta saída
+              o usuário fica preso, tocando em "usar minha localização" sem nada acontecer. */}
+          {locationError === 'denied' ? (
+            <Button
+              kind="quiet"
+              label={t.cities.openSettings}
+              onPress={() => void Linking.openSettings()}
+            />
+          ) : null}
+        </View>
       ) : null}
       {message ? (
         <Surface strength="soft" radius="card" padding={3} style={styles.messageRow}>
@@ -58,6 +71,7 @@ export function CitiesHeader({
 
 const styles = StyleSheet.create({
   header: { padding: tokens.space[4], gap: tokens.space[3] },
+  locationError: { gap: tokens.space[2] },
   messageRow: { gap: tokens.space[2] },
   error: { color: tokens.color.danger },
 });
