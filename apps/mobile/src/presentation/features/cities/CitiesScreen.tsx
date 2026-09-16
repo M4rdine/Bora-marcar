@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { City, LocationError } from '@/application/ports';
 
-import { t } from '../../i18n/pt-BR';
 import { useCitySearch } from '../../queries/useCitySearch';
 import { useServices } from '../../services/ServicesProvider';
 import { isFavorite } from '../../state/preferences';
