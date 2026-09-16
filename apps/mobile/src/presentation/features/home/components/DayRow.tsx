@@ -34,7 +34,11 @@ export function DayRow({ day, title, glyph, isBest, onPress }: Props) {
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.row, isBest ? styles.best : null]}
+      style={({ pressed }) => [
+        styles.row,
+        isBest ? styles.best : styles.separator,
+        pressed ? styles.pressed : null,
+      ]}
     >
       {isBest ? (
         <AppText variant="micro" weight="800" tone="mint">
@@ -57,17 +61,27 @@ export function DayRow({ day, title, glyph, isBest, onPress }: Props) {
 
 const styles = StyleSheet.create({
   row: {
+    minHeight: tokens.size.minTouch,
+    justifyContent: 'center',
     paddingVertical: tokens.space[2],
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.color.border,
     gap: tokens.space[1],
   },
+  separator: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.color.border,
+  },
+  /**
+   * Os quatro lados verdes precisam ser declarados: `borderBottomColor` vence `borderColor`, e
+   * era por isso que o destaque da melhor semana ficava com três lados verdes e o de baixo não.
+   */
   best: {
-    borderColor: tokens.color.mint,
     borderWidth: 1,
+    borderColor: tokens.color.mint,
+    borderBottomColor: tokens.color.mint,
     borderRadius: tokens.radius.inner,
     padding: tokens.space[2],
   },
+  pressed: { opacity: 0.6 },
   line: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   title: { flexShrink: 0 },
   summary: { flex: 1 },

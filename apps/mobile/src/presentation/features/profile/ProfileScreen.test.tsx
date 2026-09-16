@@ -59,11 +59,13 @@ describe('ProfileScreen', () => {
     expect(screen.getByLabelText('3 conquistas')).toBeTruthy();
     expect(screen.queryByLabelText(/cidades?$/)).toBeNull();
 
-    // a fração "2/5" já aparece nas células bloqueadas com progresso; ao abrir o detalhe do
-    // Explorador ela aparece de novo lá dentro.
-    const beforeDetail = screen.getAllByText('2/5').length;
+    // a célula bloqueada mostra a fração curta; o detalhe abre com barra e o número por extenso,
+    // que é o que faltava para a conquista parecer alcançável em vez de só enunciar o critério.
+    expect(screen.getAllByText('2/5').length).toBeGreaterThan(0);
+    expect(screen.queryByText('2 de 5')).toBeNull();
     fireEvent.press(screen.getByText('Explorador'));
-    expect(screen.getAllByText('2/5')).toHaveLength(beforeDetail + 1);
+    expect(screen.getByText('2 de 5')).toBeTruthy();
+    expect(screen.getByLabelText('Progresso: 2 de 5, 40%')).toBeTruthy();
     expect(screen.getByText('Registrou atividades em 5 cidades diferentes.')).toBeTruthy();
   });
 

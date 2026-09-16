@@ -30,7 +30,7 @@ export function CityRow({ city, favorite, onSelect, onToggleFavorite }: Props) {
         accessibilityRole="button"
         accessibilityLabel={cityLabel(city)}
         onPress={onSelect}
-        style={styles.main}
+        style={({ pressed }) => [styles.main, pressed ? styles.pressed : null]}
       >
         <Emoji
           symbol={countryFlag(city.countryCode)}
@@ -58,7 +58,13 @@ export function CityRow({ city, favorite, onSelect, onToggleFavorite }: Props) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  main: {
+    flex: 1,
+    minHeight: tokens.size.minTouch,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+  },
   info: { flex: 1, gap: tokens.space[1] },
   // 44pt é o mínimo de alvo de toque da Apple; a caixa visível é menor, a de toque não.
   favorite: {

@@ -217,6 +217,9 @@ export const t = {
     achievements: 'Conquistas',
     badges: (unlocked: number, total: number) => `${unlocked} de ${total}`,
     badgeProgress: (current: number, target: number) => `${current} de ${target}`,
+    badgeProgressAria: (current: number, target: number, pct: number) =>
+      `Progresso: ${current} de ${target}, ${pct}%`,
+    badgeDone: 'Conquistada',
     bestStreak: (current: number, target: number) => `melhor sequência ${current}/${target}`,
     monthSummary: (active: number, rest: number) =>
       `${active} ${plural(active, 'dia ativo', 'dias ativos')} · ${rest} ${plural(rest, 'folga', 'folgas')} por chuva`,
