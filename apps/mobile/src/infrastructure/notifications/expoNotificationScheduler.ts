@@ -16,6 +16,13 @@ export function configureNotificationHandler(): void {
 
 const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
+/**
+ * Lembrete é um acessório: se agendar ou cancelar falhar, o plano continua valendo e não há nada
+ * que o usuário possa fazer a respeito. Por isso `warn`, e não `error` — em desenvolvimento o
+ * `console.error` sobe como faixa vermelha na tela, e ela estava caindo em cima do momento da
+ * recompensa, que é o pico do produto.
+ */
+
 export const expoNotificationScheduler = (logger: Logger): NotificationScheduler => ({
   async schedule({ id, title, body, atEpochMs }) {
     if (atEpochMs <= Date.now()) {
@@ -37,14 +44,14 @@ export const expoNotificationScheduler = (logger: Logger): NotificationScheduler
         },
       });
     } catch (e) {
-      logger.error('Falha ao agendar lembrete', { id, error: messageOf(e) });
+      logger.warn('Falha ao agendar lembrete', { id, error: messageOf(e) });
     }
   },
   async cancel(id) {
     try {
       await Notifications.cancelScheduledNotificationAsync(id);
     } catch (e) {
-      logger.error('Falha ao cancelar lembrete', { id, error: messageOf(e) });
+      logger.warn('Falha ao cancelar lembrete', { id, error: messageOf(e) });
     }
   },
 });
