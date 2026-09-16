@@ -26,7 +26,7 @@ export function SearchField({ value, onChangeText }: Props) {
           accessibilityRole="button"
           accessibilityLabel={t.cities.clear}
           onPress={() => onChangeText('')}
-          hitSlop={tokens.space[2]}
+          style={({ pressed }) => [styles.clear, pressed ? styles.pressed : null]}
         >
           <AppText variant="body" tone="muted">
             ✕
@@ -40,4 +40,12 @@ export function SearchField({ value, onChangeText }: Props) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   input: { flex: 1, color: tokens.color.text, fontSize: tokens.font.body, padding: 0 },
+  // 44pt é o mínimo de alvo de toque da Apple; a caixa visível é menor, a de toque não.
+  clear: {
+    minWidth: tokens.size.minTouch,
+    minHeight: tokens.size.minTouch,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pressed: { opacity: 0.6 },
 });

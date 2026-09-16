@@ -18,7 +18,7 @@ export function DayHeader({ date, today, tomorrow, onBack }: Props) {
         accessibilityRole="button"
         accessibilityLabel={t.day.back}
         onPress={onBack}
-        style={styles.backButton}
+        style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}
       >
         <AppText variant="title">{t.day.backGlyph}</AppText>
       </Pressable>
@@ -34,5 +34,12 @@ export function DayHeader({ date, today, tomorrow, onBack }: Props) {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  backButton: { padding: tokens.space[2] },
+  // 44pt é o mínimo de alvo de toque da Apple; a caixa visível é menor, a de toque não.
+  backButton: {
+    minWidth: tokens.size.minTouch,
+    minHeight: tokens.size.minTouch,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pressed: { opacity: 0.6 },
 });

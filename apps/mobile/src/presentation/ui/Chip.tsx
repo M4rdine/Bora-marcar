@@ -31,7 +31,11 @@ export function Chip({ label, emoji, active = false, score = null, scoreLabel, o
       accessibilityLabel={ariaLabel}
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={[styles.base, active ? styles.active : styles.inactive]}
+      style={({ pressed }) => [
+        styles.base,
+        active ? styles.active : styles.inactive,
+        pressed ? styles.pressed : null,
+      ]}
     >
       {emoji !== undefined ? <AppText>{emoji}</AppText> : null}
       <AppText variant="small" weight="600" style={active ? styles.activeText : undefined}>
@@ -50,14 +54,17 @@ export function Chip({ label, emoji, active = false, score = null, scoreLabel, o
 
 const styles = StyleSheet.create({
   base: {
+    minHeight: tokens.size.minTouch,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: tokens.space[1],
     paddingVertical: tokens.space[2],
     paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.pill,
   },
   inactive: { backgroundColor: tokens.color.surface },
+  pressed: { opacity: 0.6 },
   active: { backgroundColor: tokens.color.accent },
   activeText: { color: tokens.color.accentInk },
   scorePill: {

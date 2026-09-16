@@ -33,6 +33,8 @@ export const tokens = {
   radius: { hero: 24, card: 16, inner: 12, pill: 999, cell: 8, tabBar: 22 },
   font: { display: 52, xp: 56, title: 20, subtitle: 16, body: 14, small: 12, micro: 10 },
   size: {
+    /** Mínimo de alvo de toque da Apple. Nenhum controle do app fica abaixo disto. */
+    minTouch: 44,
     orb: 34,
     orbBorder: 3,
     orbLarge: 64,

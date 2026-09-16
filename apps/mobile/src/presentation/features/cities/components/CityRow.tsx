@@ -48,7 +48,7 @@ export function CityRow({ city, favorite, onSelect, onToggleFavorite }: Props) {
         accessibilityRole="button"
         accessibilityLabel={favorite ? t.cities.unfavorite : t.cities.favorite}
         onPress={onToggleFavorite}
-        hitSlop={tokens.space[2]}
+        style={({ pressed }) => [styles.favorite, pressed ? styles.pressed : null]}
       >
         <AppText variant="title">{favorite ? '★' : '☆'}</AppText>
       </Pressable>
@@ -60,4 +60,12 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   info: { flex: 1, gap: tokens.space[1] },
+  // 44pt é o mínimo de alvo de toque da Apple; a caixa visível é menor, a de toque não.
+  favorite: {
+    minWidth: tokens.size.minTouch,
+    minHeight: tokens.size.minTouch,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pressed: { opacity: 0.6 },
 });
