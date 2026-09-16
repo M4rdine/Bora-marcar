@@ -30,18 +30,42 @@ beforeEach(() => {
 });
 
 describe('HomeScreen', () => {
-  it('sem cidade mostra as boas-vindas', () => {
+  it('primeiro acesso começa perguntando a atividade, não pedindo uma cidade', async () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
-    expect(screen.getByText('A melhor hora para sair, em uma frase.')).toBeTruthy();
-    expect(screen.getByText('Como funciona')).toBeTruthy();
-    expect(screen.getByLabelText('Passo 1')).toBeTruthy();
-    expect(screen.getByLabelText('Passo 2')).toBeTruthy();
-    expect(screen.getByLabelText('Passo 3')).toBeTruthy();
+    await screen.findByText('O que você costuma fazer ao ar livre?');
+    expect(screen.getByLabelText('Passo 1 de 2')).toBeTruthy();
+    // as opções vêm da config do motor, que carrega de forma assíncrona.
+    await screen.findByLabelText(/^Caminhada\./);
+    // as cinco atividades, cada uma dizendo o que o motor pesa nela.
+    for (const name of ['Caminhada', 'Corrida', 'Ciclismo', 'Praia', 'Piquenique']) {
+      expect(screen.getByLabelText(new RegExp(`^${name}\\.`))).toBeTruthy();
+    }
+    expect(screen.getByText('Aceita bem o calor e foge da chuva.')).toBeTruthy();
+    expect(screen.getByText('O vento é o que mais atrapalha.')).toBeTruthy();
+    // a cidade só é pedida no segundo passo.
+    expect(screen.queryByText('Usar minha localização')).toBeNull();
+  });
+
+  it('escolher a atividade guarda a preferência e leva ao passo do lugar', async () => {
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    fireEvent.press(await screen.findByLabelText(/^Corrida\./));
+    expect(usePreferences.getState().activity).toBe('run');
+    await screen.findByText('De onde você sai?');
+    expect(screen.getByLabelText('Passo 2 de 2')).toBeTruthy();
     fireEvent.press(screen.getByText('Buscar cidade'));
     expect(mockPush).toHaveBeenCalledWith('/cities');
   });
 
-  it('nas boas-vindas, "Usar minha localização" seleciona a cidade do GPS', async () => {
+  it('dá para voltar do passo do lugar e trocar a atividade', async () => {
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    fireEvent.press(await screen.findByLabelText(/^Corrida\./));
+    fireEvent.press(await screen.findByText('Voltar'));
+    await screen.findByText('O que você costuma fazer ao ar livre?');
+    fireEvent.press(screen.getByLabelText(/^Praia\./));
+    expect(usePreferences.getState().activity).toBe('beach');
+  });
+
+  it('no passo do lugar, "Usar minha localização" seleciona a cidade do GPS', async () => {
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
         forecast: fakeForecast(ok(makeForecast(DATES))),
@@ -53,14 +77,16 @@ describe('HomeScreen', () => {
         ),
       }),
     });
-    fireEvent.press(screen.getByText('Usar minha localização'));
+    fireEvent.press(await screen.findByLabelText(/^Caminhada\./));
+    fireEvent.press(await screen.findByText('Usar minha localização'));
     await screen.findByText('São Paulo, Brasil');
     expect(usePreferences.getState().city?.id).toBe(saoPaulo.id);
   });
 
-  it('nas boas-vindas, "Usar minha localização" negada mostra o erro traduzido', async () => {
+  it('no passo do lugar, localização negada mostra o erro traduzido', async () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
-    fireEvent.press(screen.getByText('Usar minha localização'));
+    fireEvent.press(await screen.findByLabelText(/^Caminhada\./));
+    fireEvent.press(await screen.findByText('Usar minha localização'));
     await screen.findByText(t.errors.denied);
   });
 

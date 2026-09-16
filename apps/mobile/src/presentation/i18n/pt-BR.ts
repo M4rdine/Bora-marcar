@@ -1,5 +1,5 @@
 import type { LocationError, ProviderErrorCode } from '@/application/ports';
-import type { BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
+import type { ActivityId, BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 
 import { formatHourRange } from '../format/hourRange';
 
@@ -111,6 +111,24 @@ export const t = {
       { emoji: '🏅', text: 'Planeje a melhor janela, saia e ganhe XP, níveis e conquistas.' },
     ],
     stepLabel: (n: number) => `Passo ${n}`,
+    onboarding: {
+      lead: 'O Bora marcar lê a previsão hora a hora e diz quando vale a pena sair.',
+      progress: (step: number, total: number) => `Passo ${step} de ${total}`,
+      activityQuestion: 'O que você costuma fazer ao ar livre?',
+      activityHelp:
+        'Cada atividade pesa calor, chuva, vento e sol de um jeito. Dá para trocar depois.',
+      activityAria: (name: string, hint: string) => `${name}. ${hint}`,
+      placeQuestion: 'De onde você sai?',
+      placeHelp: 'A previsão vem desse lugar. Dá para trocar de cidade quando quiser.',
+      back: 'Voltar',
+      activityHints: {
+        walk: 'Aceita bem o calor e foge da chuva.',
+        run: 'Quer clima fresco e UV baixo.',
+        cycle: 'O vento é o que mais atrapalha.',
+        beach: 'Quer sol e calor, mas não vento.',
+        picnic: 'Quer céu aberto e chão seco.',
+      } satisfies Record<ActivityId, string>,
+    },
     bestToday: 'Melhor horário hoje',
     noWindow: 'Sem janela boa hoje',
     noWindowRow: (reason: string | null) =>
