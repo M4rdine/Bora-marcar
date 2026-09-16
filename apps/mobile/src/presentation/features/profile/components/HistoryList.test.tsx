@@ -41,19 +41,28 @@ const EVENTS: readonly GamificationEvent[] = [
 ];
 
 describe('HistoryList', () => {
-  it('mostra "plano cumprido" só na linha do registro que cumpriu o plano', () => {
+  const render10and13 = () => {
     const progress = deriveProgress(EVENTS, CONFIG, '2026-09-13');
-    render(
-      <HistoryList
-        records={progress.records}
-        today="2026-09-13"
-        tomorrow="2026-09-14"
-        config={CONFIG}
-      />,
-    );
+    render(<HistoryList records={progress.records} config={CONFIG} />);
+    return progress;
+  };
 
-    expect(screen.getAllByText('plano cumprido')).toHaveLength(1);
+  it('agrupa por mês, com o mês como capítulo da linha do tempo', () => {
+    render10and13();
+    expect(screen.getByText('Setembro 2026')).toBeTruthy();
+  });
+
+  it('cada linha carrega o que teve de notável, em vez de só data e XP', () => {
+    render10and13();
     expect(screen.getByText('Caminhada · 18h00')).toBeTruthy();
     expect(screen.getByText('Corrida · 18h00')).toBeTruthy();
+    // a de 10/09 é a primeira saída e cumpriu o plano; a de 13/09 não cumpriu plano nenhum.
+    expect(screen.getByText(/primeira saída/)).toBeTruthy();
+    expect(screen.getAllByText(/plano cumprido/)).toHaveLength(1);
+  });
+
+  it('sem registros, diz que ainda não há nada em vez de mostrar uma lista vazia', () => {
+    render(<HistoryList records={[]} config={CONFIG} />);
+    expect(screen.getByText('Nenhuma atividade ainda.')).toBeTruthy();
   });
 });

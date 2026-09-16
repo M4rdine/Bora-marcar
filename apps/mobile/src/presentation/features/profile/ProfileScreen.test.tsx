@@ -48,7 +48,8 @@ describe('ProfileScreen', () => {
     expect(screen.getByText('Corrida · 18h00')).toBeTruthy();
     expect(screen.getByText('+100 XP')).toBeTruthy();
 
-    expect(screen.getByText('Setembro 2026')).toBeTruthy();
+    // o mês aparece duas vezes de propósito: título do calendário e capítulo do histórico.
+    expect(screen.getAllByText('Setembro 2026')).toHaveLength(2);
     expect(screen.getByLabelText('13: hoje, atividade feita')).toBeTruthy();
 
     // os três placares: sequência, atividades e conquistas. A contagem de cidades saiu, porque

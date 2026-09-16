@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { addDays, type EngineConfig, type Progress } from '@/domain';
+import type { EngineConfig, Progress } from '@/domain';
 
 import { useToday } from '../../hooks/useToday';
 import { formatLongDate } from '../../i18n/dates';
@@ -74,12 +74,7 @@ function ProfileContent({ progress, today, config }: ContentProps) {
       />
       <BadgeGrid badges={progress.badges} />
       <SectionHeader title={t.profile.history} />
-      <HistoryList
-        records={progress.records}
-        today={today}
-        tomorrow={addDays(today, 1)}
-        config={config}
-      />
+      <HistoryList records={progress.records} config={config} />
     </>
   );
 }

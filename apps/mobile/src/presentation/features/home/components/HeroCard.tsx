@@ -29,6 +29,7 @@ type Props = {
   readonly level: LevelProgress;
   readonly actions: HeroActionsResult;
   readonly unlockedToday: readonly BadgeState[];
+  readonly badgeTotals?: { readonly unlocked: number; readonly total: number } | undefined;
   readonly onOpenTomorrow: () => void;
 };
 
@@ -42,6 +43,7 @@ export function HeroCard({
   level,
   actions,
   unlockedToday,
+  badgeTotals,
   onOpenTomorrow,
 }: Props) {
   return (
@@ -62,6 +64,7 @@ export function HeroCard({
         config={config}
         cityId={cityId}
         unlockedToday={unlockedToday}
+        badgeTotals={badgeTotals}
       />
       <HeroActions
         state={state}

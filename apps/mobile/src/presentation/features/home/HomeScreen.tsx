@@ -65,6 +65,10 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
   });
   const actions = useHeroActions({ city, activity, snapshot, hero });
   const unlockedToday = progress.badges.filter((b) => b.unlockedOn === snapshot.now.date);
+  const badgeTotals = {
+    unlocked: progress.badges.filter((b) => b.unlocked).length,
+    total: progress.badges.length,
+  };
   return (
     <>
       <HeroCard
@@ -77,6 +81,7 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
         level={progress.level}
         actions={actions}
         unlockedToday={unlockedToday}
+        badgeTotals={badgeTotals}
         onOpenTomorrow={() => onOpenDay(tomorrowDate)}
       />
       <HourlyChronology

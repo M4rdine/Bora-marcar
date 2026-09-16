@@ -29,6 +29,9 @@ type Props = {
   readonly level: LevelProgress;
   readonly config: EngineConfig;
   readonly unlockedToday: readonly BadgeState[];
+  /** Coleção de conquistas, para o cartão de desbloqueio dar posição ao que foi conquistado.
+   * A tela do dia nunca chega ao estado "done", então pode omitir. */
+  readonly badgeTotals?: { readonly unlocked: number; readonly total: number } | undefined;
   /** Cidade em foco; um plano feito em outra cidade ganha um aviso discreto. Só a Home passa. */
   readonly cityId?: string;
   /** "Hoje" na Home; "outro dia" na tela do dia, onde a cópia não pode dizer "hoje" nem
@@ -39,6 +42,7 @@ type Props = {
 export type HeroScope = 'today' | 'otherDay';
 
 const MINUTES_PER_HOUR = 60;
+const NO_BADGES = { unlocked: 0, total: 0 } as const;
 
 /** O plano é por dia, não por cidade (spec §5): ao trocar de cidade ele continua valendo, mas
  * o herói avisa de onde ele veio para o horário não parecer desta cidade. */
@@ -162,11 +166,13 @@ function DoneBody({
   level,
   config,
   unlockedToday,
+  badgeTotals,
 }: {
   readonly state: Extract<HeroState, { kind: 'done' }>;
   readonly level: LevelProgress;
   readonly config: EngineConfig;
   readonly unlockedToday: readonly BadgeState[];
+  readonly badgeTotals: { readonly unlocked: number; readonly total: number };
 }) {
   const { record } = state;
   const activity = config.activities[record.activity];
@@ -185,7 +191,11 @@ function DoneBody({
       />
       {unlockedToday.map((badge) => (
         <Reveal key={badge.id}>
-          <UnlockCard badge={badge} />
+          <UnlockCard
+            badge={badge}
+            unlockedCount={badgeTotals.unlocked}
+            total={badgeTotals.total}
+          />
         </Reveal>
       ))}
     </>
@@ -238,6 +248,7 @@ export function HeroBody({
   level,
   config,
   unlockedToday,
+  badgeTotals = NO_BADGES,
   cityId,
   scope = 'today',
 }: Props) {
@@ -249,7 +260,15 @@ export function HeroBody({
     case 'confirm':
       return <ConfirmBody state={state} hours={hours} config={config} cityId={cityId} />;
     case 'done':
-      return <DoneBody state={state} level={level} config={config} unlockedToday={unlockedToday} />;
+      return (
+        <DoneBody
+          state={state}
+          level={level}
+          config={config}
+          unlockedToday={unlockedToday}
+          badgeTotals={badgeTotals}
+        />
+      );
     case 'logNoPlan':
       return <LogNoPlanBody state={state} />;
     case 'noWindow':

@@ -225,6 +225,13 @@ export const t = {
     planFulfilled: 'plano cumprido',
     history: 'Histórico',
     empty: 'Nenhuma atividade ainda.',
+    historyNotes: {
+      first: 'primeira saída',
+      planKept: 'plano cumprido',
+      greatScore: 'clima ótimo',
+    },
+    historyStreak: (n: number) => `${n}º dia seguido`,
+    historyAria: (activity: string, date: string, xp: number) => `${activity} em ${date}, ${xp} XP`,
   },
   facts: {
     apparent: 'sensação',
@@ -240,8 +247,9 @@ export const t = {
     total: 'Total',
   },
   unlock: {
-    kicker: 'Nova conquista',
+    kicker: 'Conquista desbloqueada',
     count: (unlocked: number, total: number) => `${unlocked} de ${total} conquistas`,
+    earnedOn: (dateLabel: string) => `Conquistada ${dateLabel}`,
   },
   streak: {
     days: (n: number) => streakDaysLabel(n),
