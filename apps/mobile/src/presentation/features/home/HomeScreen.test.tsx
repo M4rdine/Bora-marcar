@@ -199,7 +199,7 @@ describe('HomeScreen', () => {
     );
     // a guarda por data do `useBadWeatherRecorder` (não repetir a chamada nem duplicar o
     // evento dentro do mesmo dia) tem cobertura dedicada em `useBadWeatherRecorder.test.tsx`.
-    fireEvent.press(within(hero).getByText('Amanhã: 6h–9h, ótimo'));
+    fireEvent.press(within(hero).getByText('Amanhã: 6h – 9h, ótimo'));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/day/[date]',
       params: { date: '2026-09-14' },

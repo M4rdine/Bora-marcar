@@ -9,3 +9,6 @@ coverage/
 dist/
 *.orig.*
 web-build/
+
+# Snapshots de crítica de design (impeccable)
+.impeccable/

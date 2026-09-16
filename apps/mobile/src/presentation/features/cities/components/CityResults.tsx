@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import type { City } from '@/application/ports';
 
 import { t } from '../../../i18n/pt-BR';
-import { screenPaddingBottom, tokens } from '../../../ui';
+import { tokens, useScreenPaddingBottom } from '../../../ui';
 
 import { CityRow } from './CityRow';
 import { CitySection } from './CitySection';
@@ -25,6 +25,7 @@ export function CityResults({
   onSelect,
   onToggleFavorite,
 }: Props) {
+  const paddingBottom = useScreenPaddingBottom();
   return (
     <FlatList
       data={results}
@@ -37,7 +38,7 @@ export function CityResults({
           onToggleFavorite={() => onToggleFavorite(item)}
         />
       )}
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[styles.list, { paddingBottom }]}
       ItemSeparatorComponent={() => <View style={styles.gap} />}
       ListFooterComponent={
         <>
@@ -62,6 +63,6 @@ export function CityResults({
 }
 
 const styles = StyleSheet.create({
-  list: { paddingHorizontal: tokens.space[4], paddingBottom: screenPaddingBottom },
+  list: { paddingHorizontal: tokens.space[4] },
   gap: { height: tokens.space[2] },
 });

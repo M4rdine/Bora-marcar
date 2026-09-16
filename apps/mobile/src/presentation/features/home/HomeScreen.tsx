@@ -12,7 +12,7 @@ import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useOverview, type OverviewState } from '../../queries/useOverview';
 import { useProgress } from '../../queries/useProgress';
 import { usePreferences } from '../../state/preferencesStore';
-import { AppText, Button, phaseFor, screenPaddingBottom, Sky, tokens } from '../../ui';
+import { AppText, Button, phaseFor, Sky, tokens, useScreenPaddingBottom } from '../../ui';
 
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
@@ -164,6 +164,7 @@ function HomeContent({ city, config, overview, progress }: ContentProps) {
 export function HomeScreen() {
   const city = usePreferences((s) => s.city);
   const activity = usePreferences((s) => s.activity);
+  const paddingBottom = useScreenPaddingBottom();
   const config = useEngineConfig();
   const overview = useOverview(city, activity);
   const today = overview.snapshot?.overview.today ?? null;
@@ -183,7 +184,9 @@ export function HomeScreen() {
   if (city === null) {
     return (
       <Sky phase="dusk">
-        <Welcome />
+        <SafeAreaView style={styles.safe}>
+          <Welcome />
+        </SafeAreaView>
       </Sky>
     );
   }
@@ -191,7 +194,7 @@ export function HomeScreen() {
   return (
     <Sky phase={phase}>
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
           {config.data ? (
             <HomeContent
               city={city}
@@ -212,7 +215,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {
     padding: tokens.space[4],
-    paddingBottom: screenPaddingBottom,
     gap: tokens.space[3],
   },
   status: { gap: tokens.space[2] },

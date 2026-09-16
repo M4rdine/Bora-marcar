@@ -8,7 +8,7 @@ import { formatLongDate } from '../../i18n/dates';
 import { t } from '../../i18n/pt-BR';
 import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useProgress } from '../../queries/useProgress';
-import { AppText, screenPaddingBottom, SectionHeader, Sky, tokens } from '../../ui';
+import { AppText, SectionHeader, Sky, tokens, useScreenPaddingBottom } from '../../ui';
 
 import { BadgeGrid } from './components/BadgeGrid';
 import { HistoryList } from './components/HistoryList';
@@ -87,12 +87,13 @@ function ProfileContent({ progress, today, config }: ContentProps) {
 export function ProfileScreen() {
   const { date: today } = useToday();
   const progress = useProgress(today);
+  const paddingBottom = useScreenPaddingBottom();
   const config = useEngineConfig();
 
   return (
     <Sky phase="dusk">
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
           {progress.data && config.data ? (
             <ProfileContent progress={progress.data} today={today} config={config.data} />
           ) : (
@@ -108,7 +109,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {
     padding: tokens.space[4],
-    paddingBottom: screenPaddingBottom,
     gap: tokens.space[3],
   },
 });

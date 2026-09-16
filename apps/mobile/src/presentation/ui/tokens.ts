@@ -22,7 +22,8 @@ export const tokens = {
     scoreInk: { great: '#0A4A2A', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
     shade: 'rgba(0,0,0,0.16)',
     shadow: '#000000',
-    tabBar: 'rgba(0,0,0,0.22)',
+    // Quase opaca de propósito: a 0.22 o conteúdo da tela atravessava a barra e parecia defeito.
+    tabBar: 'rgba(12,16,28,0.94)',
   },
   space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40 },
   radius: { hero: 24, card: 16, inner: 12, pill: 999, cell: 8, tabBar: 22 },

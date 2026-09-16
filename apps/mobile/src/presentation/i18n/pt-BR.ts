@@ -1,6 +1,8 @@
 import type { LocationError, ProviderErrorCode } from '@/application/ports';
 import type { BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 
+import { formatHourRange } from '../format/hourRange';
+
 type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
@@ -115,7 +117,7 @@ export const t = {
     noWindowBecause: (reason: string) => `Motivo principal: ${reason}.`,
     restDayProtected: 'Hoje não conta contra a sua sequência.',
     seeTomorrow: (startHour: number, endHour: number, label: ScoreLabel) =>
-      `Amanhã: ${startHour}h–${endHour}h, ${LABELS[label].toLowerCase()}`,
+      `Amanhã: ${formatHourRange(startHour, endHour)}, ${LABELS[label].toLowerCase()}`,
     planTomorrowShortcut: (startHour: number) => `Planejar amanhã às ${startHour}h`,
     windowPassed: 'Sua janela de hoje já passou',
     planExpired: (hour: number) => `O plano das ${hour}h expirou`,

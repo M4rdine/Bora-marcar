@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import type { City } from '@/application/ports';
 import { saoPaulo } from '@/application/testing/fakes';
+
+import { testMetrics } from '../../../testing/renderWithProviders';
 
 import { CityResults } from './CityResults';
 
@@ -19,14 +22,16 @@ const rio: City = {
 describe('CityResults', () => {
   it('favoritas e recentes não vazias mostram as duas seções', () => {
     render(
-      <CityResults
-        results={[]}
-        favorites={[saoPaulo]}
-        recents={[rio]}
-        isFavorite={(city) => city.id === saoPaulo.id}
-        onSelect={() => undefined}
-        onToggleFavorite={() => undefined}
-      />,
+      <SafeAreaProvider initialMetrics={testMetrics}>
+        <CityResults
+          results={[]}
+          favorites={[saoPaulo]}
+          recents={[rio]}
+          isFavorite={(city) => city.id === saoPaulo.id}
+          onSelect={() => undefined}
+          onToggleFavorite={() => undefined}
+        />
+      </SafeAreaProvider>,
     );
     expect(screen.getByText('Favoritas')).toBeTruthy();
     expect(screen.getByText('Recentes')).toBeTruthy();

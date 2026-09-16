@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { DayRecommendation } from '@/domain';
 
+import { formatHourRange } from '../../../format/hourRange';
 import { t } from '../../../i18n/pt-BR';
 import type { WeatherGlyph } from '../../../i18n/weatherGlyph';
 import { AppText, Emoji, Pill, tokens } from '../../../ui';
@@ -21,7 +22,7 @@ function summaryOf(day: DayRecommendation, glyph: WeatherGlyph): string {
   const { startHour, endHour } = day.result.window;
   const tempMax = day.daily?.tempMax ?? null;
   const temperature = tempMax !== null ? `${tempMax}°, ` : '';
-  return `${startHour}h – ${endHour}h · ${temperature}${glyph.summary}`;
+  return `${formatHourRange(startHour, endHour)} · ${temperature}${glyph.summary}`;
 }
 
 const scoreOf = (day: DayRecommendation): number | null =>

@@ -8,6 +8,7 @@ import {
   type LocalDateTime,
 } from '@/domain';
 
+import { formatHourRange } from '../../../format/hourRange';
 import { t } from '../../../i18n/pt-BR';
 import { AppText, CountUp, LevelBar, Pill, Reveal } from '../../../ui';
 import { countdown } from '../countdown';
@@ -71,7 +72,9 @@ function PlanBody({
         label={`${t.labels[state.day.label ?? 'poor']} · ${state.score}`}
         tone={state.day.label ?? 'poor'}
       />
-      <AppText variant="display">{`${state.window.startHour}h – ${state.window.endHour}h`}</AppText>
+      <AppText variant="display">
+        {formatHourRange(state.window.startHour, state.window.endHour)}
+      </AppText>
       {state.day.sentence ? <AppText variant="body">{state.day.sentence}</AppText> : null}
       {state.day.caveat ? (
         <AppText variant="small" tone="muted">
@@ -136,7 +139,9 @@ function ConfirmBody({
   return (
     <>
       <AppText variant="kicker">{t.home.windowStarted}</AppText>
-      <AppText variant="display">{`${plan.window.startHour}h – ${plan.window.endHour}h`}</AppText>
+      <AppText variant="display">
+        {formatHourRange(plan.window.startHour, plan.window.endHour)}
+      </AppText>
       <AppText variant="body">
         {t.home.planOf(activity.emoji, activity.name, plan.window.startHour)}
       </AppText>

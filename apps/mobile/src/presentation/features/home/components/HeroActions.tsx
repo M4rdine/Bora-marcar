@@ -85,7 +85,7 @@ type TomorrowProps = {
   readonly onOpenTomorrow: () => void;
 };
 
-/** Atalho "Amanhã: 6h–9h, ótimo", o botão primário quando hoje não tem janela boa. */
+/** Atalho "Amanhã: 6h – 9h, ótimo", o botão primário quando hoje não tem janela boa. */
 function SeeTomorrowButton({ shortcut, config, busy, onOpenTomorrow }: TomorrowProps) {
   if (shortcut === null) return null;
   return (
