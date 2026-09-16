@@ -3,8 +3,8 @@ import { StyleSheet, View } from 'react-native';
 
 import type { ActivityProfile } from '@/domain';
 
-import { t } from '../../../i18n/pt-BR';
-import { AppText, SectionHeader, Surface, tokens } from '../../../ui';
+import { t } from '../../i18n/pt-BR';
+import { AppText, SectionHeader, Surface, tokens } from '../../ui';
 import { bestOfSequence, type TimelineHour } from '../hourlySequence';
 
 import { HourDetail } from './HourDetail';
@@ -16,14 +16,34 @@ type Props = {
   readonly sequence: readonly TimelineHour[];
   readonly profile: ActivityProfile;
   readonly onPlanHour: ((item: TimelineHour) => void) | null;
+  readonly title?: string;
+  readonly subtitle?: string;
+  /**
+   * Cabeçalhos "Hoje"/"Amanhã" entre os blocos. A tela inicial atravessa a meia-noite e precisa
+   * deles; a tela de um dia específico mostra um dia só, onde eles mentiriam.
+   */
+  readonly showDayHeadings?: boolean;
+  /** Nome do dia de cada bloco, usado no cabeçalho e no rótulo de acessibilidade de cada hora. */
+  readonly dayLabelFor?: (dayOffset: 0 | 1) => string;
 };
 
+const defaultDayLabel = (dayOffset: 0 | 1): string =>
+  dayOffset === 0 ? t.chronology.today : t.chronology.tomorrow;
+
 /**
- * A cronologia: as próximas horas em sequência, cada uma com nota, temperatura e chuva. A
- * recomendação do motor aparece como destaque dentro dela ("melhor"), não como veredito acima
- * dela — quem escolhe o horário é quem vai sair.
+ * A cronologia: horas em sequência, cada uma com nota, temperatura e chuva. A recomendação do
+ * motor aparece como destaque dentro dela ("melhor"), não como veredito acima dela — quem
+ * escolhe o horário é quem vai sair.
  */
-export function HourlyChronology({ sequence, profile, onPlanHour }: Props) {
+export function HourlyChronology({
+  sequence,
+  profile,
+  onPlanHour,
+  title = t.chronology.title,
+  subtitle = t.chronology.subtitle,
+  showDayHeadings = true,
+  dayLabelFor = defaultDayLabel,
+}: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const best = bestOfSequence(sequence);
 
@@ -32,9 +52,9 @@ export function HourlyChronology({ sequence, profile, onPlanHour }: Props) {
   return (
     <Surface accessibilityLabel="cronologia" strength="soft" radius="card" padding={3} gap={2}>
       <View style={styles.header}>
-        <SectionHeader title={t.chronology.title} />
+        <SectionHeader title={title} />
         <AppText variant="micro" tone="muted">
-          {t.chronology.subtitle}
+          {subtitle}
         </AppText>
       </View>
 
@@ -45,13 +65,14 @@ export function HourlyChronology({ sequence, profile, onPlanHour }: Props) {
         const startsNewDay = previous !== undefined && previous.dayOffset !== item.dayOffset;
         return (
           <Fragment key={key}>
-            {index === 0 || startsNewDay ? (
+            {showDayHeadings && (index === 0 || startsNewDay) ? (
               <AppText variant="kicker" style={styles.dayHeading}>
-                {item.dayOffset === 0 ? t.chronology.today : t.chronology.tomorrow}
+                {dayLabelFor(item.dayOffset)}
               </AppText>
             ) : null}
             <HourRow
               item={item}
+              dayLabel={dayLabelFor(item.dayOffset)}
               selected={selected}
               isBest={best !== null && keyOf(best) === key}
               onPress={() => setSelectedKey(selected ? null : key)}
@@ -60,8 +81,8 @@ export function HourlyChronology({ sequence, profile, onPlanHour }: Props) {
               <HourDetail
                 hour={item.hour}
                 profile={profile}
-                // Planejar só vale para hoje: o domínio guarda um plano ativo por dia. As horas de
-                // amanhã continuam abrindo o detalhe, que é onde mora o "por que".
+                // Só o primeiro dia da sequência aceita plano: o domínio guarda um plano ativo por
+                // dia. As demais horas continuam abrindo o detalhe, que é onde mora o "por que".
                 onPlan={onPlanHour && item.dayOffset === 0 ? () => onPlanHour(item) : null}
               />
             ) : null}

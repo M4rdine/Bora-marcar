@@ -1,7 +1,7 @@
 import { defaultEngineConfig as cfg, recommendDay, type LocalDateTime } from '@/domain';
 import { makeForecast } from '@/domain/recommendation/testing/fixtures';
 
-import { bestOfSequence, buildHourlySequence } from './hourlySequence';
+import { bestOfSequence, buildDaySequence, buildHourlySequence } from './hourlySequence';
 
 const DATES = ['2026-09-13', '2026-09-14'];
 const forecast = makeForecast(DATES);
@@ -51,6 +51,16 @@ describe('buildHourlySequence', () => {
     const seq = buildHourlySequence({ today, tomorrow: null, now: at(23) });
     expect(seq).toHaveLength(1);
     expect(seq[0]?.isNow).toBe(true);
+  });
+});
+
+describe('buildDaySequence', () => {
+  it('entrega as 24 horas do dia, em ordem, sem marcar agora', () => {
+    const seq = buildDaySequence(dayAt('2026-09-14'));
+    expect(seq).toHaveLength(24);
+    expect(seq.map((i) => i.hour.hour.hour)).toEqual(Array.from({ length: 24 }, (_, i) => i));
+    expect(seq.some((i) => i.isNow)).toBe(false);
+    expect(seq.every((i) => i.dayOffset === 0)).toBe(true);
   });
 });
 

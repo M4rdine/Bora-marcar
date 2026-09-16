@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 
 import {
   fakeForecast,
@@ -77,6 +77,48 @@ describe('DayScreen', () => {
     });
     await screen.findByText('Planejamento disponível só para amanhã');
     expect(screen.queryByText(/Planejar/)).toBeNull();
+  });
+
+  it('a cronologia lista as 24 horas do dia, sem cabeçalho de dia e sem marcar "agora"', async () => {
+    mockDate = '2026-09-14';
+    renderWithProviders(<DayScreen />, {
+      services: fakeServices({ forecast: fakeForecast(ok(makeForecast(DATES))) }),
+    });
+    await screen.findByText('Hora a hora');
+    const chronology = screen.getByLabelText('cronologia');
+    // um dia tem 24 horas e nenhuma delas é "agora" numa tela de dia futuro.
+    expect(within(chronology).getAllByRole('button')).toHaveLength(24);
+    expect(within(chronology).queryByText('agora')).toBeNull();
+    // o rótulo de cada hora nomeia o dia visitado, não "Hoje".
+    expect(screen.getByLabelText(/^Amanhã, 0h, /)).toBeTruthy();
+    expect(screen.getByLabelText(/^Amanhã, 23h, /)).toBeTruthy();
+  });
+
+  it('amanhã: escolher uma hora na cronologia planeja naquela hora', async () => {
+    mockDate = '2026-09-14';
+    const progress = memoryProgressRepository();
+    renderWithProviders(<DayScreen />, {
+      services: fakeServices({ progress, forecast: fakeForecast(ok(makeForecast(DATES))) }),
+    });
+    await screen.findByText('Hora a hora');
+    fireEvent.press(screen.getByLabelText(/^Amanhã, 15h, /));
+    fireEvent.press(await screen.findByText('Planejar Caminhada às 15h'));
+    await waitFor(() =>
+      expect(progress.events().some((e) => e.type === 'planned' && e.window.startHour === 15)).toBe(
+        true,
+      ),
+    );
+  });
+
+  it('depois de amanhã a cronologia explica a nota mas não oferece plano', async () => {
+    mockDate = '2026-09-15';
+    renderWithProviders(<DayScreen />, {
+      services: fakeServices({ forecast: fakeForecast(ok(makeForecast(DATES))) }),
+    });
+    await screen.findByText('Hora a hora');
+    fireEvent.press(screen.getByLabelText(/, 15h, /));
+    await screen.findByText('Por que esta nota');
+    expect(screen.queryByText(/^Planejar/)).toBeNull();
   });
 
   it('dia fora da previsão mostra aviso e botão de voltar', async () => {

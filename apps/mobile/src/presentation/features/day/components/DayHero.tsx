@@ -11,6 +11,9 @@ import type {
   Progress,
 } from '@/domain';
 
+import { buildDaySequence, HourlyChronology } from '../../../chronology';
+import { formatDayTitle } from '../../../i18n/dates';
+import { t } from '../../../i18n/pt-BR';
 import { AppText, Surface, tokens } from '../../../ui';
 import { dayHeroState, type DayHeroState } from '../dayHeroState';
 import type { DayActionsResult } from '../useDayActions';
@@ -122,6 +125,32 @@ export function DayHero({
         nowHour={null}
         sunrise={day.daily?.sunrise ?? null}
         sunset={day.daily?.sunset ?? null}
+      />
+      {/* O gráfico acima dá a forma do dia de relance; a cronologia abaixo é o detalhe, com o
+          porquê de cada nota e o plano na hora que a pessoa escolher. */}
+      <HourlyChronology
+        sequence={buildDaySequence(day)}
+        profile={config.activities[activity]}
+        title={t.chronology.dayTitle}
+        subtitle={t.chronology.subtitle}
+        showDayHeadings={false}
+        dayLabelFor={() => formatDayTitle(date, today, tomorrow)}
+        onPlanHour={
+          heroState.kind === 'plan' || heroState.kind === 'noWindow'
+            ? (item) =>
+                actions.onPlan({
+                  city,
+                  activity,
+                  window: {
+                    date: item.hour.hour.date,
+                    startHour: item.hour.hour.hour,
+                    endHour: item.hour.hour.hour + 1,
+                  },
+                  windowScore: item.hour.score,
+                  utcOffsetSeconds: now.utcOffsetSeconds,
+                })
+            : null
+        }
       />
     </>
   );

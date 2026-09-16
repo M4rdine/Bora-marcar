@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { t } from '../../../i18n/pt-BR';
-import { weatherGlyph } from '../../../i18n/weatherGlyph';
-import { AppText, Emoji, Pill, tokens } from '../../../ui';
+import { t } from '../../i18n/pt-BR';
+import { weatherGlyph } from '../../i18n/weatherGlyph';
+import { AppText, Emoji, Pill, tokens } from '../../ui';
 import type { TimelineHour } from '../hourlySequence';
 
 /** Mínimo de toque da Apple. Nenhuma linha da cronologia fica abaixo disto. */
@@ -12,12 +12,13 @@ const RAIN_WORTH_SHOWING = 10;
 
 type Props = {
   readonly item: TimelineHour;
+  readonly dayLabel: string;
   readonly selected: boolean;
   readonly isBest: boolean;
   readonly onPress: () => void;
 };
 
-export function HourRow({ item, selected, isBest, onPress }: Props) {
+export function HourRow({ item, dayLabel, selected, isBest, onPress }: Props) {
   const { hour } = item;
   const glyph = weatherGlyph(hour.hour.weatherCode);
   const rain = hour.hour.precipitationProbability;
@@ -26,7 +27,7 @@ export function HourRow({ item, selected, isBest, onPress }: Props) {
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={t.chronology.hourAria(
-        item.dayOffset === 0 ? t.chronology.today : t.chronology.tomorrow,
+        dayLabel,
         hour.hour.hour,
         hour.score,
         t.labels[hour.label],

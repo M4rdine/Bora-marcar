@@ -158,6 +158,7 @@ export const t = {
   },
   chronology: {
     title: 'Suas próximas horas',
+    dayTitle: 'Hora a hora',
     subtitle: 'Toque em uma hora para ver por que ela recebeu essa nota.',
     today: 'Hoje',
     tomorrow: 'Amanhã',

@@ -38,6 +38,14 @@ export function buildHourlySequence({
   return [...rest, ...next].slice(0, maxHours);
 }
 
+/**
+ * Cronologia de um dia inteiro, para a tela de um dia específico: sem "agora", sem corte, na
+ * ordem do relógio. Todas as horas ficam no bloco 0, que é o único dia que essa tela mostra.
+ */
+export function buildDaySequence(day: DayRecommendation): readonly TimelineHour[] {
+  return day.hours.map((hour) => ({ hour, isNow: false, dayOffset: 0 }));
+}
+
 /** A melhor hora da cronologia, para destacá-la sem transformar a recomendação em veredito. */
 export function bestOfSequence(sequence: readonly TimelineHour[]): TimelineHour | null {
   return sequence.reduce<TimelineHour | null>(

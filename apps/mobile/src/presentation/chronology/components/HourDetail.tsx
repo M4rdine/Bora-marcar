@@ -2,8 +2,8 @@ import { StyleSheet, View } from 'react-native';
 
 import type { ActivityProfile, HourScore } from '@/domain';
 
-import { t } from '../../../i18n/pt-BR';
-import { AppText, Button, tokens, type ScoreTone } from '../../../ui';
+import { t } from '../../i18n/pt-BR';
+import { AppText, Button, tokens, type ScoreTone } from '../../ui';
 import { factorBreakdown, limitingFactor, type FactorRow } from '../factorBreakdown';
 
 /** Abaixo disto o fator não é culpado de nada: a hora é boa e dizer o contrário confunde. */

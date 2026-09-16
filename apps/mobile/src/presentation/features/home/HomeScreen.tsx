@@ -7,6 +7,7 @@ import type { City } from '@/application/ports';
 import type { OverviewSnapshot } from '@/application/useCases/buildOverview';
 import { addDays, recommendDay, type ActivityId, type EngineConfig, type Progress } from '@/domain';
 
+import { buildHourlySequence, HourlyChronology } from '../../chronology';
 import { t } from '../../i18n/pt-BR';
 import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useOverview, type OverviewState } from '../../queries/useOverview';
@@ -17,12 +18,10 @@ import { AppText, Button, phaseFor, Sky, tokens, useScreenPaddingBottom } from '
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
 import { HomeHeader } from './components/HomeHeader';
-import { HourlyChronology } from './components/HourlyChronology';
 import { NextDaysList } from './components/NextDaysList';
 import { StreakBar } from './components/StreakBar';
 import { Welcome } from './components/Welcome';
 import { deriveHeroState } from './heroState';
-import { buildHourlySequence } from './hourlySequence';
 import { useBadWeatherRecorder } from './useBadWeatherRecorder';
 import { useHeroActions } from './useHeroActions';
 import { weekStrip } from './weekStrip';
