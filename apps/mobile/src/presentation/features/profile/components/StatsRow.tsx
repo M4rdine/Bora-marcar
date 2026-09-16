@@ -6,7 +6,7 @@ import { AppText, Emoji, Surface, tokens } from '../../../ui';
 type Props = {
   readonly streak: number;
   readonly activities: number;
-  readonly cities: number;
+  readonly unlockedBadges: number;
 };
 
 type Stat = {
@@ -18,8 +18,11 @@ type Stat = {
   readonly a11y: string;
 };
 
-/** Três placares iguais (sequência, atividades, cidades) — mockup `.pstats`. */
-export function StatsRow({ streak, activities, cities }: Props) {
+/**
+ * Três placares: sequência, atividades e conquistas. A contagem de cidades saiu porque nada no
+ * app recompensa variar de cidade, então o número não respondia a nenhuma pergunta do usuário.
+ */
+export function StatsRow({ streak, activities, unlockedBadges }: Props) {
   const stats: readonly Stat[] = [
     {
       symbol: '🔥',
@@ -34,10 +37,10 @@ export function StatsRow({ streak, activities, cities }: Props) {
       a11y: t.profile.activities(activities),
     },
     {
-      symbol: '🧭',
-      value: cities,
-      label: t.profile.statLabels.cities(cities),
-      a11y: t.profile.cities(cities),
+      symbol: '🏅',
+      value: unlockedBadges,
+      label: t.profile.statLabels.achievements(unlockedBadges),
+      a11y: t.profile.unlockedCount(unlockedBadges),
     },
   ];
   return (

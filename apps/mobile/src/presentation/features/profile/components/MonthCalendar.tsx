@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, tokens } from '../../../ui';
+import { AppText, Emoji, tokens } from '../../../ui';
 import type { MonthCell, MonthCellState, MonthGrid } from '../monthGrid';
 
 type Props = {
@@ -43,6 +43,11 @@ function DayCell({ cell }: { readonly cell: MonthCell }) {
       <AppText variant="micro" weight="700" style={{ color: TEXT_BY_STATE[cell.state] }}>
         {cell.day}
       </AppText>
+      {/* O fogo marca o dia de hoje já cumprido: é a recompensa visual de ter mantido a sequência,
+          no lugar onde a pessoa vai procurar por ela. */}
+      {cell.state === 'todayDone' ? (
+        <Emoji symbol="🔥" size={FLAME_SIZE} label={t.streak.state.todayDone} />
+      ) : null}
     </View>
   );
 }
@@ -92,6 +97,7 @@ export function MonthCalendar({ grid }: Props) {
 }
 
 const CELL_WIDTH = `${100 / 7}%` as const;
+const FLAME_SIZE = 12;
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },

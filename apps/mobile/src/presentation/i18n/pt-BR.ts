@@ -10,6 +10,7 @@ const statLabels = {
   streak: (n: number) => plural(n, 'dia seguido', 'dias seguidos'),
   activities: (n: number) => plural(n, 'atividade', 'atividades'),
   cities: (n: number) => plural(n, 'cidade', 'cidades'),
+  achievements: (n: number) => plural(n, 'conquista', 'conquistas'),
 };
 const streakDaysLabel = (n: number): string => `${n} ${statLabels.streak(n)}`;
 
@@ -211,6 +212,7 @@ export const t = {
     streak: (n: number) => streakDaysLabel(n),
     activities: (n: number) => `${n} ${statLabels.activities(n)}`,
     cities: (n: number) => `${n} ${statLabels.cities(n)}`,
+    unlockedCount: (n: number) => `${n} ${statLabels.achievements(n)}`,
     statLabels,
     achievements: 'Conquistas',
     badges: (unlocked: number, total: number) => `${unlocked} de ${total}`,
@@ -243,6 +245,18 @@ export const t = {
   },
   streak: {
     days: (n: number) => streakDaysLabel(n),
+    risk: {
+      securedTitle: 'Sequência garantida hoje',
+      protectedTitle: 'Hoje não conta contra você',
+      protectedBody: 'O tempo não ajudou, então a sequência fica de pé sem atividade.',
+      idleTitle: 'Comece uma sequência hoje',
+      idleBody: 'Registre uma atividade e o contador começa a correr.',
+      atRiskTitle: (n: number) => `Sua sequência de ${streakDaysLabel(n)} acaba hoje`,
+      countdown: (hours: number, minutes: number) =>
+        hours > 0 ? `Faltam ${hours}h ${minutes}min` : `Faltam ${minutes}min`,
+      countdownAria: (hours: number, minutes: number) =>
+        `Faltam ${hours} horas e ${minutes} minutos para perder a sequência`,
+    },
     state: {
       done: 'atividade feita',
       today: 'hoje',

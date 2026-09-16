@@ -51,6 +51,13 @@ describe('ProfileScreen', () => {
     expect(screen.getByText('Setembro 2026')).toBeTruthy();
     expect(screen.getByLabelText('13: hoje, atividade feita')).toBeTruthy();
 
+    // os três placares: sequência, atividades e conquistas. A contagem de cidades saiu, porque
+    // nada no app recompensa variar de cidade.
+    expect(screen.getByLabelText('2 atividades')).toBeTruthy();
+    // três desbloqueadas: primeira saída, madrugador (6h) e coruja (18h).
+    expect(screen.getByLabelText('3 conquistas')).toBeTruthy();
+    expect(screen.queryByLabelText(/cidades?$/)).toBeNull();
+
     // a fração "2/5" já aparece nas células bloqueadas com progresso; ao abrir o detalhe do
     // Explorador ela aparece de novo lá dentro.
     const beforeDetail = screen.getAllByText('2/5').length;

@@ -61,7 +61,7 @@ function ProfileContent({ progress, today, config }: ContentProps) {
       <StatsRow
         streak={progress.streak}
         activities={progress.records.length}
-        cities={progress.citiesCount}
+        unlockedBadges={progress.badges.filter((b) => b.unlocked).length}
       />
       <SectionHeader
         title={grid.title}

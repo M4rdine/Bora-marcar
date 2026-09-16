@@ -22,6 +22,7 @@ import { NextDaysList } from './components/NextDaysList';
 import { StreakBar } from './components/StreakBar';
 import { Welcome } from './components/Welcome';
 import { deriveHeroState } from './heroState';
+import { deriveStreakRisk } from './streakRisk';
 import { useBadWeatherRecorder } from './useBadWeatherRecorder';
 import { useHeroActions } from './useHeroActions';
 import { weekStrip } from './weekStrip';
@@ -146,7 +147,12 @@ function HomeContent({ city, config, overview, progress }: ContentProps) {
             onOpenCities={() => router.push('/cities')}
           />
           <StreakBar
-            streak={progress.streak}
+            risk={deriveStreakRisk({
+              streak: progress.streak,
+              doneToday: progress.todayRecord !== null,
+              restToday: progress.restDates.has(now.date),
+              now,
+            })}
             days={weekStrip({
               today: now.date,
               activeDates: progress.activeDates,

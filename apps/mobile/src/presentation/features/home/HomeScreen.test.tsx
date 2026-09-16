@@ -9,7 +9,7 @@ import {
   saoPaulo,
 } from '@/application/testing/fakes';
 import { defaultEngineConfig, err, ok, recommendDay } from '@/domain';
-import { logged, planned } from '@/domain/gamification/testing/fixtures';
+import { badDay, logged, planned } from '@/domain/gamification/testing/fixtures';
 import { makeForecast } from '@/domain/recommendation/testing/fixtures';
 
 import { t } from '../../i18n/pt-BR';
@@ -331,13 +331,14 @@ describe('HomeScreen', () => {
     await screen.findByText(/Concluído · .+ · 14h37/);
   });
 
-  it('sem histórico, a faixa de streak mostra 0 dias seguidos', async () => {
+  it('sem histórico, a sequência convida a começar em vez de exibir um zero', async () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, { services: goodServices() });
-    await screen.findByText('0 dias seguidos');
+    await screen.findByText('Comece uma sequência hoje');
+    expect(screen.queryByText('0 dias seguidos')).toBeNull();
   });
 
-  it('com 1 dia seguido, a faixa de streak usa o singular', async () => {
+  it('com sequência e sem registro hoje, mostra o que se perde e em quanto tempo', async () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
@@ -346,6 +347,38 @@ describe('HomeScreen', () => {
         progress: memoryProgressRepository([logged('2026-09-12')]),
       }),
     });
-    await screen.findByText('1 dia seguido');
+    await screen.findByText('Sua sequência de 1 dia seguido acaba hoje');
+    // relógio falso às 14:00 → faltam 10 horas para a virada do dia.
+    expect(screen.getByText('Faltam 10h 0min')).toBeTruthy();
+    const streakBar = screen.getByLabelText('sequência');
+    expect(within(streakBar).getByText('1')).toBeTruthy();
+  });
+
+  it('depois de confirmar, a sequência do dia aparece como garantida', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        progress: memoryProgressRepository([logged('2026-09-12')]),
+      }),
+    });
+    await screen.findByText('Sua sequência de 1 dia seguido acaba hoje');
+    fireEvent.press(screen.getByText('Planejar Caminhada às 14h'));
+    fireEvent.press(await screen.findByText('Confirmar que fui'));
+    await screen.findByText('Sequência garantida hoje');
+    expect(screen.queryByText(/acaba hoje/)).toBeNull();
+  });
+
+  it('dia de folga por mau tempo protege a sequência em vez de ameaçá-la', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        forecast: fakeForecast(ok(makeForecast(DATES))),
+        // a folga já gravada; aqui o que se testa é a faixa lendo `restDates`, não o gravador.
+        progress: memoryProgressRepository([logged('2026-09-12'), badDay('2026-09-13')]),
+      }),
+    });
+    await screen.findByText('Hoje não conta contra você');
+    expect(screen.queryByText(/acaba hoje/)).toBeNull();
   });
 });
