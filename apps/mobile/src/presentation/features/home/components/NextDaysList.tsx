@@ -24,7 +24,7 @@ const asideFor = (comparison: Comparison): string | undefined => {
 
 export function NextDaysList({ days, comparison, bestDate, today, tomorrow, onOpenDay }: Props) {
   return (
-    <Surface strength="soft" radius="card" padding={4} gap={2}>
+    <Surface accessibilityLabel="próximos dias" strength="soft" radius="card" padding={4} gap={2}>
       <SectionHeader title={t.home.nextDays} aside={asideFor(comparison)} />
       {days.map((day) => (
         <DayRow

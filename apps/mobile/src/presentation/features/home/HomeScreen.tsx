@@ -17,11 +17,12 @@ import { AppText, Button, phaseFor, Sky, tokens, useScreenPaddingBottom } from '
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
 import { HomeHeader } from './components/HomeHeader';
-import { HourlyTimeline } from './components/HourlyTimeline';
+import { HourlyChronology } from './components/HourlyChronology';
 import { NextDaysList } from './components/NextDaysList';
 import { StreakBar } from './components/StreakBar';
 import { Welcome } from './components/Welcome';
 import { deriveHeroState } from './heroState';
+import { buildHourlySequence } from './hourlySequence';
 import { useBadWeatherRecorder } from './useBadWeatherRecorder';
 import { useHeroActions } from './useHeroActions';
 import { weekStrip } from './weekStrip';
@@ -78,11 +79,26 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
         unlockedToday={unlockedToday}
         onOpenTomorrow={() => onOpenDay(tomorrowDate)}
       />
-      <HourlyTimeline
-        hours={snapshot.overview.today.hours}
-        nowHour={snapshot.now.hour}
-        sunrise={snapshot.overview.today.daily?.sunrise ?? null}
-        sunset={snapshot.overview.today.daily?.sunset ?? null}
+      <HourlyChronology
+        sequence={buildHourlySequence({
+          today: snapshot.overview.today,
+          tomorrow,
+          now: snapshot.now,
+        })}
+        profile={config.activities[activity]}
+        onPlanHour={
+          actions.canPlanAt
+            ? (item) =>
+                actions.onPlanAt(
+                  {
+                    date: item.hour.hour.date,
+                    startHour: item.hour.hour.hour,
+                    endHour: item.hour.hour.hour + 1,
+                  },
+                  item.hour.score,
+                )
+            : null
+        }
       />
       <NextDaysList
         days={snapshot.overview.nextDays}

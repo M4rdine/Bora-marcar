@@ -53,7 +53,7 @@ describe('HomeScreen (MSW + adapters reais)', () => {
     // convida a registrar em vez de mostrar uma janela futura (mesmo comportamento coberto com
     // fakes em `HomeScreen.test.tsx`). A prova de que o HTTP real chegou até a tela é a janela
     // aparecendo nos "Próximos dias", calculada a partir do DTO parseado dos adapters reais.
-    await screen.findByText('Seu dia, hora a hora', {}, { timeout: 5000 });
+    await screen.findByText('Suas próximas horas', {}, { timeout: 5000 });
     expect(screen.getAllByText(/\d+h – \d+h/).length).toBeGreaterThan(0);
   });
 
@@ -64,7 +64,7 @@ describe('HomeScreen (MSW + adapters reais)', () => {
 
     try {
       renderWithProviders(<HomeScreen />, { services: realServices() });
-      await screen.findByText('Seu dia, hora a hora', {}, { timeout: 5000 });
+      await screen.findByText('Suas próximas horas', {}, { timeout: 5000 });
 
       const forecastUrl = urls
         .map((u) => new URL(u))

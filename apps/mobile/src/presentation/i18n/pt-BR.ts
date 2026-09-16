@@ -156,6 +156,34 @@ export const t = {
     sunLabel: 'Sol',
     moonLabel: 'Lua',
   },
+  chronology: {
+    title: 'Suas próximas horas',
+    subtitle: 'Toque em uma hora para ver por que ela recebeu essa nota.',
+    today: 'Hoje',
+    tomorrow: 'Amanhã',
+    now: 'agora',
+    best: 'melhor',
+    rainChance: (pct: number) => `${pct}% de chuva`,
+    temperature: (celsius: number) => `${Math.round(celsius)}°`,
+    whyTitle: 'Por que esta nota',
+    factors: {
+      thermal: 'Temperatura',
+      rain: 'Chuva',
+      wind: 'Vento',
+      uv: 'UV',
+      sun: 'Sol',
+    } satisfies Record<FactorId, string>,
+    factorWeight: (pct: number) => `peso ${pct}%`,
+    limiting: (factor: string) => `${factor} é o que mais derruba esta hora.`,
+    nothingLimiting: 'Nenhum fator atrapalha esta hora.',
+    vetoed: (reason: string) => `Nota limitada por ${reason}.`,
+    comfortAria: (factor: string, pct: number) => `${factor}: ${pct}% de conforto`,
+    // O dia entra no rótulo porque a cronologia atravessa a meia-noite: sem ele, hoje às 13h e
+    // amanhã às 13h são lidos igual por um leitor de tela.
+    hourAria: (day: string, hour: number, score: number, label: string, temperature: number) =>
+      `${day}, ${hour}h, ${label}, score ${score}, ${Math.round(temperature)} graus`,
+    collapse: 'Fechar detalhe',
+  },
   cities: {
     placeholder: 'Digite o nome da cidade',
     hint: 'Pelo menos 2 letras',

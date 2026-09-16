@@ -1,6 +1,6 @@
 import type { City } from '@/application/ports';
 import type { OverviewSnapshot } from '@/application/useCases/buildOverview';
-import type { ActivityId } from '@/domain';
+import type { ActivityId, TimeWindow } from '@/domain';
 
 import { useGamificationActions } from '../../queries/useGamificationActions';
 
@@ -24,6 +24,10 @@ type Input = {
 
 export type HeroActionsResult = {
   readonly onPlan: () => void;
+  /** Planeja numa hora escolhida na cronologia, em vez da janela que o motor recomendou. */
+  readonly onPlanAt: (window: TimeWindow, windowScore: number) => void;
+  /** Verdadeiro quando ainda não há plano nem registro hoje, então escolher uma hora faz sentido. */
+  readonly canPlanAt: boolean;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
   readonly onLogNow: (hour: number, minute: number, hourScore: number) => void;
@@ -34,7 +38,16 @@ export type HeroActionsResult = {
 };
 
 type Actions = ReturnType<typeof useGamificationActions>;
-type Handlers = Omit<HeroActionsResult, 'busy' | 'errorMessage' | 'pickableHours'>;
+type Handlers = Omit<HeroActionsResult, 'busy' | 'errorMessage' | 'pickableHours' | 'canPlanAt'>;
+
+/**
+ * Estados em que a agenda de hoje está livre. Só neles a cronologia oferece "planejar às Xh":
+ * o domínio aceita um plano ativo por dia, e um segundo seria recusado com erro.
+ */
+const canPlanAtIn = (state: HeroState): boolean =>
+  state.kind === 'plan' ||
+  state.kind === 'noWindow' ||
+  (state.kind === 'logNoPlan' && state.expiredPlan === null);
 
 /** Pura: monta os quatro handlers a partir dos dados de entrada, do herói e das mutações. */
 function buildHeroHandlers(
@@ -50,6 +63,19 @@ function buildHeroHandlers(
         activity,
         window: hero.window,
         windowScore: hero.score,
+        utcOffsetSeconds: snapshot.now.utcOffsetSeconds,
+      }),
+    );
+  };
+
+  const onPlanAt = (window: TimeWindow, windowScore: number) => {
+    if (!canPlanAtIn(hero)) return;
+    run(() =>
+      actions.plan.mutateAsync({
+        city,
+        activity,
+        window,
+        windowScore,
         utcOffsetSeconds: snapshot.now.utcOffsetSeconds,
       }),
     );
@@ -85,7 +111,7 @@ function buildHeroHandlers(
     run(() => actions.log.mutateAsync(input));
   };
 
-  return { onPlan, onCancel, onConfirm, onLogNow };
+  return { onPlan, onPlanAt, onCancel, onConfirm, onLogNow };
 }
 
 const isBusy = (actions: Actions): boolean =>
@@ -100,5 +126,11 @@ export function useHeroActions(input: Input): HeroActionsResult {
   const { run, errorMessage } = useActionRunner();
   const handlers = buildHeroHandlers(input, actions, run);
   const hours = pickableHours(input.snapshot.overview.today, input.snapshot.now);
-  return { ...handlers, pickableHours: hours, busy: isBusy(actions), errorMessage };
+  return {
+    ...handlers,
+    pickableHours: hours,
+    canPlanAt: canPlanAtIn(input.hero),
+    busy: isBusy(actions),
+    errorMessage,
+  };
 }

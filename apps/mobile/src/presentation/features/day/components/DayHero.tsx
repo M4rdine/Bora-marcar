@@ -12,11 +12,11 @@ import type {
 } from '@/domain';
 
 import { AppText, Surface, tokens } from '../../../ui';
-import { HourlyTimeline } from '../../home/components/HourlyTimeline';
 import { dayHeroState, type DayHeroState } from '../dayHeroState';
 import type { DayActionsResult } from '../useDayActions';
 
 import { NoWindowSection, PlannedSection, PlanSection, ViewOnlySection } from './DaySections';
+import { HourlyTimeline } from './HourlyTimeline';
 
 type DayHeroBodyProps = {
   readonly heroState: DayHeroState;

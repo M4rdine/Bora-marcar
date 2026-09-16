@@ -72,10 +72,12 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Nível 1')).toBeTruthy();
     // relógio falso: 14:00 em São Paulo → janela 14h–17h
     await screen.findByText('14h – 17h', {}, { timeout: 3000 });
-    expect(screen.getByText('Ótimo · 100')).toBeTruthy();
+    // a mesma nota aparece no herói e nas linhas da cronologia; aqui só interessa o herói.
+    const planHero = screen.getByLabelText('hero');
+    expect(within(planHero).getByText('Ótimo · 100')).toBeTruthy();
     // fatos da janela (fixture padrão: sensação 22°, chuva 5%).
-    expect(screen.getByText('22°')).toBeTruthy();
-    expect(screen.getByText('5%')).toBeTruthy();
+    expect(within(planHero).getByText('22°')).toBeTruthy();
+    expect(within(planHero).getByText('5%')).toBeTruthy();
     fireEvent.press(screen.getByText('Planejar Caminhada às 14h'));
     // 14:00 está dentro da janela → estado "confirm", com a atividade do plano, o score de agora
     // colorido e os fatores da janela (fixture padrão: sensação 22°).
@@ -109,21 +111,67 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Tentar de novo')).toBeTruthy();
   });
 
-  it('lista as 24 horas e os próximos dias', async () => {
+  it('a cronologia começa em agora, atravessa para amanhã e não mostra horas passadas', async () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, { services: goodServices() });
-    await screen.findByText('Seu dia, hora a hora');
-    expect(screen.getByLabelText('17h: 100, Ótimo')).toBeTruthy();
-    expect(screen.getByText(/Amanhã/)).toBeTruthy();
-    // todos os próximos dias têm a fixture uniforme, então a mesma janela se repete.
-    await waitFor(() => expect(screen.getAllByText(/6h – 9h/).length).toBeGreaterThan(0));
+    await screen.findByText('Suas próximas horas');
+    // relógio falso: 14:00. A hora atual entra marcada e as anteriores ficam de fora.
+    expect(screen.getByLabelText(/^Hoje, 14h, /)).toBeTruthy();
+    expect(screen.getByText('agora')).toBeTruthy();
+    expect(screen.queryByLabelText(/^Hoje, 13h, /)).toBeNull();
+    // 10 horas restantes de hoje e o resto vem de amanhã, sob o cabeçalho do dia.
+    expect(screen.getByLabelText(/^Hoje, 23h, /)).toBeTruthy();
+    const chronology = screen.getByLabelText('cronologia');
+    expect(within(chronology).getByText('Hoje')).toBeTruthy();
+    expect(within(chronology).getByText('Amanhã')).toBeTruthy();
   });
 
-  it('toca na linha de amanhã e navega para /day/[date]', async () => {
+  it('toca numa hora e vê por que ela recebeu aquela nota', async () => {
     usePreferences.setState({ city: saoPaulo });
     renderWithProviders(<HomeScreen />, { services: goodServices() });
-    const tomorrowRow = await screen.findByText('Amanhã');
-    fireEvent.press(tomorrowRow);
+    await screen.findByText('Suas próximas horas');
+    expect(screen.queryByText('Por que esta nota')).toBeNull();
+    fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
+    await screen.findByText('Por que esta nota');
+    // os cinco fatores do motor, cada um com o peso da atividade escolhida.
+    expect(screen.getByLabelText(/^Temperatura: \d+% de conforto$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Chuva: \d+% de conforto$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Vento: \d+% de conforto$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^UV: \d+% de conforto$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Sol: \d+% de conforto$/)).toBeTruthy();
+    // tocar de novo fecha
+    fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
+    expect(screen.queryByText('Por que esta nota')).toBeNull();
+  });
+
+  it('planeja numa hora escolhida na cronologia, não na que o motor recomendou', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    await screen.findByText('Suas próximas horas');
+    fireEvent.press(screen.getByLabelText(/^Hoje, 18h, /));
+    fireEvent.press(await screen.findByText('Planejar Caminhada às 18h'));
+    // o plano passa a ser das 18h, e não das 14h que o motor havia recomendado.
+    await screen.findByText('Caminhada às 18h');
+  });
+
+  it('horas de amanhã explicam a nota mas não oferecem plano: o domínio guarda um por dia', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    await screen.findByText('Suas próximas horas');
+    const chronology = screen.getByLabelText('cronologia');
+    const tomorrowHeading = within(chronology).getByText('Amanhã');
+    expect(tomorrowHeading).toBeTruthy();
+    fireEvent.press(screen.getByLabelText(/^Amanhã, 2h, /));
+    await screen.findByText('Por que esta nota');
+    expect(screen.queryByText('Planejar Caminhada às 2h')).toBeNull();
+  });
+
+  it('toca na linha de amanhã em Próximos dias e navega para /day/[date]', async () => {
+    usePreferences.setState({ city: saoPaulo });
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    await screen.findByText('Suas próximas horas');
+    const nextDays = screen.getByLabelText('próximos dias');
+    fireEvent.press(within(nextDays).getByText('Amanhã'));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/day/[date]',
       params: { date: '2026-09-14' },
@@ -244,8 +292,10 @@ describe('HomeScreen', () => {
     });
     await screen.findByText('Sua janela de hoje já passou');
     fireEvent.press(screen.getByText('Registrar atividade'));
-    fireEvent.press(await screen.findByText('7h'));
-    fireEvent.press(screen.getByText('Registrar às 7h'));
+    // "7h" também aparece nas horas de amanhã da cronologia; o seletor mora no herói.
+    const logHero = screen.getByLabelText('hero');
+    fireEvent.press(await within(logHero).findByText('7h'));
+    fireEvent.press(within(logHero).getByText('Registrar às 7h'));
     await screen.findByText(/Concluído · .+ · 7h00/);
     const expectedScore = recommendDay(
       forecast,
