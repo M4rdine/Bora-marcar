@@ -17,6 +17,9 @@ type Props = {
   readonly accessibilityLabel?: string;
 };
 
+/** 0,75 dava 4,28:1 sobre o botão branco, abaixo dos 4,5 exigidos. A 0,85 sobra folga. */
+const SUBTEXT_OPACITY = 0.85;
+
 const BACKGROUND_BY_KIND: Record<Kind, string> = {
   primary: tokens.color.accent,
   mint: tokens.color.mint,
@@ -66,7 +69,10 @@ export function Button({
         {shownLabel}
       </AppText>
       {subtext !== undefined && !loading ? (
-        <AppText variant="small" style={[styles.subtext, { color: textColor, opacity: 0.75 }]}>
+        <AppText
+          variant="small"
+          style={[styles.subtext, { color: textColor, opacity: SUBTEXT_OPACITY }]}
+        >
           {subtext}
         </AppText>
       ) : null}

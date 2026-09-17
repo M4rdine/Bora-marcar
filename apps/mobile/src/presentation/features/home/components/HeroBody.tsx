@@ -187,11 +187,14 @@ function DoneBody({
         left={t.level.short(level.level)}
         right={levelBarRight(level)}
       />
-      {unlockedToday.map((badge) => (
+      {unlockedToday.map((badge, index) => (
         <Reveal key={badge.id}>
           <UnlockCard
             badge={badge}
-            unlockedCount={badgeTotals.unlocked}
+            // Cada cartão conta a SUA posição na coleção. Passar o total a todos fazia duas
+            // conquistas desbloqueadas juntas dizerem "2 de 8" as duas, em vez de "1 de 8" e
+            // "2 de 8": a segunda contradizia a primeira na mesma rolagem.
+            unlockedCount={badgeTotals.unlocked - unlockedToday.length + index + 1}
             total={badgeTotals.total}
           />
         </Reveal>

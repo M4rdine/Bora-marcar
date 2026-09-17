@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { View } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 import { tokens } from '../tokens';
@@ -62,21 +63,24 @@ function Shape({ shape, color }: { readonly shape: IconShape; readonly color: st
 function IconView({ name, size = 20, color = tokens.color.text, label }: Props) {
   const shapes = ICON_SHAPES[name];
   return (
-    <Svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${GRID} ${GRID}`}
+    // A acessibilidade fica no `View`, não no `Svg`. Passadas ao `Svg`, as propriedades nativas
+    // chegavam cruas ao DOM na versão web — dois erros de React por renderização — e o ícone
+    // decorativo continuava exposto ao leitor de tela, que é o oposto do pretendido.
+    <View
       {...(label === undefined
         ? {
             accessibilityElementsHidden: true,
             importantForAccessibility: 'no-hide-descendants' as const,
+            'aria-hidden': true,
           }
         : { accessibilityRole: 'image' as const, accessibilityLabel: label })}
     >
-      {shapes.map((shape, index) => (
-        <Shape key={index} shape={shape} color={color} />
-      ))}
-    </Svg>
+      <Svg width={size} height={size} viewBox={`0 0 ${GRID} ${GRID}`}>
+        {shapes.map((shape, index) => (
+          <Shape key={index} shape={shape} color={color} />
+        ))}
+      </Svg>
+    </View>
   );
 }
 

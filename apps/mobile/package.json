@@ -110,6 +110,9 @@
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
     ],
-    "resolver": "react-native-worklets/jest/resolver"
+    "resolver": "react-native-worklets/jest/resolver",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setupAfterEnv.js"
+    ]
   }
 }

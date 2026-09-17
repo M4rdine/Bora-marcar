@@ -44,7 +44,15 @@ const ICON_SIZE = 18;
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  input: { flex: 1, color: tokens.color.text, fontSize: tokens.font.body, padding: 0 },
+  // A pílula em volta tem altura de sobra, mas quem recebe o toque é o campo: sem isto ele
+  // media 17 de altura e era o único alvo do app abaixo do mínimo.
+  input: {
+    flex: 1,
+    minHeight: tokens.size.minTouch,
+    color: tokens.color.text,
+    fontSize: tokens.font.body,
+    padding: 0,
+  },
   // 44pt é o mínimo de alvo de toque da Apple; a caixa visível é menor, a de toque não.
   clear: {
     minWidth: tokens.size.minTouch,
