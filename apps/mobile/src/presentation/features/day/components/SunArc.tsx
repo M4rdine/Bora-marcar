@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { minutesOfDay } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, tokens } from '../../../ui';
+import { AppText, Icon, tokens } from '../../../ui';
 
 type Props = {
   readonly sunrise: string | null;
@@ -28,8 +28,10 @@ function markerPosition(
 function NowMarker({ pct, isDay }: { readonly pct: number; readonly isDay: boolean }) {
   return (
     <View style={[styles.marker, { left: `${pct * 100}%` }]}>
-      <Emoji
-        symbol={isDay ? '☀️' : '🌙'}
+      {/* O sol e a lua do próprio conjunto. Eram ☀️/🌙 do sistema, a uma tela de distância do
+          crescente vetorial que o app desenha para "céu limpo à noite". */}
+      <Icon
+        name={isDay ? 'clear' : 'clearNight'}
         size={tokens.size.sunMarker}
         label={isDay ? t.home.sunLabel : t.home.moonLabel}
       />
@@ -38,7 +40,7 @@ function NowMarker({ pct, isDay }: { readonly pct: number; readonly isDay: boole
 }
 
 /** Arco do sol: rótulos de nascer/pôr do sol e, quando há um "agora" (só hoje), o marcador
- * ☀️/🌙 na posição dele. Dias futuros mostram só o arco com os horários. */
+ * de sol/lua na posição dele. Dias futuros mostram só o arco com os horários. */
 export function SunArc({ sunrise, sunset, nowMinutes }: Props) {
   if (sunrise === null || sunset === null) return <View style={styles.arc} />;
   const marker = nowMinutes === null ? null : markerPosition(sunrise, sunset, nowMinutes);

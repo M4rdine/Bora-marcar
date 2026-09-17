@@ -55,15 +55,22 @@ export function bestOfSequence(sequence: readonly TimelineHour[]): TimelineHour 
 }
 
 /**
- * TODAS as horas empatadas na melhor nota, e não só a primeira delas.
+ * TODAS as horas empatadas na melhor nota — desde que a melhor nota valha alguma coisa.
  *
- * Marcar apenas a primeira era desonesto: num dia em que oito horas empatam em 100, dizer que a
- * melhor é a das 7h esconde que qualquer uma das oito serve. Marcar as oito conta a verdade, e a
- * verdade aqui é uma informação útil — o dia inteiro está bom, escolha pela sua agenda.
+ * Marcar só a primeira era desonesto: num dia em que oito horas empatam em 100, dizer que a melhor
+ * é a das 7h esconde que qualquer uma das oito serve. Mas o empate no TOPO é só metade do caso
+ * real, e a outra metade mente: num dia em que a melhor hora tirou 30 — "Ruim" —, nove linhas
+ * seguidas saíam marcadas como "melhor". A marca prometia uma escolha boa onde não havia nenhuma.
+ *
+ * Por isso o limiar. Num dia sem nenhuma hora razoável ninguém é a melhor, e a cronologia fica
+ * sem marca — que é a informação certa: hoje não tem hora boa.
  */
-export function bestHoursOf(sequence: readonly TimelineHour[]): ReadonlySet<string> {
+export function bestHoursOf(
+  sequence: readonly TimelineHour[],
+  fairThreshold: number,
+): ReadonlySet<string> {
   const best = bestOfSequence(sequence);
-  if (best === null) return new Set();
+  if (best === null || best.hour.score < fairThreshold) return new Set();
   return new Set(
     sequence
       .filter((item) => item.hour.score === best.hour.score)

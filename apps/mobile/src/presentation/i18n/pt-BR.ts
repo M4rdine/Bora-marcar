@@ -74,13 +74,6 @@ export const t = {
     multi: 'Praticou as 5 atividades disponíveis.',
     perfect: 'Saiu em uma hora com score 95 ou mais.',
   } satisfies Record<BadgeId, string>,
-  tipEmoji: {
-    sunscreen: '🧴',
-    water: '💧',
-    cooling: '🧥',
-    rain: '☔',
-    coat: '🧥',
-  } satisfies Record<TipId, string>,
   errors: {
     network: 'Sem conexão. Tente de novo.',
     http: 'O serviço de previsão respondeu com erro.',

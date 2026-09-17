@@ -15,6 +15,8 @@ const keyOf = (item: TimelineHour): string => item.hour.hour.time;
 type Props = {
   readonly sequence: readonly TimelineHour[];
   readonly profile: ActivityProfile;
+  /** Nota mínima para uma hora merecer a marca de melhor. Ver `bestHoursOf`. */
+  readonly fairThreshold: number;
   readonly onPlanHour: ((item: TimelineHour) => void) | null;
   readonly title?: string;
   readonly subtitle?: string;
@@ -38,6 +40,7 @@ const defaultDayLabel = (dayOffset: 0 | 1): string =>
 export function HourlyChronology({
   sequence,
   profile,
+  fairThreshold,
   onPlanHour,
   title = t.chronology.title,
   subtitle = t.chronology.subtitle,
@@ -48,7 +51,7 @@ export function HourlyChronology({
   const toggle = useCallback((key: string) => {
     setSelectedKey((current) => (current === key ? null : key));
   }, []);
-  const best = bestHoursOf(sequence);
+  const best = bestHoursOf(sequence, fairThreshold);
 
   if (sequence.length === 0) return null;
 

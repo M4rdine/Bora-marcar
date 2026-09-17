@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, Surface, tokens } from '../../../ui';
+import { AppText, Icon, Surface, tokens, type IconName } from '../../../ui';
 
 type Props = {
   readonly streak: number;
@@ -10,13 +10,16 @@ type Props = {
 };
 
 type Stat = {
-  readonly symbol: string;
+  readonly icon: IconName;
   readonly value: number;
   /** Rótulo visível, sem o número (que já aparece grande logo acima). */
   readonly label: string;
   /** Rótulo completo para o leitor de tela. */
   readonly a11y: string;
 };
+
+/** O placar é lido pela Surface inteira, então o desenho é decorativo. */
+const STAT_ICON_SIZE = 22;
 
 /**
  * Três placares: sequência, atividades e conquistas. A contagem de cidades saiu porque nada no
@@ -25,19 +28,19 @@ type Stat = {
 export function StatsRow({ streak, activities, unlockedBadges }: Props) {
   const stats: readonly Stat[] = [
     {
-      symbol: '🔥',
+      icon: 'flame',
       value: streak,
       label: t.profile.statLabels.streak(streak),
       a11y: t.profile.streak(streak),
     },
     {
-      symbol: '🏃',
+      icon: 'run',
       value: activities,
       label: t.profile.statLabels.activities(activities),
       a11y: t.profile.activities(activities),
     },
     {
-      symbol: '🏅',
+      icon: 'medal',
       value: unlockedBadges,
       label: t.profile.statLabels.achievements(unlockedBadges),
       a11y: t.profile.unlockedCount(unlockedBadges),
@@ -47,14 +50,14 @@ export function StatsRow({ streak, activities, unlockedBadges }: Props) {
     <View style={styles.row}>
       {stats.map((stat) => (
         <Surface
-          key={stat.symbol}
+          key={stat.icon}
           accessible
           accessibilityLabel={stat.a11y}
           padding={3}
           gap={1}
           style={styles.tile}
         >
-          <Emoji symbol={stat.symbol} label={stat.label} />
+          <Icon name={stat.icon} size={STAT_ICON_SIZE} />
           <AppText variant="title" weight="800">
             {stat.value}
           </AppText>

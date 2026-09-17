@@ -11,10 +11,12 @@ type Props = { readonly receipt: XpReceiptResult; readonly activity: ActivityId 
 /**
  * Ícone de cada parcela; a base usa o desenho da atividade registrada.
  *
- * A sequência usava `thermal` — um termômetro ilustrando "3 dias seguidos", que não quer dizer
- * nada. Estrela é o que o conjunto tem de mais próximo de "acumulado".
+ * A sequência já usou `thermal` — um termômetro ilustrando "3 dias seguidos", que não quer dizer
+ * nada — e depois `star`, que não queria dizer nada de errado mas era um SEGUNDO símbolo para o
+ * mesmo conceito: fogo na faixa da Home, no calendário e nos placares, estrela aqui. Agora é a
+ * chama nos quatro lugares.
  */
-const ROW_ICON = { hour: 'today', plan: 'medal', streak: 'star' } as const satisfies Record<
+const ROW_ICON = { hour: 'today', plan: 'medal', streak: 'flame' } as const satisfies Record<
   'hour' | 'plan' | 'streak',
   IconName
 >;

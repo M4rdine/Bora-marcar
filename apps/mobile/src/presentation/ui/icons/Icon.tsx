@@ -49,6 +49,9 @@ function Shape({ shape, color }: { readonly shape: IconShape; readonly color: st
       d={shape.d}
       stroke={shape.fill ? 'none' : color}
       fill={shape.fill ? color : 'none'}
+      // Par-ímpar para um caminho cheio poder ter buraco: dois contornos sobrepostos se cancelam.
+      // É o que abre a língua interna da chama. Para um contorno só, é igual a não-zero.
+      fillRule="evenodd"
       strokeWidth={STROKE}
       strokeLinecap="round"
       strokeLinejoin="round"

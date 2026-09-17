@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { weekdayLong } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, Surface, tokens } from '../../../ui';
+import { AppText, Icon, Surface, tokens } from '../../../ui';
 import { splitMinutes, type StreakRisk } from '../streakRisk';
 import type { WeekDayState, WeekStripDay } from '../weekStrip';
 
@@ -71,7 +71,7 @@ function RiskHeadline({ risk }: { readonly risk: StreakRisk }) {
     <View style={styles.headline}>
       <View style={styles.countRow}>
         <View style={risk.kind === 'atRisk' ? styles.flameAtRisk : undefined}>
-          <Emoji symbol="🔥" size={FLAME_SIZE} label={t.streak.days(risk.streak)} />
+          <Icon name="flame" size={FLAME_SIZE} label={t.streak.days(risk.streak)} />
         </View>
         <AppText variant="display" style={styles.count}>
           {String(risk.streak)}

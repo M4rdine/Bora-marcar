@@ -87,6 +87,8 @@ describe('bestOfSequence', () => {
 });
 
 describe('bestHoursOf', () => {
+  /** Limiar de "razoável" da configuração padrão; abaixo dele nenhuma hora merece a marca. */
+  const FAIR = 45;
   const seq = buildHourlySequence({
     today: dayAt('2026-09-13'),
     tomorrow: dayAt('2026-09-14'),
@@ -94,7 +96,7 @@ describe('bestHoursOf', () => {
   });
 
   it('marca TODAS as horas empatadas na melhor nota, não só a primeira', () => {
-    const best = bestHoursOf(seq);
+    const best = bestHoursOf(seq, FAIR);
     const topScore = bestOfSequence(seq)?.hour.score ?? 0;
     const tied = seq.filter((i) => i.hour.score === topScore);
     expect(best.size).toBe(tied.length);
@@ -102,14 +104,28 @@ describe('bestHoursOf', () => {
   });
 
   it('nenhuma hora abaixo da melhor nota entra', () => {
-    const best = bestHoursOf(seq);
+    const best = bestHoursOf(seq, FAIR);
     const topScore = bestOfSequence(seq)?.hour.score ?? 0;
     for (const item of seq) {
       if (item.hour.score < topScore) expect(best.has(item.hour.hour.time)).toBe(false);
     }
   });
 
+  /**
+   * O caso que a marca mentia. Num dia em que a melhor hora tirou 30 — "Ruim" — o app marcava
+   * nove linhas seguidas como "melhor", prometendo uma escolha boa onde não havia nenhuma.
+   */
+  it('num dia sem hora razoável, ninguém é a melhor', () => {
+    const topScore = bestOfSequence(seq)?.hour.score ?? 0;
+    expect(bestHoursOf(seq, topScore + 1).size).toBe(0);
+  });
+
+  it('a hora que empata EXATAMENTE no limiar ainda conta', () => {
+    const topScore = bestOfSequence(seq)?.hour.score ?? 0;
+    expect(bestHoursOf(seq, topScore).size).toBeGreaterThan(0);
+  });
+
   it('cronologia vazia não marca nada', () => {
-    expect(bestHoursOf([]).size).toBe(0);
+    expect(bestHoursOf([], FAIR).size).toBe(0);
   });
 });

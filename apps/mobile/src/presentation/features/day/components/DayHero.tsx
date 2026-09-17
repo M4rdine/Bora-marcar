@@ -131,6 +131,7 @@ export function DayHero({
       <HourlyChronology
         sequence={buildDaySequence(day)}
         profile={config.activities[activity]}
+        fairThreshold={config.scores.fair}
         title={t.chronology.dayTitle}
         subtitle={t.chronology.subtitle}
         showDayHeadings={false}

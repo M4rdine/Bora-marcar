@@ -118,6 +118,7 @@ function HeroSection({
           now: snapshot.now,
         })}
         profile={config.activities[activity]}
+        fairThreshold={config.scores.fair}
         onPlanHour={
           actions.canPlanAt
             ? (item) =>

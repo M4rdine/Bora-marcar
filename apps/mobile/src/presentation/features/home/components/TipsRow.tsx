@@ -2,8 +2,10 @@ import { StyleSheet, View } from 'react-native';
 
 import type { Tip } from '@/domain';
 
-import { t } from '../../../i18n/pt-BR';
-import { AppText, tokens } from '../../../ui';
+import { AppText, Icon, tipIcon, tokens } from '../../../ui';
+
+/** O texto ao lado já diz a dica, então o desenho é decorativo. */
+const TIP_ICON_SIZE = 16;
 
 export function TipsRow({ tips }: { readonly tips: readonly Tip[] }) {
   if (tips.length === 0) return null;
@@ -11,7 +13,8 @@ export function TipsRow({ tips }: { readonly tips: readonly Tip[] }) {
     <View style={styles.row}>
       {tips.map((tip) => (
         <View key={tip.id} style={styles.chip}>
-          <AppText variant="small">{`${t.tipEmoji[tip.id]} ${tip.text}`}</AppText>
+          <Icon name={tipIcon(tip.id)} size={TIP_ICON_SIZE} />
+          <AppText variant="small">{tip.text}</AppText>
         </View>
       ))}
     </View>
@@ -21,6 +24,9 @@ export function TipsRow({ tips }: { readonly tips: readonly Tip[] }) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
     backgroundColor: tokens.color.surface,
     borderRadius: tokens.radius.pill,
     paddingVertical: tokens.space[1],

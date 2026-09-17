@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, tokens } from '../../../ui';
+import { AppText, Icon, tokens } from '../../../ui';
 import type { MonthCell, MonthCellState, MonthGrid } from '../monthGrid';
 
 type Props = {
@@ -44,9 +44,16 @@ function DayCell({ cell }: { readonly cell: MonthCell }) {
         {cell.day}
       </AppText>
       {/* O fogo marca o dia de hoje já cumprido: é a recompensa visual de ter mantido a sequência,
-          no lugar onde a pessoa vai procurar por ela. */}
+          no lugar onde a pessoa vai procurar por ela. Ele toma a MESMA tinta do número — a célula
+          cumprida é verde-menta, e um desenho branco nela some. O emoji antigo trazia cor própria
+          e escondia essa dependência. */}
       {cell.state === 'todayDone' ? (
-        <Emoji symbol="🔥" size={FLAME_SIZE} label={t.streak.state.todayDone} />
+        <Icon
+          name="flame"
+          size={FLAME_SIZE}
+          color={TEXT_BY_STATE[cell.state]}
+          label={t.streak.state.todayDone}
+        />
       ) : null}
     </View>
   );

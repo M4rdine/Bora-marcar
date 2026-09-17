@@ -19,6 +19,7 @@ export type IconName =
   | 'caret'
   | 'star'
   | 'starFilled'
+  | 'flame'
   | 'close'
   | 'back'
   | 'settings'
@@ -84,8 +85,19 @@ const CLOUD = 'M7 18h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 10 4 4 0 0 0 7 18Z'
 /** Meia nuvem, para os estados em que o sol ainda aparece. */
 const CLOUD_SMALL = 'M9 19h7.5a3 3 0 0 0 .3-5.98A4.2 4.2 0 0 0 9.2 12 3.5 3.5 0 0 0 9 19Z';
 /** Lua crescente, desenhada como um arco fechado: a mesma família de formas do resto. */
-const MOON = 'M15.8 3.2a9 9 0 1 0 5 5 7 7 0 0 1-5-5Z';
-const MOON_SMALL = 'M12.6 3.4a6.4 6.4 0 1 0 3.6 3.6 5 5 0 0 1-3.6-3.6Z';
+/**
+ * Crescente de verdade: a lua é a LUA, o pedaço de disco entre dois arcos que se cruzam.
+ *
+ * O desenho anterior era um contorno fechado ÚNICO, e um contorno único não subtrai nada: o
+ * preenchimento devolvia um disco quase cheio com uma mordida, e a 18 pixels virava um ponto
+ * branco sólido. "Céu limpo à noite" é o segundo estado mais comum num app de 24 horas, então
+ * ele não pode desenhar igual a um sol sem raios.
+ *
+ * Aqui o contorno vai pelo arco MAIOR do disco de fora e volta pelo arco do disco de dentro, que
+ * é deslocado. As duas pontas do crescente são justamente onde os dois círculos se cruzam.
+ */
+const MOON = 'M11.17 3.04A9 9 0 1 0 19.95 16.22A8 8 0 0 1 11.17 3.04Z';
+const MOON_SMALL = 'M8.21 2.26A5.4 5.4 0 1 0 14.04 9.55A4.8 4.8 0 0 1 8.21 2.26Z';
 const SUN_RAYS: readonly IconShape[] = [
   line(12, 2, 12, 4),
   line(12, 20, 12, 22),
@@ -105,6 +117,24 @@ export const ICON_SHAPES: Record<IconName, readonly IconShape[]> = {
 
   // — affordances —
   caret: [path('M6 9.5 12 15.5 18 9.5')],
+  /**
+   * A sequência do app, desenhada e não emprestada.
+   *
+   * Era 🔥 na faixa da Home, no calendário do mês e nos placares, e uma ESTRELA no recibo de XP:
+   * quatro lugares, dois símbolos, e três deles no desenho do sistema operacional em vez do
+   * desenho do produto. Um conceito, um signo.
+   *
+   * É cheia com a língua recortada de propósito. Em contorno, a chama vira a gota da chuva que já
+   * existe no conjunto — testado lado a lado a 18 pixels, eram o mesmo desenho. O recorte é o que
+   * separa fogo de água nesse tamanho.
+   */
+  flame: [
+    path(
+      'M13 2.4c1.1 3.5-.4 5.4-2.2 7.2C9 11.4 7 12.8 7 15.4a5.7 5.7 0 0 0 11.4 0c0-2.7-1.5-4.4-2.9-6.2-.4 1.9-1.4 2.7-2.3 3.2 1.3-3.4 1.1-7-.2-10Z' +
+        'M12.5 12.4c-1 1-2.1 2.1-2.1 3.6a2.6 2.6 0 0 0 5.2 0c0-1.4-.8-2.2-1.6-3.1-.4.9-.9 1.3-1.5 1.5Z',
+      true,
+    ),
+  ],
   star: [path('m12 3.6 2.6 5.5 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.8Z')],
   starFilled: [
     path('m12 3.6 2.6 5.5 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.8Z', true),
