@@ -5,7 +5,7 @@ import type { DayRecommendation } from '@/domain';
 import { formatHourRange } from '../../../format/hourRange';
 import { t } from '../../../i18n/pt-BR';
 import type { WeatherGlyph } from '../../../i18n/weatherGlyph';
-import { AppText, Emoji, Pill, tokens } from '../../../ui';
+import { AppText, Icon, Pill, tokens } from '../../../ui';
 
 type Props = {
   readonly day: DayRecommendation;
@@ -49,7 +49,7 @@ export function DayRow({ day, title, glyph, isBest, onPress }: Props) {
         <AppText variant="body" weight="700" style={styles.title}>
           {title}
         </AppText>
-        <Emoji symbol={glyph.emoji} label={glyph.summary} />
+        <Icon name={glyph.icon} size={GLYPH_SIZE} label={glyph.summary} />
         <AppText variant="small" tone="muted" style={styles.summary}>
           {summaryOf(day, glyph)}
         </AppText>
@@ -58,6 +58,8 @@ export function DayRow({ day, title, glyph, isBest, onPress }: Props) {
     </Pressable>
   );
 }
+
+const GLYPH_SIZE = 20;
 
 const styles = StyleSheet.create({
   row: {

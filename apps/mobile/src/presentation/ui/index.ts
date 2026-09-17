@@ -16,4 +16,5 @@ export * from './Pill';
 export * from './Reveal';
 export * from './SectionHeader';
 export * from './Emoji';
+export * from './icons';
 export * from './contrast';

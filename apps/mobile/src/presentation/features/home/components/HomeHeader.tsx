@@ -5,7 +5,7 @@ import type { LevelProgress, LocalDateTime } from '@/domain';
 
 import { formatLongDate } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Surface, tokens } from '../../../ui';
+import { AppText, Icon, Surface, tokens } from '../../../ui';
 
 import { LevelOrb } from './LevelOrb';
 
@@ -26,14 +26,16 @@ export function HomeHeader({ city, now, level, onOpenCities }: Props) {
   const cityLabel = cityLabelOf(city);
   return (
     <View style={styles.row}>
-      <Pressable accessibilityRole="button" onPress={onOpenCities} style={styles.cityButton}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onOpenCities}
+        style={({ pressed }) => [styles.cityButton, pressed ? styles.pressed : null]}
+      >
         <View style={styles.cityLine}>
           <AppText variant="subtitle" weight="700">
             {cityLabel}
           </AppText>
-          <AppText variant="subtitle" tone="muted">
-            {' ▾'}
-          </AppText>
+          <Icon name="caret" size={CARET_SIZE} color={tokens.color.textMuted} />
         </View>
         <AppText variant="small" tone="muted">
           {`${formatLongDate(now.date)} · ${now.hour}h`}
@@ -54,6 +56,8 @@ export function HomeHeader({ city, now, level, onOpenCities }: Props) {
   );
 }
 
+const CARET_SIZE = 16;
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
@@ -61,7 +65,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[3],
   },
-  cityButton: { flexShrink: 1 },
+  // 44pt: era o único controle do app abaixo do mínimo de toque, com 34 de altura.
+  cityButton: { flexShrink: 1, minHeight: tokens.size.minTouch, justifyContent: 'center' },
+  pressed: { opacity: 0.6 },
   cityLine: { flexDirection: 'row', alignItems: 'center' },
   levelPill: { flexDirection: 'row', alignItems: 'center' },
 });

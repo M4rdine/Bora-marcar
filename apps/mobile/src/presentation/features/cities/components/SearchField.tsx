@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, TextInput } from 'react-native';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, Surface, tokens } from '../../../ui';
+import { Icon, Surface, tokens } from '../../../ui';
 
 type Props = {
   readonly value: string;
@@ -11,7 +11,12 @@ type Props = {
 export function SearchField({ value, onChangeText }: Props) {
   return (
     <Surface strength="strong" radius="pill" padding={3} style={styles.row}>
-      <Emoji symbol="🔍" size={tokens.size.icon} label={t.cities.searchIcon} />
+      <Icon
+        name="search"
+        size={tokens.size.icon}
+        color={tokens.color.textMuted}
+        label={t.cities.searchIcon}
+      />
       <TextInput
         accessibilityLabel={t.cities.placeholder}
         placeholder={t.cities.placeholder}
@@ -28,14 +33,14 @@ export function SearchField({ value, onChangeText }: Props) {
           onPress={() => onChangeText('')}
           style={({ pressed }) => [styles.clear, pressed ? styles.pressed : null]}
         >
-          <AppText variant="body" tone="muted">
-            ✕
-          </AppText>
+          <Icon name="close" size={ICON_SIZE} color={tokens.color.textMuted} />
         </Pressable>
       ) : null}
     </Surface>
   );
 }
+
+const ICON_SIZE = 18;
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },

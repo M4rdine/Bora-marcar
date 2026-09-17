@@ -4,7 +4,7 @@ import type { City } from '@/application/ports';
 
 import { countryFlag } from '../../../i18n/countryFlag';
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, Surface, tokens } from '../../../ui';
+import { AppText, Emoji, Icon, Surface, tokens } from '../../../ui';
 
 export const cityLabel = (city: City): string =>
   [city.name, city.admin1, city.country].filter((x): x is string => Boolean(x)).join(', ');
@@ -50,11 +50,13 @@ export function CityRow({ city, favorite, onSelect, onToggleFavorite }: Props) {
         onPress={onToggleFavorite}
         style={({ pressed }) => [styles.favorite, pressed ? styles.pressed : null]}
       >
-        <AppText variant="title">{favorite ? '★' : '☆'}</AppText>
+        <Icon name={favorite ? 'starFilled' : 'star'} size={ICON_SIZE} color={tokens.color.text} />
       </Pressable>
     </Surface>
   );
 }
+
+const ICON_SIZE = 22;
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },

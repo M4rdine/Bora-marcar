@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatDayTitle, formatLongDate } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
-import { AppText, tokens } from '../../../ui';
+import { AppText, Icon, tokens } from '../../../ui';
 
 type Props = {
   readonly date: string;
@@ -20,7 +20,7 @@ export function DayHeader({ date, today, tomorrow, onBack }: Props) {
         onPress={onBack}
         style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}
       >
-        <AppText variant="title">{t.day.backGlyph}</AppText>
+        <Icon name="back" size={ICON_SIZE} color={tokens.color.text} />
       </Pressable>
       <View>
         <AppText variant="title">{formatDayTitle(date, today, tomorrow)}</AppText>
@@ -31,6 +31,8 @@ export function DayHeader({ date, today, tomorrow, onBack }: Props) {
     </View>
   );
 }
+
+const ICON_SIZE = 22;
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },

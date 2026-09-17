@@ -2,35 +2,30 @@ import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
 import { t } from '@/presentation/i18n/pt-BR';
-import { AppText, tokens } from '@/presentation/ui';
+import { Icon, tokens, type IconName } from '@/presentation/ui';
 
 type TabIconProps = { readonly color: ColorValue; readonly focused: boolean };
 
-const INACTIVE_OPACITY = 0.55;
-const INACTIVE_SCALE = 0.92;
+const ICON_SIZE = 22;
 
-// A acessibilidade do botão da aba já usa o título da tela; o emoji é só decoração. A aba
-// ativa fica visualmente distinguível por opacidade e escala além da cor do rótulo.
-function tabIconStyle({ color, focused }: TabIconProps) {
-  return {
-    color,
-    fontSize: tokens.font.subtitle,
-    opacity: focused ? 1 : INACTIVE_OPACITY,
-    transform: [{ scale: focused ? 1 : INACTIVE_SCALE }],
-  };
+/**
+ * Ícone vetorial, e não emoji. Emoji ignora `tabBarActiveTintColor` — glifo colorido não responde
+ * à cor —, então ativa e inativa só diferiam por opacidade. Com vetor, a cor volta a ser o sinal.
+ * A acessibilidade do botão já usa o título da tela, então o desenho é decorativo.
+ */
+function tabIcon(name: IconName) {
+  function TabIcon({ color, focused }: TabIconProps) {
+    return (
+      <Icon name={name} size={ICON_SIZE} color={focused ? tokens.color.text : String(color)} />
+    );
+  }
+  TabIcon.displayName = `TabIcon(${name})`;
+  return TabIcon;
 }
 
-function HomeIcon(props: TabIconProps) {
-  return <AppText style={tabIconStyle(props)}>{t.tabs.icons.home}</AppText>;
-}
-
-function CitiesIcon(props: TabIconProps) {
-  return <AppText style={tabIconStyle(props)}>{t.tabs.icons.cities}</AppText>;
-}
-
-function ProfileIcon(props: TabIconProps) {
-  return <AppText style={tabIconStyle(props)}>{t.tabs.icons.profile}</AppText>;
-}
+const HomeIcon = tabIcon('today');
+const CitiesIcon = tabIcon('search');
+const ProfileIcon = tabIcon('medal');
 
 export default function TabsLayout() {
   return (

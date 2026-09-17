@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { t } from '../../i18n/pt-BR';
 import { weatherGlyph } from '../../i18n/weatherGlyph';
-import { AppText, Emoji, Pill, tokens } from '../../ui';
+import { AppText, Icon, Pill, tokens } from '../../ui';
 import type { TimelineHour } from '../hourlySequence';
 
 /** Mínimo de toque da Apple. Nenhuma linha da cronologia fica abaixo disto. */
@@ -53,7 +53,7 @@ export function HourRow({ item, dayLabel, selected, isBest, onPress }: Props) {
       </View>
 
       <View style={styles.conditions}>
-        <Emoji symbol={glyph.emoji} size={GLYPH_SIZE} label={glyph.summary} />
+        <Icon name={glyph.icon} size={GLYPH_SIZE} label={glyph.summary} />
         <AppText variant="body" weight="700">
           {t.chronology.temperature(hour.hour.temperature)}
         </AppText>
