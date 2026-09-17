@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import type { RefObject } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -46,6 +47,7 @@ type HeroSectionProps = {
   readonly config: EngineConfig;
   readonly snapshot: OverviewSnapshot;
   readonly progress: Progress;
+  readonly scrollRef: RefObject<ScrollView | null>;
   readonly onOpenDay: (date: string) => void;
 };
 
@@ -53,7 +55,15 @@ type HeroSectionProps = {
  * Só monta quando previsão e progresso já carregaram, então `useHeroActions` pode ser chamado
  * incondicionalmente a cada renderização deste componente sem violar as regras de hooks.
  */
-function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: HeroSectionProps) {
+function HeroSection({
+  city,
+  activity,
+  config,
+  snapshot,
+  progress,
+  scrollRef,
+  onOpenDay,
+}: HeroSectionProps) {
   const tomorrowDate = addDays(snapshot.now.date, 1);
   const tomorrow = snapshot.overview.nextDays.find((d) => d.date === tomorrowDate) ?? null;
   const hero = deriveHeroState({
@@ -69,6 +79,13 @@ function HeroSection({ city, activity, config, snapshot, progress, onOpenDay }: 
     unlocked: progress.badges.filter((b) => b.unlocked).length,
     total: progress.badges.length,
   };
+  // A recompensa nasce no fim do cartão do herói, e a barra de abas flutua sobre o fim da tela:
+  // medido, o cartão de conquista renderizava inteiramente coberto por ela. Voltar ao topo no
+  // instante em que a conquista aparece põe o pico do produto onde ele pode ser visto.
+  const justUnlocked = unlockedToday.length > 0 && hero.kind === 'done';
+  useEffect(() => {
+    if (justUnlocked) scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [justUnlocked, scrollRef]);
   return (
     <>
       <HeroCard
@@ -133,9 +150,10 @@ type ContentProps = {
   readonly config: EngineConfig;
   readonly overview: OverviewState;
   readonly progress: Progress | undefined;
+  readonly scrollRef: RefObject<ScrollView | null>;
 };
 
-function HomeContent({ city, config, overview, progress }: ContentProps) {
+function HomeContent({ city, config, overview, progress, scrollRef }: ContentProps) {
   const router = useRouter();
   const activity = usePreferences((s) => s.activity);
   const selectActivity = usePreferences((s) => s.selectActivity);
@@ -180,6 +198,7 @@ function HomeContent({ city, config, overview, progress }: ContentProps) {
           config={config}
           snapshot={overview.snapshot}
           progress={progress}
+          scrollRef={scrollRef}
           onOpenDay={(date) => router.push({ pathname: '/day/[date]', params: { date } })}
         />
       ) : null}
@@ -188,6 +207,7 @@ function HomeContent({ city, config, overview, progress }: ContentProps) {
 }
 
 export function HomeScreen() {
+  const scrollRef = useRef<ScrollView>(null);
   const city = usePreferences((s) => s.city);
   const activity = usePreferences((s) => s.activity);
   const paddingBottom = useScreenPaddingBottom();
@@ -220,13 +240,14 @@ export function HomeScreen() {
   return (
     <Sky phase={phase}>
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
+        <ScrollView ref={scrollRef} contentContainerStyle={[styles.container, { paddingBottom }]}>
           {config.data ? (
             <HomeContent
               city={city}
               config={config.data}
               overview={overview}
               progress={progress.data}
+              scrollRef={scrollRef}
             />
           ) : (
             <AppText>{t.home.loading}</AppText>

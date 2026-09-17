@@ -25,6 +25,8 @@ export const cancelPlan =
       planId,
       createdAt: clock.now(),
     });
-    await notifications.cancel(planId);
+    // Sem `await`: cancelar o lembrete é acessório e não pode segurar a ação do usuário.
+    // Ver `planActivity.ts` para o defeito que este padrão causava.
+    void notifications.cancel(planId).catch(() => undefined);
     return ok(undefined);
   };

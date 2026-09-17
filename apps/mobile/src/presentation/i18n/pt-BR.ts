@@ -168,6 +168,7 @@ export const t = {
     nextDays: 'Próximos dias',
     tomorrowBetter: 'Amanhã é melhor que hoje',
     todayBest: 'Hoje é o melhor dia da semana',
+    working: 'Salvando…',
     retry: 'Tentar de novo',
     loading: 'Carregando previsão…',
     planSubtext: (base: number, planBonus: number) => `+${base} XP base · +${planBonus} se cumprir`,

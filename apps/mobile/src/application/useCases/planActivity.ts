@@ -55,11 +55,20 @@ export const planActivity =
       windowScore: input.windowScore,
       createdAt: clock.now(),
     });
-    await notifications.schedule({
-      id: planId,
-      title: 'Sua janela está chegando',
-      body: `Melhor horário para sair começa às ${input.window.startHour}h.`,
-      atEpochMs: reminderEpoch(input),
-    });
+    // Sem `await` de propósito. O plano JÁ está gravado; o lembrete é um acessório, e nada que
+    // o usuário possa fazer depende dele. Aguardar aqui punha o agendamento no caminho crítico:
+    // se ele pendurasse — permissão pendente no iOS, plataforma sem suporte — a mutação nunca
+    // resolvia, o estado de ocupado ficava ligado para sempre e o botão principal apagava,
+    // indistinguível de desabilitado, com o plano salvo e a tela sem contar.
+    // O `.catch` não é decorativo: sem `await`, uma rejeição aqui viraria promessa não tratada e
+    // derrubaria o app. O adaptador já registra a falha; isto é a rede de segurança do contrato.
+    void notifications
+      .schedule({
+        id: planId,
+        title: 'Sua janela está chegando',
+        body: `Melhor horário para sair começa às ${input.window.startHour}h.`,
+        atEpochMs: reminderEpoch(input),
+      })
+      .catch(() => undefined);
     return ok({ planId });
   };

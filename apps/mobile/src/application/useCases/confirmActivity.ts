@@ -43,6 +43,8 @@ export const confirmActivity =
       hourScore: input.hourScore,
       createdAt: clock.now(),
     });
-    await notifications.cancel(input.planId);
+    // Sem `await`: cancelar o lembrete é acessório e não pode segurar a ação do usuário.
+    // Ver `planActivity.ts` para o defeito que este padrão causava.
+    void notifications.cancel(input.planId).catch(() => undefined);
     return ok({ eventId });
   };

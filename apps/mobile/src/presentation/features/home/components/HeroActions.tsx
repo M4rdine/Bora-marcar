@@ -72,7 +72,13 @@ function PickingHourActions({
   return (
     <>
       <HourPicker options={pickableHours} selected={hour} onSelect={onSelect} />
-      <Button label={t.home.confirmHour(hour)} kind="mint" onPress={onConfirm} disabled={busy} />
+      <Button
+        label={t.home.confirmHour(hour)}
+        kind="mint"
+        onPress={onConfirm}
+        loading={busy}
+        loadingLabel={t.home.working}
+      />
       <Button label={t.home.cancelPick} kind="quiet" onPress={onCancel} disabled={busy} />
     </>
   );
@@ -150,16 +156,31 @@ function DefaultActions({
           label={t.home.plan(config.activities[state.day.activityId].name, state.window.startHour)}
           subtext={t.home.planSubtext(base, planBonus)}
           onPress={onPlan}
-          disabled={busy}
+          loading={busy}
+          loadingLabel={t.home.working}
         />
       );
     }
     case 'planned':
-      return <Button label={t.home.cancelPlan} kind="quiet" onPress={onCancel} disabled={busy} />;
+      return (
+        <Button
+          label={t.home.cancelPlan}
+          kind="quiet"
+          onPress={onCancel}
+          loading={busy}
+          loadingLabel={t.home.working}
+        />
+      );
     case 'confirm':
       return (
         <>
-          <Button label={t.home.confirm} kind="mint" onPress={onConfirm} disabled={busy} />
+          <Button
+            label={t.home.confirm}
+            kind="mint"
+            onPress={onConfirm}
+            loading={busy}
+            loadingLabel={t.home.working}
+          />
           <Button label={t.home.logOther} kind="quiet" onPress={onOpenPicker} disabled={busy} />
         </>
       );
@@ -168,7 +189,13 @@ function DefaultActions({
         <>
           <Button label={t.home.logNow} onPress={onOpenPicker} disabled={busy} />
           {state.expiredPlan ? (
-            <Button label={t.home.cancelPlan} kind="quiet" onPress={onCancel} disabled={busy} />
+            <Button
+              label={t.home.cancelPlan}
+              kind="quiet"
+              onPress={onCancel}
+              loading={busy}
+              loadingLabel={t.home.working}
+            />
           ) : null}
         </>
       );

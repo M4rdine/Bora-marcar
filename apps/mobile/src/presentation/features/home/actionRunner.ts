@@ -25,6 +25,28 @@ export const isActionError = (e: unknown): e is { code: ActionErrorCode } =>
   'code' in e &&
   isActionErrorCode((e as { code: unknown }).code);
 
+/**
+ * Teto para qualquer mutação de gamificação. Nenhuma delas fala com a rede: são leitura e escrita
+ * no armazenamento local. Se passar disto, algo pendurou, e deixar a tela em "carregando" para
+ * sempre é pior que dizer que demorou.
+ */
+const TIMEOUT_MS = 8_000;
+
+const withTimeout = async (fn: () => Promise<unknown>): Promise<unknown> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => reject({ code: 'timeout' }), TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([fn(), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const isTimeout = (e: unknown): boolean =>
+  typeof e === 'object' && e !== null && 'code' in e && (e as { code: unknown }).code === 'timeout';
+
 /** Roda uma mutação e converte o erro em mensagem pronta para exibição. */
 export function useActionRunner(): {
   readonly run: (fn: () => Promise<unknown>) => void;
@@ -33,7 +55,11 @@ export function useActionRunner(): {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const run = (fn: () => Promise<unknown>) => {
     setErrorMessage(null);
-    void fn().catch((e: unknown) => {
+    void withTimeout(fn).catch((e: unknown) => {
+      if (isTimeout(e)) {
+        setErrorMessage(t.errors.timeout);
+        return;
+      }
       setErrorMessage(isActionError(e) ? t.errors[e.code] : t.errors.network);
     });
   };

@@ -45,6 +45,8 @@ export const logActivity =
       hourScore: input.hourScore,
       createdAt: clock.now(),
     });
-    if (pendingPlan !== null) await notifications.cancel(pendingPlan.planId);
+    // Sem `await`: cancelar o lembrete é acessório e não pode segurar a ação do usuário.
+    // Ver `planActivity.ts` para o defeito que este padrão causava.
+    if (pendingPlan !== null) void notifications.cancel(pendingPlan.planId).catch(() => undefined);
     return ok({ eventId });
   };

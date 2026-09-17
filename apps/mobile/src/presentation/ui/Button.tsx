@@ -11,6 +11,9 @@ type Props = {
   readonly kind?: Kind;
   readonly onPress: () => void;
   readonly disabled?: boolean;
+  /** Ação em andamento. Distinto de `disabled`: aqui o botão está trabalhando, não impedido. */
+  readonly loading?: boolean;
+  readonly loadingLabel?: string;
   readonly accessibilityLabel?: string;
 };
 
@@ -32,30 +35,37 @@ export function Button({
   kind = 'primary',
   onPress,
   disabled = false,
+  loading = false,
+  loadingLabel,
   accessibilityLabel,
 }: Props) {
   const textColor = TEXT_COLOR_BY_KIND[kind];
+  // Carregando também bloqueia o toque, mas conta o porquê — antes, uma ação em andamento
+  // renderizava como opacidade 0.6, indistinguível de um botão desabilitado de propósito.
+  const blocked = disabled || loading;
+  const shownLabel = loading ? (loadingLabel ?? label) : label;
 
   return (
     <Pressable
       testID={`button-${kind}`}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityLabel={accessibilityLabel ?? shownLabel}
+      accessibilityState={{ disabled: blocked, busy: loading }}
+      disabled={blocked}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         { backgroundColor: BACKGROUND_BY_KIND[kind] },
         kind === 'primary' && styles.shadow,
         disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
+        loading && styles.loading,
+        pressed && !blocked && styles.pressed,
       ]}
     >
       <AppText variant="subtitle" weight="800" style={{ color: textColor }}>
-        {label}
+        {shownLabel}
       </AppText>
-      {subtext !== undefined ? (
+      {subtext !== undefined && !loading ? (
         <AppText variant="small" style={[styles.subtext, { color: textColor, opacity: 0.75 }]}>
           {subtext}
         </AppText>
@@ -79,6 +89,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   disabled: { opacity: 0.6 },
+  /** Carregando fica mais opaco que desabilitado, para os dois não lerem como o mesmo estado. */
+  loading: { opacity: 0.8 },
   pressed: { opacity: 0.85 },
   subtext: { marginTop: tokens.space[1] },
 });
