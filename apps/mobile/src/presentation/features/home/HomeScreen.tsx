@@ -9,6 +9,7 @@ import type { OverviewSnapshot } from '@/application/useCases/buildOverview';
 import { addDays, recommendDay, type ActivityId, type EngineConfig, type Progress } from '@/domain';
 
 import { buildHourlySequence, HourlyChronology } from '../../chronology';
+import { useAmbientPhase } from '../../hooks/useAmbientPhase';
 import { t } from '../../i18n/pt-BR';
 import { useEngineConfig } from '../../queries/useEngineConfig';
 import { useOverview, type OverviewState } from '../../queries/useOverview';
@@ -208,6 +209,10 @@ function HomeContent({ city, config, overview, progress, scrollRef }: ContentPro
 
 export function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
+  // Fase de reserva: vale no primeiro acesso e enquanto a previsão carrega. Antes eram duas
+  // constantes — entardecer no onboarding e dia no carregamento — e ambas contradiziam o relógio:
+  // quem abria às 23h via um pôr do sol em chamas e caía numa tela quase preta.
+  const ambient = useAmbientPhase();
   const city = usePreferences((s) => s.city);
   const activity = usePreferences((s) => s.activity);
   const paddingBottom = useScreenPaddingBottom();
@@ -225,11 +230,11 @@ export function HomeScreen() {
     today.bestScoreOfDay < config.data.scores.fair;
   const phase = overview.snapshot
     ? phaseFor({ now: overview.snapshot.now, daily: today?.daily ?? null, isBadDay })
-    : 'day';
+    : ambient;
 
   if (city === null) {
     return (
-      <Sky phase="dusk">
+      <Sky phase={ambient}>
         <SafeAreaView style={styles.safe}>
           <Welcome />
         </SafeAreaView>
