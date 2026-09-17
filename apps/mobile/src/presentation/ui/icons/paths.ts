@@ -139,7 +139,7 @@ export const ICON_SHAPES: Record<IconName, readonly IconShape[]> = {
   fog: [path(CLOUD_SMALL), line(4, 20.5, 12, 20.5), line(15, 20.5, 20, 20.5)],
   drizzle: [path(CLOUD_SMALL), line(9, 20, 8.2, 22), line(13, 20, 12.2, 22)],
   rain: [path(CLOUD_SMALL), line(9, 20, 8, 23), line(13, 20, 12, 23), line(17, 20, 16, 23)],
-  showers: [path(CLOUD_SMALL), line(9.5, 20, 8, 23.5), line(14.5, 20, 13, 23.5)],
+  showers: [path(CLOUD_SMALL), line(9.5, 19.5, 8, 22.5), line(14.5, 19.5, 13, 22.5)],
   snow: [
     path(CLOUD_SMALL),
     line(8, 21, 11, 21),
@@ -147,7 +147,10 @@ export const ICON_SHAPES: Record<IconName, readonly IconShape[]> = {
     line(14, 21, 17, 21),
     line(15.5, 19.5, 15.5, 22.5),
   ],
-  thunder: [path(CLOUD_SMALL), path('M13 19.5 10 23h3l-1.2 2.5')],
+  // O raio é preenchido e cabe na grade. Antes ele descia até y=25,5 e era recortado pelo
+  // `viewBox`, então a trovoada desenhava como nuvem lisa — indistinguível de `cloudy`, na
+  // condição mais relevante para quem vai correr na rua.
+  thunder: [path(CLOUD_SMALL), path('M13.2 18.4 9.8 21.8h2.4l-.6 2 3.4-3.6h-2.4Z', true)],
 
   // — atividades —
   walk: [

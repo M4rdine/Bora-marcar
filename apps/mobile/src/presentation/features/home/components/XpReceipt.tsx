@@ -8,8 +8,13 @@ import type { XpReceiptResult } from '../xpReceipt';
 
 type Props = { readonly receipt: XpReceiptResult; readonly activity: ActivityId };
 
-/** Ícone de cada parcela; a base usa o desenho da atividade registrada. */
-const ROW_ICON = { hour: 'today', plan: 'medal', streak: 'thermal' } as const satisfies Record<
+/**
+ * Ícone de cada parcela; a base usa o desenho da atividade registrada.
+ *
+ * A sequência usava `thermal` — um termômetro ilustrando "3 dias seguidos", que não quer dizer
+ * nada. Estrela é o que o conjunto tem de mais próximo de "acumulado".
+ */
+const ROW_ICON = { hour: 'today', plan: 'medal', streak: 'star' } as const satisfies Record<
   'hour' | 'plan' | 'streak',
   IconName
 >;

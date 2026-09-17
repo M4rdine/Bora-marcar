@@ -26,7 +26,6 @@ export const t = {
     home: 'Hoje',
     cities: 'Cidades',
     profile: 'Perfil',
-    icons: { home: '🌤', cities: '🔍', profile: '🏅' },
   },
   labels: LABELS,
   tips: {
@@ -113,13 +112,6 @@ export const t = {
     welcomeBody: 'Escolha uma cidade e uma atividade. O resto é com a previsão.',
     searchCity: 'Buscar cidade',
     useLocation: 'Usar minha localização',
-    howTitle: 'Como funciona',
-    howSteps: [
-      { emoji: '🔍', text: 'Escolha uma cidade ou use a sua localização.' },
-      { emoji: '🌤', text: 'A previsão vira um score por hora para a sua atividade.' },
-      { emoji: '🏅', text: 'Planeje a melhor janela, saia e ganhe XP, níveis e conquistas.' },
-    ],
-    stepLabel: (n: number) => `Passo ${n}`,
     onboarding: {
       lead: 'O Bora marcar lê a previsão hora a hora e diz quando vale a pena sair.',
       progress: (step: number, total: number) => `Passo ${step} de ${total}`,

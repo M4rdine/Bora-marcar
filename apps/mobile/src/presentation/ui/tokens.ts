@@ -33,6 +33,10 @@ export const tokens = {
     shadow: '#000000',
     // Quase opaca de propósito: a 0.22 o conteúdo da tela atravessava a barra e parecia defeito.
     tabBar: 'rgba(12,16,28,0.94)',
+    /** Aba inativa. A 0.82 ela era quase branco puro: a barra não dizia onde você estava. */
+    tabInactive: 'rgba(255,255,255,0.5)',
+    /** Fundo da aba ativa: o sinal de forma, que a cor sozinha não dá. */
+    tabActiveBg: 'rgba(255,255,255,0.14)',
   },
   space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40 },
   radius: { hero: 24, card: 16, inner: 12, pill: 999, cell: 8, tabBar: 22 },

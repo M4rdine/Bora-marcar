@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
 import { t } from '@/presentation/i18n/pt-BR';
-import { Icon, tokens, type IconName } from '@/presentation/ui';
+import { fontFamily, Icon, tokens, type IconName } from '@/presentation/ui';
 
 type TabIconProps = { readonly color: ColorValue; readonly focused: boolean };
 
@@ -43,8 +43,19 @@ export default function TabsLayout() {
           backgroundColor: tokens.color.tabBar,
         },
         tabBarActiveTintColor: tokens.color.text,
-        tabBarInactiveTintColor: tokens.color.textMuted,
-        tabBarLabelStyle: { fontSize: tokens.font.micro },
+        // A inativa era `textMuted` (branco a 82%), 18% de alfa de diferença da ativa: a navegação
+        // primária não informava onde você estava. A 50% a distinção fica 3,5x maior, e o rótulo
+        // ainda passa em AA sobre a barra.
+        tabBarInactiveTintColor: tokens.color.tabInactive,
+        // Cor sozinha é sinal fraco; o fundo dá o sinal de forma.
+        tabBarActiveBackgroundColor: tokens.color.tabActiveBg,
+        tabBarItemStyle: { borderRadius: tokens.radius.inner, margin: tokens.space[1] },
+        tabBarLabelStyle: {
+          fontSize: tokens.font.micro,
+          // Sem isto o rótulo cai na fonte do sistema: eram os únicos três textos do app fora
+          // das famílias carregadas.
+          fontFamily: fontFamily('text', '600'),
+        },
         sceneStyle: { backgroundColor: tokens.gradients.dusk[3] },
       }}
     >
