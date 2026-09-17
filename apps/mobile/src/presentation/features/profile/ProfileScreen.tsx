@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { EngineConfig, Progress } from '@/domain';
 
+import { useAmbientPhase } from '../../hooks/useAmbientPhase';
 import { useToday } from '../../hooks/useToday';
 import { formatLongDate } from '../../i18n/dates';
 import { t } from '../../i18n/pt-BR';
@@ -82,13 +83,14 @@ function ProfileContent({ progress, today, config }: ContentProps) {
 }
 
 export function ProfileScreen() {
+  const phase = useAmbientPhase();
   const { date: today } = useToday();
   const progress = useProgress(today);
   const paddingBottom = useScreenPaddingBottom();
   const config = useEngineConfig();
 
   return (
-    <Sky phase="dusk">
+    <Sky phase={phase}>
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
           {progress.data && config.data ? (

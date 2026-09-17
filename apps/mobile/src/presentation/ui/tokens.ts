@@ -4,12 +4,15 @@ export const tokens = {
   color: {
     text: '#FFFFFF',
     textMuted: 'rgba(255,255,255,0.82)',
-    // Superfícies escuras, não claras. Vidro branco sobre um céu claro deixa o fundo MAIS claro e
-    // derruba o contraste do texto branco; escurecer separa a superfície do céu e ainda ajuda a ler.
-    // Os três materiais também passam a diferir de verdade, em vez de 2% de alfa entre eles.
-    surface: 'rgba(0,0,0,0.18)',
-    surfaceStrong: 'rgba(0,0,0,0.30)',
+    // Superfícies escuras, não claras: vidro branco sobre céu claro deixa o fundo MAIS claro e
+    // derruba o contraste do texto branco. Os dois materiais diferem por 14 pontos de alfa, o
+    // suficiente para um cartão dentro de outro ainda se distinguir.
+    surface: 'rgba(0,0,0,0.26)',
+    surfaceStrong: 'rgba(0,0,0,0.40)',
     border: 'rgba(255,255,255,0.28)',
+    /** Realce de um pixel no topo da superfície: é ele que faz o cartão ler como objeto com
+     * espessura, e não como um retângulo de opacidade. */
+    surfaceEdge: 'rgba(255,255,255,0.14)',
     ink: '#2C2C5E',
     accent: '#FFFFFF',
     accentInk: '#4B3FB5',
@@ -24,7 +27,7 @@ export const tokens = {
     score: { great: '#8FF0B6', good: '#8FF0B6', fair: '#FFD66B', poor: '#FF9B8A' },
     scoreInk: { great: '#0A4A2A', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
     // Encaixe dentro de uma superfície (trilhos, medalhas): mais fundo que `surface`.
-    shade: 'rgba(0,0,0,0.22)',
+    shade: 'rgba(0,0,0,0.30)',
     shadow: '#000000',
     // Quase opaca de propósito: a 0.22 o conteúdo da tela atravessava a barra e parecia defeito.
     tabBar: 'rgba(12,16,28,0.94)',
@@ -50,19 +53,24 @@ export const tokens = {
     icon: 22,
     tabBar: 64,
   },
-  gradients: {
-    dawn: ['#F6C9A0', '#E8927A', '#8E6AA6', '#4C4477'],
-    day: ['#9FD3F5', '#5AA2E0', '#3D6FC0'],
-    dusk: ['#F7B388', '#E58AA0', '#7D63B8', '#2C2C5E'],
-    night: ['#3B3F7A', '#23264F', '#101230'],
-    rainy: ['#B6BCC8', '#7C8597', '#444B5A'],
-  } satisfies Record<SkyPhase, readonly [string, string, ...string[]]>,
   /**
-   * Véu entre o céu e o conteúdo. É um gradiente, e não um preto chapado, porque os tons claros
-   * de cada fase ficam sempre no topo: escurecendo mais em cima e menos embaixo, o texto branco
-   * passa a ser legível em toda a tela sem apagar a cor da base do céu.
+   * O céu. As paradas são profundas de propósito: texto branco lê direto sobre elas em nível AA
+   * (pior caso 5,52:1), o que dispensa qualquer véu por cima. A versão anterior era pastel e
+   * precisava de um véu preto que apagava a atmosfera — as 14h ficavam tão escuras quanto as 23h.
+   *
+   * Em `dawn` a segunda parada é mais clara que a primeira de propósito: é a faixa de brilho do
+   * horizonte, que é onde o céu de verdade acende no nascer do sol.
    */
-  scrim: ['rgba(0,0,0,0.50)', 'rgba(0,0,0,0.26)'] as const,
+  gradients: {
+    // amanhecer: luz fria que esquenta, em rosa e violeta, com pouco laranja
+    dawn: ['#5E3A52', '#A8486B', '#6A4188', '#2C2A66'],
+    day: ['#2A6A96', '#1C4F9E', '#1B3C86'],
+    // entardecer: calor que apaga, em laranja queimado e carmim — o oposto do amanhecer, para
+    // que o céu consiga dizer se é manhã ou noite
+    dusk: ['#A83E14', '#93273F', '#4E2C7E', '#20204F'],
+    night: ['#2A2B5E', '#1B1C42', '#0C0D26'],
+    rainy: ['#4A5566', '#3C4655', '#2A3340'],
+  } satisfies Record<SkyPhase, readonly [string, string, ...string[]]>,
 } as const;
 
 export type ScoreTone = keyof typeof tokens.color.score;

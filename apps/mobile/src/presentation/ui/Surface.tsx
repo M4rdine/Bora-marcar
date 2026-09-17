@@ -34,6 +34,12 @@ export function Surface({
           borderRadius: tokens.radius[radius],
           borderWidth: strength === 'strong' ? 1 : 0,
           borderColor: tokens.color.border,
+          // O topo sempre ganha um realce, e ele vence o `borderWidth` acima porque no React
+          // Native a propriedade específica tem precedência. É esse fio de luz que dá espessura
+          // ao cartão e o faz ler como objeto em qualquer posição de rolagem, em vez de um
+          // retângulo cuja cor é a do fundo naquele momento.
+          borderTopWidth: 1,
+          borderTopColor: tokens.color.surfaceEdge,
         },
         padding !== undefined && { padding: tokens.space[padding] },
         gap !== undefined && { gap: tokens.space[gap] },

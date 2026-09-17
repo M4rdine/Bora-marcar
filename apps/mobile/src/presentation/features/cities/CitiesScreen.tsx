@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { City, LocationError } from '@/application/ports';
 
+import { useAmbientPhase } from '../../hooks/useAmbientPhase';
 import { useCitySearch } from '../../queries/useCitySearch';
 import { useServices } from '../../services/ServicesProvider';
 import { isFavorite } from '../../state/preferences';
@@ -18,6 +19,7 @@ import { CitySkeleton } from './components/CitySkeleton';
 export function CitiesScreen() {
   const router = useRouter();
   const services = useServices();
+  const phase = useAmbientPhase();
   const [query, setQuery] = useState('');
   const [locationError, setLocationError] = useState<LocationError['code'] | null>(null);
   const search = useCitySearch(query);
@@ -38,7 +40,7 @@ export function CitiesScreen() {
   };
 
   return (
-    <Sky phase="night">
+    <Sky phase={phase}>
       <SafeAreaView style={styles.safe}>
         <CitiesHeader
           query={query}

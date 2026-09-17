@@ -17,7 +17,7 @@ describe('Sky', () => {
     expect(UNSAFE_getAllByType(LinearGradient).length).toBeGreaterThan(0);
   });
 
-  it('troca de fase mantém o filho e as duas fases, mais o véu', () => {
+  it('troca de fase mantém o filho e as duas fases', () => {
     const { getByText, rerender, UNSAFE_getAllByType } = render(
       <Sky phase="day">
         <Text>Conteúdo</Text>
@@ -31,19 +31,9 @@ describe('Sky', () => {
     );
 
     expect(getByText('Conteúdo')).toBeTruthy();
-    const gradients = UNSAFE_getAllByType(LinearGradient);
-    expect(gradients).toHaveLength(3);
-    // O véu é o último: fica acima das duas fases, e por isso vale igual durante o crossfade.
-    expect(gradients[gradients.length - 1]?.props.colors).toEqual(tokens.scrim);
-  });
-
-  it('o véu está presente já na primeira renderização, não só depois de trocar de fase', () => {
-    const { UNSAFE_getAllByType } = render(
-      <Sky phase="night">
-        <Text>Conteúdo</Text>
-      </Sky>,
-    );
+    // Sem véu: o céu é escuro por paleta, então só existem as duas camadas do crossfade.
     const colors = UNSAFE_getAllByType(LinearGradient).map((g) => g.props.colors);
-    expect(colors).toContainEqual(tokens.scrim);
+    expect(colors).toHaveLength(2);
+    expect(colors).toContainEqual(tokens.gradients.night);
   });
 });

@@ -47,9 +47,6 @@ export function Sky({ phase, style, children, ...rest }: Props) {
       <Animated.View style={[StyleSheet.absoluteFill, fade]} pointerEvents="none">
         <LinearGradient colors={tokens.gradients[phase]} style={StyleSheet.absoluteFill} />
       </Animated.View>
-      {/* O véu fica acima das duas fases e abaixo do conteúdo, então vale igual durante o
-          crossfade e nunca escurece o próprio texto. */}
-      <LinearGradient colors={tokens.scrim} style={StyleSheet.absoluteFill} pointerEvents="none" />
       {children}
     </Animated.View>
   );

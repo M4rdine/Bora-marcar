@@ -11,12 +11,10 @@ import { tokens, type SkyPhase } from './tokens';
 
 const WHITE: Rgb = [255, 255, 255];
 const BLACK: Rgb = [0, 0, 0];
-const SAMPLES_PER_SEGMENT = 12;
+const SAMPLES_PER_SEGMENT = 16;
 
 const alphaOf = (rgba: string): number => Number(rgba.split(',')[3]?.replace(')', '') ?? '0');
 
-const SCRIM_TOP = alphaOf(tokens.scrim[0]);
-const SCRIM_BOTTOM = alphaOf(tokens.scrim[1]);
 const SURFACE = alphaOf(tokens.color.surface);
 const SURFACE_STRONG = alphaOf(tokens.color.surfaceStrong);
 const MUTED = alphaOf(tokens.color.textMuted);
@@ -27,80 +25,87 @@ const mix = (a: Rgb, b: Rgb, ratio: number): Rgb =>
   ) as unknown as Rgb;
 
 /**
- * Amostra densa de um gradiente: a cor e a posição vertical de cada ponto. Testar só as paradas
- * deixaria passar um vale de contraste no meio de um segmento.
+ * Amostra densa de um gradiente. Testar só as paradas deixaria passar um vale de contraste no
+ * meio de um segmento, que é exatamente onde o texto costuma cair.
  */
-function samplesOf(phase: SkyPhase): readonly { readonly color: Rgb; readonly position: number }[] {
+function samplesOf(phase: SkyPhase): readonly Rgb[] {
   const stops = tokens.gradients[phase].map(hexToRgb);
-  const segments = stops.length - 1;
   return stops.flatMap((stop, index) => {
-    if (index === segments) return [{ color: stop, position: 1 }];
-    const next = stops[index + 1] as Rgb;
-    return Array.from({ length: SAMPLES_PER_SEGMENT }, (_, step) => {
-      const within = step / SAMPLES_PER_SEGMENT;
-      return {
-        color: mix(stop, next, within),
-        position: (index + within) / segments,
-      };
-    });
+    const next = stops[index + 1];
+    if (next === undefined) return [stop];
+    return Array.from({ length: SAMPLES_PER_SEGMENT }, (_, step) =>
+      mix(stop, next, step / SAMPLES_PER_SEGMENT),
+    );
   });
-}
-
-/** O pixel final atrás do texto: céu, véu na altura daquele ponto e, quando houver, a superfície. */
-function groundAt(
-  phase: SkyPhase,
-  sample: { readonly color: Rgb; readonly position: number },
-  surfaceAlpha: number | null,
-): Rgb {
-  const scrimAlpha = SCRIM_TOP + (SCRIM_BOTTOM - SCRIM_TOP) * sample.position;
-  const layers = [{ color: BLACK, alpha: scrimAlpha }];
-  return stack(
-    sample.color,
-    surfaceAlpha === null ? layers : [...layers, { color: BLACK, alpha: surfaceAlpha }],
-  );
 }
 
 const PHASES: readonly SkyPhase[] = ['dawn', 'day', 'dusk', 'night', 'rainy'];
 
-const worstRatio = (surfaceAlpha: number | null, ink: Rgb): { ratio: number; where: string } =>
-  PHASES.flatMap((phase) =>
-    samplesOf(phase).map((sample) => ({
-      ratio: contrastRatio(ink, groundAt(phase, sample, surfaceAlpha)),
-      where: `${phase} em ${(sample.position * 100).toFixed(0)}%`,
+/** O pior contraste de uma tinta contra o céu, opcionalmente com uma superfície no meio. */
+function worstRatio(
+  ink: Rgb,
+  surfaceAlpha: number | null,
+): { readonly ratio: number; readonly phase: SkyPhase } {
+  return PHASES.flatMap((phase) =>
+    samplesOf(phase).map((sky) => ({
+      phase,
+      ratio: contrastRatio(
+        ink,
+        surfaceAlpha === null ? sky : stack(sky, [{ color: BLACK, alpha: surfaceAlpha }]),
+      ),
     })),
   ).reduce((worst, candidate) => (candidate.ratio < worst.ratio ? candidate : worst));
+}
 
 describe('contraste do texto sobre o céu', () => {
-  it('tinta branca direto sobre o céu passa no nível AA para texto normal, em toda a tela', () => {
-    const worst = worstRatio(null, WHITE);
-    expect({ where: worst.where, ok: worst.ratio >= WCAG_AA.normalText }).toEqual({
-      where: worst.where,
-      ok: true,
+  it('tinta branca lê DIRETO sobre o céu, em nível AA para texto normal', () => {
+    const worst = worstRatio(WHITE, null);
+    expect({ fase: worst.phase, passa: worst.ratio >= WCAG_AA.normalText }).toEqual({
+      fase: worst.phase,
+      passa: true,
     });
   });
 
-  it('tinta branca sobre as duas superfícies passa com folga', () => {
-    expect(worstRatio(SURFACE, WHITE).ratio).toBeGreaterThanOrEqual(WCAG_AA.normalText);
-    expect(worstRatio(SURFACE_STRONG, WHITE).ratio).toBeGreaterThanOrEqual(WCAG_AA.normalText);
+  it('e lê com folga sobre as duas superfícies', () => {
+    expect(worstRatio(WHITE, SURFACE).ratio).toBeGreaterThanOrEqual(WCAG_AA.normalText);
+    expect(worstRatio(WHITE, SURFACE_STRONG).ratio).toBeGreaterThanOrEqual(WCAG_AA.normalText);
   });
 
-  it('texto secundário continua legível, ao menos no limiar de texto grande', () => {
+  it('o texto secundário passa ao menos no limiar de texto grande, direto no céu', () => {
     const muted = composite(WHITE, MUTED, BLACK);
-    expect(worstRatio(null, muted).ratio).toBeGreaterThanOrEqual(WCAG_AA.largeText);
+    expect(worstRatio(muted, null).ratio).toBeGreaterThanOrEqual(WCAG_AA.largeText);
+  });
+
+  it('não existe véu: o céu é escuro por escolha de paleta, não por preto por cima', () => {
+    expect('scrim' in tokens).toBe(false);
   });
 
   it('as duas superfícies são materiais distintos, não a mesma com outro nome', () => {
-    const MIN_SEPARATION = 0.08;
+    const MIN_SEPARATION = 0.1;
     expect(SURFACE_STRONG - SURFACE).toBeGreaterThanOrEqual(MIN_SEPARATION);
   });
 
-  it('o véu escurece mais no topo, que é onde todas as fases têm o tom claro', () => {
-    expect(SCRIM_TOP).toBeGreaterThan(SCRIM_BOTTOM);
+  it('toda fase escurece do topo para a base, para o céu ter direção', () => {
     for (const phase of PHASES) {
       const stops = tokens.gradients[phase].map(hexToRgb);
       const first = stops[0] as Rgb;
       const last = stops[stops.length - 1] as Rgb;
       expect(luminance(first)).toBeGreaterThan(luminance(last));
+    }
+  });
+
+  it('as fases são distinguíveis entre si, senão o céu não informa a hora', () => {
+    const MIN_DIFFERENCE = 24;
+    const tops = PHASES.map((phase) => hexToRgb(tokens.gradients[phase][0]));
+    for (let i = 0; i < tops.length; i += 1) {
+      for (let j = i + 1; j < tops.length; j += 1) {
+        const a = tops[i] as Rgb;
+        const b = tops[j] as Rgb;
+        const distance = Math.max(
+          ...[0, 1, 2].map((c) => Math.abs((a[c] as number) - (b[c] as number))),
+        );
+        expect(distance).toBeGreaterThanOrEqual(MIN_DIFFERENCE);
+      }
     }
   });
 });
