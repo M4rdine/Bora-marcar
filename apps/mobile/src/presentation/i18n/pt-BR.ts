@@ -172,6 +172,7 @@ export const t = {
     title: 'Suas próximas horas',
     dayTitle: 'Hora a hora',
     subtitle: 'Toque em uma hora para ver por que ela recebeu essa nota.',
+    legendLabel: 'Escala de notas: ótimo, bom, razoável, ruim',
     today: 'Hoje',
     tomorrow: 'Amanhã',
     now: 'agora',

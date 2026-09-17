@@ -8,10 +8,18 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import type { HourScore, ScoreLabel } from '@/domain';
+import type { HourScore } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
-import { AppText, motion, SectionHeader, Surface, tokens, useReducedMotion } from '../../../ui';
+import {
+  AppText,
+  motion,
+  ScoreLegend,
+  SectionHeader,
+  Surface,
+  tokens,
+  useReducedMotion,
+} from '../../../ui';
 
 import { SunArc } from './SunArc';
 
@@ -27,13 +35,6 @@ const HEIGHT_PER_SCORE = 0.44;
 const MAX_SCORE = 100;
 const BARS_HEIGHT = HEIGHT_BASE + MAX_SCORE * HEIGHT_PER_SCORE;
 const PULSE_MIN_OPACITY = 0.35;
-/**
- * Os QUATRO tons da escala, e os nomes vêm de `t.labels` — o mesmo vocabulário das linhas.
- * Antes eram três itens tirados de uma lista própria, então as barras de "Bom" não tinham
- * explicação, e a legenda dizia "Ok/Evite" a poucos pixels de linhas dizendo "Razoável/Ruim".
- */
-const LEGEND_TONES: readonly ScoreLabel[] = ['great', 'good', 'fair', 'poor'];
-
 function nowAside(hours: readonly HourScore[], nowHour: number | null): string | undefined {
   const now = hours.find((h) => h.hour.hour === nowHour);
   return now ? `${t.home.now}: ${t.labels[now.label]} · ${now.score}` : undefined;
@@ -75,21 +76,6 @@ function Bar({ hour, nowHour }: { readonly hour: HourScore; readonly nowHour: nu
   );
 }
 
-function Legend() {
-  return (
-    <View style={styles.legend}>
-      {LEGEND_TONES.map((tone) => (
-        <View key={tone} style={styles.legendItem}>
-          <View style={[styles.dot, { backgroundColor: tokens.color.score[tone] }]} />
-          <AppText variant="micro" tone="muted">
-            {t.labels[tone]}
-          </AppText>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 export function HourlyTimeline({ hours, nowHour, sunrise, sunset }: Props) {
   const nowMinutes = nowHour !== null ? nowHour * 60 : null;
   return (
@@ -108,12 +94,10 @@ export function HourlyTimeline({ hours, nowHour, sunrise, sunset }: Props) {
           </AppText>
         ))}
       </View>
-      <Legend />
+      <ScoreLegend />
     </Surface>
   );
 }
-
-const DOT_SIZE = tokens.space[2];
 
 const styles = StyleSheet.create({
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 1, height: BARS_HEIGHT },
@@ -130,7 +114,4 @@ const styles = StyleSheet.create({
     borderColor: tokens.color.accent,
   },
   axis: { flexDirection: 'row', justifyContent: 'space-between' },
-  legend: { flexDirection: 'row', gap: tokens.space[3] },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2 },
 });

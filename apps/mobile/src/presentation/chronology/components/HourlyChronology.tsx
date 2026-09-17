@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import type { ActivityProfile } from '@/domain';
 
 import { t } from '../../i18n/pt-BR';
-import { AppText, SectionHeader, Surface, tokens } from '../../ui';
+import { AppText, ScoreLegend, SectionHeader, Surface, tokens } from '../../ui';
 import { bestHoursOf, type TimelineHour } from '../hourlySequence';
 
 import { HourDetail } from './HourDetail';
@@ -62,6 +62,10 @@ export function HourlyChronology({
         <AppText variant="micro" tone="muted">
           {subtitle}
         </AppText>
+        {/* A chave das cores fica AQUI, e não só no gráfico do dia: são estas vinte e quatro
+            linhas que repetem as quatro cores, e sem a chave a palavra da nota só existia no
+            rótulo de acessibilidade. */}
+        <ScoreLegend />
       </View>
 
       {sequence.map((item, index) => {

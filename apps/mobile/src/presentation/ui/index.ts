@@ -17,4 +17,5 @@ export * from './Reveal';
 export * from './SectionHeader';
 export * from './Emoji';
 export * from './icons';
+export { ScoreLegend } from './ScoreLegend';
 export * from './contrast';
