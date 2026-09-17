@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -49,6 +49,8 @@ type HeroSectionProps = {
   readonly snapshot: OverviewSnapshot;
   readonly progress: Progress;
   readonly scrollRef: RefObject<ScrollView | null>;
+  readonly visibleHeight: number;
+  readonly reservedBottom: number;
   readonly onOpenDay: (date: string) => void;
 };
 
@@ -63,6 +65,8 @@ function HeroSection({
   snapshot,
   progress,
   scrollRef,
+  visibleHeight,
+  reservedBottom,
   onOpenDay,
 }: HeroSectionProps) {
   const tomorrowDate = addDays(snapshot.now.date, 1);
@@ -80,28 +84,39 @@ function HeroSection({
     unlocked: progress.badges.filter((b) => b.unlocked).length,
     total: progress.badges.length,
   };
-  // A recompensa nasce no fim do cartão do herói, e a barra de abas flutua sobre o fim da tela:
-  // medido, o cartão de conquista renderizava inteiramente coberto por ela. Voltar ao topo no
-  // instante em que a conquista aparece põe o pico do produto onde ele pode ser visto.
+  // A recompensa nasce no fim do cartão do herói, e a barra de abas flutua sobre o fim da tela.
+  // Rolar para o topo resolvia a conquista e criava outro enquadramento ruim: o botão seguinte
+  // ficava 83% coberto pela barra. Aqui o alvo é medido — o fim do herói fica logo acima da
+  // barra —, então a conquista E a próxima ação ficam visíveis. Se o herói não couber inteiro,
+  // é o fim dele que aparece, que é justamente onde moram a conquista e o botão.
   const justUnlocked = unlockedToday.length > 0 && hero.kind === 'done';
+  const heroBottom = useRef(0);
   useEffect(() => {
-    if (justUnlocked) scrollRef.current?.scrollTo({ y: 0, animated: true });
-  }, [justUnlocked, scrollRef]);
+    if (!justUnlocked) return;
+    const target = Math.max(0, heroBottom.current - visibleHeight + reservedBottom);
+    scrollRef.current?.scrollTo({ y: target, animated: true });
+  }, [justUnlocked, scrollRef, visibleHeight, reservedBottom]);
   return (
     <>
-      <HeroCard
-        state={hero}
-        config={config}
-        cityId={city.id}
-        now={snapshot.now}
-        hours={snapshot.overview.today.hours}
-        tomorrow={tomorrow}
-        level={progress.level}
-        actions={actions}
-        unlockedToday={unlockedToday}
-        badgeTotals={badgeTotals}
-        onOpenTomorrow={() => onOpenDay(tomorrowDate)}
-      />
+      <View
+        onLayout={(e) => {
+          heroBottom.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height;
+        }}
+      >
+        <HeroCard
+          state={hero}
+          config={config}
+          cityId={city.id}
+          now={snapshot.now}
+          hours={snapshot.overview.today.hours}
+          tomorrow={tomorrow}
+          level={progress.level}
+          actions={actions}
+          unlockedToday={unlockedToday}
+          badgeTotals={badgeTotals}
+          onOpenTomorrow={() => onOpenDay(tomorrowDate)}
+        />
+      </View>
       <HourlyChronology
         sequence={buildHourlySequence({
           today: snapshot.overview.today,
@@ -152,9 +167,19 @@ type ContentProps = {
   readonly overview: OverviewState;
   readonly progress: Progress | undefined;
   readonly scrollRef: RefObject<ScrollView | null>;
+  readonly visibleHeight: number;
+  readonly reservedBottom: number;
 };
 
-function HomeContent({ city, config, overview, progress, scrollRef }: ContentProps) {
+function HomeContent({
+  city,
+  config,
+  overview,
+  progress,
+  scrollRef,
+  visibleHeight,
+  reservedBottom,
+}: ContentProps) {
   const router = useRouter();
   const activity = usePreferences((s) => s.activity);
   const selectActivity = usePreferences((s) => s.selectActivity);
@@ -200,6 +225,8 @@ function HomeContent({ city, config, overview, progress, scrollRef }: ContentPro
           snapshot={overview.snapshot}
           progress={progress}
           scrollRef={scrollRef}
+          visibleHeight={visibleHeight}
+          reservedBottom={reservedBottom}
           onOpenDay={(date) => router.push({ pathname: '/day/[date]', params: { date } })}
         />
       ) : null}
@@ -209,6 +236,7 @@ function HomeContent({ city, config, overview, progress, scrollRef }: ContentPro
 
 export function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
+  const [visibleHeight, setVisibleHeight] = useState(0);
   // Fase de reserva: vale no primeiro acesso e enquanto a previsão carrega. Antes eram duas
   // constantes — entardecer no onboarding e dia no carregamento — e ambas contradiziam o relógio:
   // quem abria às 23h via um pôr do sol em chamas e caía numa tela quase preta.
@@ -245,7 +273,11 @@ export function HomeScreen() {
   return (
     <Sky phase={phase}>
       <SafeAreaView style={styles.safe}>
-        <ScrollView ref={scrollRef} contentContainerStyle={[styles.container, { paddingBottom }]}>
+        <ScrollView
+          ref={scrollRef}
+          onLayout={(e) => setVisibleHeight(e.nativeEvent.layout.height)}
+          contentContainerStyle={[styles.container, { paddingBottom }]}
+        >
           {config.data ? (
             <HomeContent
               city={city}
@@ -253,6 +285,8 @@ export function HomeScreen() {
               overview={overview}
               progress={progress.data}
               scrollRef={scrollRef}
+              visibleHeight={visibleHeight}
+              reservedBottom={paddingBottom}
             />
           ) : (
             <AppText>{t.home.loading}</AppText>
