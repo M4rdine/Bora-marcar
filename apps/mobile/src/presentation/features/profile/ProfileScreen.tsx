@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,8 +17,11 @@ import { DevReset } from './components/DevReset';
 import { HistoryList } from './components/HistoryList';
 import { LevelCard } from './components/LevelCard';
 import { MonthCalendar } from './components/MonthCalendar';
+import { NextBadgeCard } from './components/NextBadgeCard';
+import { ProfileEmpty } from './components/ProfileEmpty';
 import { StatsRow } from './components/StatsRow';
 import { monthGrid } from './monthGrid';
+import { nextBadge } from './nextBadge';
 
 const sinceLabel = (records: Progress['records']): string => {
   const first = records[0];
@@ -38,9 +42,13 @@ type ContentProps = {
   readonly progress: Progress;
   readonly today: string;
   readonly config: EngineConfig;
+  readonly onStart: () => void;
 };
 
-function ProfileContent({ progress, today, config }: ContentProps) {
+function ProfileContent({ progress, today, config, onStart }: ContentProps) {
+  // Antes da primeira saída não há painel a mostrar, só um convite. Ver o item 4 da crítica.
+  if (progress.records.length === 0) return <ProfileEmpty onStart={onStart} />;
+
   const { year, month } = monthOf(today);
   const grid = monthGrid({
     year,
@@ -52,6 +60,7 @@ function ProfileContent({ progress, today, config }: ContentProps) {
   const unlocked = progress.badges.filter((b) => b.unlocked).length;
   const activeInMonth = countInMonth(progress.activeDates, year, month);
   const restInMonth = countInMonth(progress.restDates, year, month);
+  const next = nextBadge(progress.badges);
 
   return (
     <>
@@ -65,16 +74,17 @@ function ProfileContent({ progress, today, config }: ContentProps) {
         activities={progress.records.length}
         unlockedBadges={progress.badges.filter((b) => b.unlocked).length}
       />
-      <SectionHeader
-        title={grid.title}
-        aside={t.profile.monthSummary(activeInMonth, restInMonth)}
-      />
-      <MonthCalendar grid={grid} />
+      {next ? <NextBadgeCard next={next} /> : null}
       <SectionHeader
         title={t.profile.achievements}
         aside={t.profile.badges(unlocked, progress.badges.length)}
       />
       <BadgeGrid badges={progress.badges} />
+      <SectionHeader
+        title={grid.title}
+        aside={t.profile.monthSummary(activeInMonth, restInMonth)}
+      />
+      <MonthCalendar grid={grid} />
       <SectionHeader title={t.profile.history} />
       <HistoryList records={progress.records} config={config} />
       <DevReset />
@@ -83,6 +93,7 @@ function ProfileContent({ progress, today, config }: ContentProps) {
 }
 
 export function ProfileScreen() {
+  const router = useRouter();
   const phase = useAmbientPhase();
   const { date: today } = useToday();
   const progress = useProgress(today);
@@ -94,7 +105,12 @@ export function ProfileScreen() {
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={[styles.container, { paddingBottom }]}>
           {progress.data && config.data ? (
-            <ProfileContent progress={progress.data} today={today} config={config.data} />
+            <ProfileContent
+              progress={progress.data}
+              today={today}
+              config={config.data}
+              onStart={() => router.push('/')}
+            />
           ) : (
             <AppText variant="small">{t.home.loading}</AppText>
           )}

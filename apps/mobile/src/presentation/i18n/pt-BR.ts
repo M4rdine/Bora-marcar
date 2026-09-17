@@ -257,6 +257,20 @@ export const t = {
     planFulfilled: 'plano cumprido',
     history: 'Histórico',
     empty: 'Nenhuma atividade ainda.',
+    emptyTitle: 'Sua coleção começa na primeira saída',
+    emptyBody:
+      'Ainda não há nada para mostrar aqui. Escolha um horário, saia, e este espaço passa a contar o que você fez.',
+    emptyAction: 'Ver os horários de hoje',
+    emptySteps: [
+      'Cada saída rende XP e sobe o seu nível.',
+      'Dias seguidos formam uma sequência, e dia de chuva não conta contra você.',
+      'São 8 conquistas para desbloquear.',
+    ],
+    nextBadgeKicker: 'Falta pouco',
+    nextBadgeRemaining: (n: number) =>
+      n === 1 ? 'Falta 1 para desbloquear' : `Faltam ${n} para desbloquear`,
+    nextBadgeAria: (name: string, current: number, target: number) =>
+      `Próxima conquista: ${name}, ${current} de ${target}`,
     historyNotes: {
       first: 'primeira saída',
       planKept: 'plano cumprido',
