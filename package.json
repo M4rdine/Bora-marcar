@@ -12,7 +12,8 @@
     "test": "pnpm -r --if-present test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "apresentar": "bash scripts/apresentar.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
@@ -36,6 +37,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+      "semver": "^7.6.3"
+    }
   }
 }
