@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import type { HourScore } from '@/domain';
+import type { HourScore, ScoreLabel } from '@/domain';
 
 import { t } from '../../../i18n/pt-BR';
 import { AppText, motion, SectionHeader, Surface, tokens, useReducedMotion } from '../../../ui';
@@ -27,7 +27,12 @@ const HEIGHT_PER_SCORE = 0.44;
 const MAX_SCORE = 100;
 const BARS_HEIGHT = HEIGHT_BASE + MAX_SCORE * HEIGHT_PER_SCORE;
 const PULSE_MIN_OPACITY = 0.35;
-const LEGEND_TONES: readonly (keyof typeof t.home.legend)[] = ['great', 'fair', 'poor'];
+/**
+ * Os QUATRO tons da escala, e os nomes vêm de `t.labels` — o mesmo vocabulário das linhas.
+ * Antes eram três itens tirados de uma lista própria, então as barras de "Bom" não tinham
+ * explicação, e a legenda dizia "Ok/Evite" a poucos pixels de linhas dizendo "Razoável/Ruim".
+ */
+const LEGEND_TONES: readonly ScoreLabel[] = ['great', 'good', 'fair', 'poor'];
 
 function nowAside(hours: readonly HourScore[], nowHour: number | null): string | undefined {
   const now = hours.find((h) => h.hour.hour === nowHour);
@@ -77,7 +82,7 @@ function Legend() {
         <View key={tone} style={styles.legendItem}>
           <View style={[styles.dot, { backgroundColor: tokens.color.score[tone] }]} />
           <AppText variant="micro" tone="muted">
-            {t.home.legend[tone]}
+            {t.labels[tone]}
           </AppText>
         </View>
       ))}

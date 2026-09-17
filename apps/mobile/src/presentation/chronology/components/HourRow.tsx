@@ -57,7 +57,7 @@ function ScoreBar({
 
 function HourRowView({ item, itemKey, dayLabel, selected, isBest, onPress }: Props) {
   const { hour } = item;
-  const glyph = weatherGlyph(hour.hour.weatherCode);
+  const glyph = weatherGlyph(hour.hour.weatherCode, hour.hour.isDay);
   const rain = hour.hour.precipitationProbability;
   return (
     <Pressable

@@ -29,7 +29,9 @@ export type IconName =
   | 'uv'
   // tempo
   | 'clear'
+  | 'clearNight'
   | 'fewClouds'
+  | 'fewCloudsNight'
   | 'cloudy'
   | 'fog'
   | 'drizzle'
@@ -81,6 +83,9 @@ const circle = (cx: number, cy: number, r: number, fill = false): IconShape => (
 const CLOUD = 'M7 18h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 10 4 4 0 0 0 7 18Z';
 /** Meia nuvem, para os estados em que o sol ainda aparece. */
 const CLOUD_SMALL = 'M9 19h7.5a3 3 0 0 0 .3-5.98A4.2 4.2 0 0 0 9.2 12 3.5 3.5 0 0 0 9 19Z';
+/** Lua crescente, desenhada como um arco fechado: a mesma família de formas do resto. */
+const MOON = 'M15.8 3.2a9 9 0 1 0 5 5 7 7 0 0 1-5-5Z';
+const MOON_SMALL = 'M12.6 3.4a6.4 6.4 0 1 0 3.6 3.6 5 5 0 0 1-3.6-3.6Z';
 const SUN_RAYS: readonly IconShape[] = [
   line(12, 2, 12, 4),
   line(12, 20, 12, 22),
@@ -125,7 +130,11 @@ export const ICON_SHAPES: Record<IconName, readonly IconShape[]> = {
 
   // — tempo —
   clear: [circle(12, 12, 4.6), ...SUN_RAYS],
+  // Crescente por subtração: um disco e um recorte deslocado, o mesmo truque de toda lua
+  // desenhada com geometria simples. Mantém a regra do conjunto — nada de curva livre.
+  clearNight: [path(MOON, true)],
   fewClouds: [circle(9.5, 9.5, 3.4), ...SUN_RAYS.slice(0, 4), path(CLOUD_SMALL)],
+  fewCloudsNight: [path(MOON_SMALL, true), path(CLOUD_SMALL)],
   cloudy: [path(CLOUD)],
   fog: [path(CLOUD_SMALL), line(4, 20.5, 12, 20.5), line(15, 20.5, 20, 20.5)],
   drizzle: [path(CLOUD_SMALL), line(9, 20, 8.2, 22), line(13, 20, 12.2, 22)],
