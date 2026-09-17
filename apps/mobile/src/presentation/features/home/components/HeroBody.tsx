@@ -146,9 +146,7 @@ function ConfirmBody({
       <AppText variant="display">
         {formatHourRange(plan.window.startHour, plan.window.endHour)}
       </AppText>
-      <AppText variant="body">
-        {t.home.planOf(activity.emoji, activity.name, plan.window.startHour)}
-      </AppText>
+      <AppText variant="body">{t.home.planOf(activity.name, plan.window.startHour)}</AppText>
       {nowScore !== null ? (
         <Pill
           label={`${t.home.now}: ${t.labels[labelFor(nowScore, config)]} · ${nowScore}`}
@@ -183,7 +181,7 @@ function DoneBody({
         {t.home.doneKicker(activity.name, record.hourLeft, record.minuteLeft)}
       </AppText>
       <CountUp value={record.xp.total} format={t.home.xpEarned} />
-      <XpReceipt receipt={receipt} activityEmoji={activity.emoji} />
+      <XpReceipt receipt={receipt} activity={record.activity} />
       <LevelBar
         progress={level.progress}
         left={t.level.short(level.level)}

@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { ACTIVITY_IDS, labelFor, type ActivityId, type EngineConfig } from '@/domain';
 
-import { Chip, tokens } from '../../../ui';
+import { activityIcon, Chip, tokens } from '../../../ui';
 
 type Props = {
   readonly config: EngineConfig;
@@ -27,7 +27,7 @@ export function ActivityPicker({ config, selected, onSelect, scoreFor }: Props) 
           <Chip
             key={id}
             label={profile.name}
-            emoji={profile.emoji}
+            icon={activityIcon(profile.id)}
             active={active}
             score={score}
             scoreLabel={score === null ? undefined : labelFor(score, config)}

@@ -4,12 +4,14 @@ import type { ScoreLabel } from '@/domain';
 
 import { t } from '../i18n/pt-BR';
 
+import { Icon } from './icons/Icon';
+import type { IconName } from './icons/paths';
 import { AppText } from './Text';
 import { tokens } from './tokens';
 
 type Props = {
   readonly label: string;
-  readonly emoji?: string;
+  readonly icon?: IconName;
   readonly active?: boolean;
   readonly score?: number | null;
   /** Rótulo do score: define a cor da mini-pílula e entra no rótulo de acessibilidade. */
@@ -19,8 +21,9 @@ type Props = {
 
 /** Sem rótulo de score o chip cai no tom "good" (menta), a cor histórica da mini-pílula. */
 const DEFAULT_SCORE_LABEL: ScoreLabel = 'good';
+const ICON_SIZE = 18;
 
-export function Chip({ label, emoji, active = false, score = null, scoreLabel, onPress }: Props) {
+export function Chip({ label, icon, active = false, score = null, scoreLabel, onPress }: Props) {
   const shownScore = active ? score : null;
   const tone = scoreLabel ?? DEFAULT_SCORE_LABEL;
   const ariaLabel =
@@ -37,7 +40,13 @@ export function Chip({ label, emoji, active = false, score = null, scoreLabel, o
         pressed ? styles.pressed : null,
       ]}
     >
-      {emoji !== undefined ? <AppText>{emoji}</AppText> : null}
+      {icon !== undefined ? (
+        <Icon
+          name={icon}
+          size={ICON_SIZE}
+          color={active ? tokens.color.accentInk : tokens.color.text}
+        />
+      ) : null}
       <AppText variant="small" weight="600" style={active ? styles.activeText : undefined}>
         {label}
       </AppText>

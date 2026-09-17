@@ -109,7 +109,7 @@ describe('HomeScreen', () => {
     // colorido e os fatores da janela (fixture padrão: sensação 22°).
     await screen.findByText('Confirmar que fui');
     const confirmHero = screen.getByLabelText('hero');
-    expect(within(confirmHero).getByText('🚶 Caminhada · plano das 14h')).toBeTruthy();
+    expect(within(confirmHero).getByText('Caminhada · plano das 14h')).toBeTruthy();
     expect(within(confirmHero).getByText('Agora: Ótimo · 100')).toBeTruthy();
     expect(within(confirmHero).queryByText('Plano feito em outra cidade')).toBeNull();
     // fatores da janela do plano também aparecem no estado "confirm" (fixture padrão: sensação 22°).

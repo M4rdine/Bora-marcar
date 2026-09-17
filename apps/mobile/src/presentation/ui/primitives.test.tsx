@@ -81,7 +81,7 @@ describe('Button', () => {
 describe('Chip', () => {
   it('mostra o score quando ativo', () => {
     const { getByText, getByRole } = render(
-      <Chip label="Corrida" emoji="🏃" active score={84} onPress={jest.fn()} />,
+      <Chip label="Corrida" icon="run" active score={84} onPress={jest.fn()} />,
     );
     expect(getByText('84')).toBeTruthy();
     expect(getByRole('button', { name: 'Corrida' }).props.accessibilityState.selected).toBe(true);

@@ -39,7 +39,6 @@ describe('defaultEngineConfig', () => {
     [
       'walk',
       'Caminhada',
-      '🚶',
       { idealMin: 17, idealMax: 26, tolMin: 8, tolMax: 33 },
       { ok: 20, max: 45 },
       { ok: 5, max: 9 },
@@ -49,7 +48,6 @@ describe('defaultEngineConfig', () => {
     [
       'run',
       'Corrida',
-      '🏃',
       { idealMin: 12, idealMax: 21, tolMin: 3, tolMax: 29 },
       { ok: 20, max: 45 },
       { ok: 5, max: 9 },
@@ -59,7 +57,6 @@ describe('defaultEngineConfig', () => {
     [
       'cycle',
       'Ciclismo',
-      '🚴',
       { idealMin: 15, idealMax: 25, tolMin: 6, tolMax: 32 },
       { ok: 15, max: 35 },
       { ok: 5, max: 9 },
@@ -69,7 +66,6 @@ describe('defaultEngineConfig', () => {
     [
       'beach',
       'Praia',
-      '🏖',
       { idealMin: 25, idealMax: 32, tolMin: 20, tolMax: 38 },
       { ok: 15, max: 35 },
       { ok: 6, max: 10 },
@@ -79,7 +75,6 @@ describe('defaultEngineConfig', () => {
     [
       'picnic',
       'Piquenique',
-      '🧺',
       { idealMin: 19, idealMax: 27, tolMin: 12, tolMax: 33 },
       { ok: 15, max: 40 },
       { ok: 5, max: 9 },
@@ -88,10 +83,9 @@ describe('defaultEngineConfig', () => {
     ],
   ] as const)(
     'valores literais de %s conferem com o spec',
-    (id, name, emoji, thermal, wind, uv, nightFactor, weights) => {
+    (id, name, thermal, wind, uv, nightFactor, weights) => {
       const activity = defaultEngineConfig.activities[id];
       expect(activity.name).toBe(name);
-      expect(activity.emoji).toBe(emoji);
       expect(activity.thermal).toEqual(thermal);
       expect(activity.wind).toEqual(wind);
       expect(activity.uv).toEqual(uv);

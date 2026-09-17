@@ -4,7 +4,7 @@ import type { ActivityRecord, EngineConfig } from '@/domain';
 
 import { formatLongDate, monthTitle } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Emoji, tokens } from '../../../ui';
+import { activityIcon, AppText, Icon, tokens } from '../../../ui';
 import { buildHistory, type HistoryEntry } from '../historyStory';
 
 type Props = {
@@ -15,6 +15,7 @@ type Props = {
 
 const MAX_ROWS = 20;
 const MONTH_PARTS = 2;
+const ICON_SIZE = 20;
 const pad = (n: number): string => String(n).padStart(2, '0');
 
 const titleOfMonth = (month: string): string => {
@@ -53,7 +54,7 @@ function HistoryRow({
       )}
       style={styles.row}
     >
-      <Emoji symbol={activity.emoji} label={activity.name} />
+      <Icon name={activityIcon(record.activity)} size={ICON_SIZE} label={activity.name} />
       <View style={styles.middle}>
         <AppText variant="small" weight="700">
           {`${activity.name} · ${record.hourLeft}h${pad(record.minuteLeft)}`}

@@ -8,10 +8,10 @@ import { t } from '../../../i18n/pt-BR';
 import { useEngineConfig } from '../../../queries/useEngineConfig';
 import { useServices } from '../../../services/ServicesProvider';
 import { usePreferences } from '../../../state/preferencesStore';
-import { AppText, Button, Emoji, Surface, tokens } from '../../../ui';
+import { activityIcon, AppText, Button, Icon, Surface, tokens } from '../../../ui';
 
 const TOTAL_STEPS = 2;
-const ACTIVITY_EMOJI_SIZE = 28;
+const ACTIVITY_ICON_SIZE = 26;
 
 /**
  * Pontos de progresso. Duas perguntas curtas prendem mais que um cartão explicando três passos:
@@ -30,12 +30,10 @@ function Progress({ step }: { readonly step: number }) {
 function ActivityOption({
   id,
   name,
-  emoji,
   onSelect,
 }: {
   readonly id: ActivityId;
   readonly name: string;
-  readonly emoji: string;
   readonly onSelect: () => void;
 }) {
   const hint = t.home.onboarding.activityHints[id];
@@ -46,7 +44,7 @@ function ActivityOption({
       onPress={onSelect}
       style={({ pressed }) => [styles.option, pressed ? styles.pressed : null]}
     >
-      <Emoji symbol={emoji} size={ACTIVITY_EMOJI_SIZE} label={name} />
+      <Icon name={activityIcon(id)} size={ACTIVITY_ICON_SIZE} color={tokens.color.text} />
       <View style={styles.optionBody}>
         <AppText variant="subtitle" weight="700">
           {name}
@@ -108,7 +106,7 @@ export function Welcome() {
                   key={id}
                   id={id}
                   name={activity.name}
-                  emoji={activity.emoji}
+
                   onSelect={() => chooseActivity(id)}
                 />
               );

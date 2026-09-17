@@ -34,7 +34,13 @@ const activitySchema = z
   .object({
     id: z.enum(ACTIVITY_IDS),
     name: z.string().min(1),
-    emoji: z.string().min(1),
+    /**
+     * Vestigial. A aparência da atividade passou a ser decisão da camada de apresentação do app,
+     * não da config do motor. Fica opcional porque a config publicada em produção ainda o traz:
+     * exigir a ausência quebraria o app contra o servidor vivo. O app lê e descarta; uma
+     * publicação futura pode remover o campo sem quebrar nenhuma versão.
+     */
+    emoji: z.string().min(1).optional(),
     thermal: thermalSchema,
     wind: limitSchema,
     uv: limitSchema,

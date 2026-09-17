@@ -153,8 +153,7 @@ export const t = {
     now: 'Agora',
     plan: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,
     plannedTitle: (activity: string, hour: number) => `${activity} às ${hour}h`,
-    planOf: (emoji: string, activity: string, hour: number) =>
-      `${emoji} ${activity} · plano das ${hour}h`,
+    planOf: (activity: string, hour: number) => `${activity} · plano das ${hour}h`,
     otherCityPlan: 'Plano feito em outra cidade',
     cancelPlan: 'Desfazer plano',
     confirm: 'Confirmar que fui',

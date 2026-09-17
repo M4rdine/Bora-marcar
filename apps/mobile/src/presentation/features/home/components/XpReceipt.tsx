@@ -1,15 +1,21 @@
 import { StyleSheet, View } from 'react-native';
 
+import type { ActivityId } from '@/domain';
+
 import { t } from '../../../i18n/pt-BR';
-import { AppText, Surface, tokens } from '../../../ui';
+import { activityIcon, AppText, Icon, Surface, tokens, type IconName } from '../../../ui';
 import type { XpReceiptResult } from '../xpReceipt';
 
-type Props = { readonly receipt: XpReceiptResult; readonly activityEmoji: string };
+type Props = { readonly receipt: XpReceiptResult; readonly activity: ActivityId };
 
-/** Emoji de cada parcela, como no mockup; a base usa o emoji da atividade registrada. */
-const ROW_EMOJI = { hour: '🌤', plan: '🎯', streak: '🔥' } as const;
+/** Ícone de cada parcela; a base usa o desenho da atividade registrada. */
+const ROW_ICON = { hour: 'today', plan: 'medal', streak: 'thermal' } as const satisfies Record<
+  'hour' | 'plan' | 'streak',
+  IconName
+>;
+const ICON_SIZE = 16;
 
-export function XpReceipt({ receipt, activityEmoji }: Props) {
+export function XpReceipt({ receipt, activity }: Props) {
   return (
     <Surface strength="shade" padding={3} gap={2}>
       {receipt.rows.map((row) => (
@@ -21,9 +27,11 @@ export function XpReceipt({ receipt, activityEmoji }: Props) {
         >
           <View style={styles.labelRow}>
             <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <AppText variant="small">
-                {row.key === 'base' ? activityEmoji : ROW_EMOJI[row.key]}
-              </AppText>
+              <Icon
+                name={row.key === 'base' ? activityIcon(activity) : ROW_ICON[row.key]}
+                size={ICON_SIZE}
+                color={tokens.color.text}
+              />
             </View>
             <AppText variant="small">{row.label}</AppText>
           </View>

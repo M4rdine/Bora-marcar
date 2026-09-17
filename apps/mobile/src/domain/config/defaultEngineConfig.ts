@@ -6,7 +6,6 @@ export const defaultEngineConfig: EngineConfig = {
     walk: {
       id: 'walk',
       name: 'Caminhada',
-      emoji: '🚶',
       thermal: { idealMin: 17, idealMax: 26, tolMin: 8, tolMax: 33 },
       wind: { ok: 20, max: 45 },
       uv: { ok: 5, max: 9 },
@@ -16,7 +15,6 @@ export const defaultEngineConfig: EngineConfig = {
     run: {
       id: 'run',
       name: 'Corrida',
-      emoji: '🏃',
       thermal: { idealMin: 12, idealMax: 21, tolMin: 3, tolMax: 29 },
       wind: { ok: 20, max: 45 },
       uv: { ok: 5, max: 9 },
@@ -26,7 +24,6 @@ export const defaultEngineConfig: EngineConfig = {
     cycle: {
       id: 'cycle',
       name: 'Ciclismo',
-      emoji: '🚴',
       thermal: { idealMin: 15, idealMax: 25, tolMin: 6, tolMax: 32 },
       wind: { ok: 15, max: 35 },
       uv: { ok: 5, max: 9 },
@@ -36,7 +33,6 @@ export const defaultEngineConfig: EngineConfig = {
     beach: {
       id: 'beach',
       name: 'Praia',
-      emoji: '🏖',
       thermal: { idealMin: 25, idealMax: 32, tolMin: 20, tolMax: 38 },
       wind: { ok: 15, max: 35 },
       uv: { ok: 6, max: 10 },
@@ -46,7 +42,6 @@ export const defaultEngineConfig: EngineConfig = {
     picnic: {
       id: 'picnic',
       name: 'Piquenique',
-      emoji: '🧺',
       thermal: { idealMin: 19, idealMax: 27, tolMin: 12, tolMax: 33 },
       wind: { ok: 15, max: 40 },
       uv: { ok: 5, max: 9 },
