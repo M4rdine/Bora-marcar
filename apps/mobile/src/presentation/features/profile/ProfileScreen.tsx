@@ -11,6 +11,7 @@ import { useProgress } from '../../queries/useProgress';
 import { AppText, SectionHeader, Sky, tokens, useScreenPaddingBottom } from '../../ui';
 
 import { BadgeGrid } from './components/BadgeGrid';
+import { DevReset } from './components/DevReset';
 import { HistoryList } from './components/HistoryList';
 import { LevelCard } from './components/LevelCard';
 import { MonthCalendar } from './components/MonthCalendar';
@@ -75,6 +76,7 @@ function ProfileContent({ progress, today, config }: ContentProps) {
       <BadgeGrid badges={progress.badges} />
       <SectionHeader title={t.profile.history} />
       <HistoryList records={progress.records} config={config} />
+      <DevReset />
     </>
   );
 }

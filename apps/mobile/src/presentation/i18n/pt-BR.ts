@@ -95,6 +95,15 @@ export const t = {
     alreadyConfirmed: 'Esse plano já foi confirmado.',
     env: 'Configuração do app inválida: modo bff sem as URLs do servidor.',
   } satisfies Record<ProviderErrorCode | LocationError['code'] | UseCaseErrorCode | 'env', string>,
+  dev: {
+    label: 'Só em desenvolvimento',
+    reset: 'Recomeçar do zero',
+    resetTitle: 'Recomeçar do zero?',
+    resetBody:
+      'Apaga cidade, atividade, favoritos, histórico, XP e conquistas deste aparelho. O app volta ao primeiro acesso.',
+    resetConfirm: 'Apagar tudo',
+    cancel: 'Cancelar',
+  },
   unexpected: {
     title: 'Algo deu errado',
     body: 'Feche e abra o app de novo. Se continuar, avise a gente.',
