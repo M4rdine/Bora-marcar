@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 import { tokens } from '../tokens';
@@ -58,7 +59,7 @@ function Shape({ shape, color }: { readonly shape: IconShape; readonly color: st
  * Um ícone do conjunto do app. O tamanho escala a grade de 24 inteira, então o traço engrossa
  * junto e o desenho não fica fino demais em 32 nem grosso demais em 16.
  */
-export function Icon({ name, size = 20, color = tokens.color.text, label }: Props) {
+function IconView({ name, size = 20, color = tokens.color.text, label }: Props) {
   const shapes = ICON_SHAPES[name];
   return (
     <Svg
@@ -78,3 +79,6 @@ export function Icon({ name, size = 20, color = tokens.color.text, label }: Prop
     </Svg>
   );
 }
+
+/** O desenho só depende de nome, tamanho e cor, então memoizar é sempre correto aqui. */
+export const Icon = memo(IconView);

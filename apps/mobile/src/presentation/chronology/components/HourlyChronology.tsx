@@ -1,11 +1,11 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { ActivityProfile } from '@/domain';
 
 import { t } from '../../i18n/pt-BR';
 import { AppText, SectionHeader, Surface, tokens } from '../../ui';
-import { bestOfSequence, type TimelineHour } from '../hourlySequence';
+import { bestHoursOf, type TimelineHour } from '../hourlySequence';
 
 import { HourDetail } from './HourDetail';
 import { HourRow } from './HourRow';
@@ -45,7 +45,10 @@ export function HourlyChronology({
   dayLabelFor = defaultDayLabel,
 }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const best = bestOfSequence(sequence);
+  const toggle = useCallback((key: string) => {
+    setSelectedKey((current) => (current === key ? null : key));
+  }, []);
+  const best = bestHoursOf(sequence);
 
   if (sequence.length === 0) return null;
 
@@ -72,10 +75,11 @@ export function HourlyChronology({
             ) : null}
             <HourRow
               item={item}
+              itemKey={key}
               dayLabel={dayLabelFor(item.dayOffset)}
               selected={selected}
-              isBest={best !== null && keyOf(best) === key}
-              onPress={() => setSelectedKey(selected ? null : key)}
+              isBest={best.has(key)}
+              onPress={toggle}
             />
             {selected ? (
               <HourDetail

@@ -24,8 +24,10 @@ export const tokens = {
     goldBorder: 'rgba(255,214,107,0.5)',
     danger: '#FF9B8A',
     dangerInk: '#5A1A0F',
-    score: { great: '#8FF0B6', good: '#8FF0B6', fair: '#FFD66B', poor: '#FF9B8A' },
-    scoreInk: { great: '#0A4A2A', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
+    // Quatro notas, quatro cores. `great` e `good` eram o MESMO verde, então "Ótimo · 100" e
+    // "Bom · 72" saíam como pílulas idênticas e a escala de 0 a 100 não significava nada.
+    score: { great: '#4FDF95', good: '#9BD3A8', fair: '#FFD66B', poor: '#FF9B8A' },
+    scoreInk: { great: '#06331C', good: '#0A4A2A', fair: '#5A3F00', poor: '#5A1A0F' },
     // Encaixe dentro de uma superfície (trilhos, medalhas): mais fundo que `surface`.
     shade: 'rgba(0,0,0,0.30)',
     shadow: '#000000',

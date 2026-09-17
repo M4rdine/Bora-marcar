@@ -53,3 +53,20 @@ export function bestOfSequence(sequence: readonly TimelineHour[]): TimelineHour 
     null,
   );
 }
+
+/**
+ * TODAS as horas empatadas na melhor nota, e não só a primeira delas.
+ *
+ * Marcar apenas a primeira era desonesto: num dia em que oito horas empatam em 100, dizer que a
+ * melhor é a das 7h esconde que qualquer uma das oito serve. Marcar as oito conta a verdade, e a
+ * verdade aqui é uma informação útil — o dia inteiro está bom, escolha pela sua agenda.
+ */
+export function bestHoursOf(sequence: readonly TimelineHour[]): ReadonlySet<string> {
+  const best = bestOfSequence(sequence);
+  if (best === null) return new Set();
+  return new Set(
+    sequence
+      .filter((item) => item.hour.score === best.hour.score)
+      .map((item) => item.hour.hour.time),
+  );
+}

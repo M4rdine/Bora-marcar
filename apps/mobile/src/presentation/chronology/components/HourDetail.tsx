@@ -6,9 +6,12 @@ import { t } from '../../i18n/pt-BR';
 import { AppText, Button, tokens, type ScoreTone } from '../../ui';
 import { factorBreakdown, limitingFactor, type FactorRow } from '../factorBreakdown';
 
-/** Abaixo disto o fator não é culpado de nada: a hora é boa e dizer o contrário confunde. */
+/** Abaixo disto o fator não atrapalha de verdade e não merece uma linha na explicação. */
+const MIN_WORTH_SHOWING = 0.04;
+/** Abaixo disto ninguém é culpado: a hora é boa e dizer o contrário confunde. */
 const MIN_LIMITING_IMPACT = 0.08;
 const PERCENT = 100;
+const MAX_ROWS = 3;
 
 const TONE_BY_COMFORT: readonly { readonly min: number; readonly tone: ScoreTone }[] = [
   { min: 0.8, tone: 'great' },
@@ -16,15 +19,28 @@ const TONE_BY_COMFORT: readonly { readonly min: number; readonly tone: ScoreTone
   { min: 0.4, tone: 'fair' },
 ];
 
-function toneFor(comfort: number): ScoreTone {
-  return TONE_BY_COMFORT.find((step) => comfort >= step.min)?.tone ?? 'poor';
-}
+const toneFor = (comfort: number): ScoreTone =>
+  TONE_BY_COMFORT.find((step) => comfort >= step.min)?.tone ?? 'poor';
 
-function FactorLine({ row }: { readonly row: FactorRow }) {
+/**
+ * Uma linha por fator que de fato derruba a nota.
+ *
+ * A versão anterior desenhava as cinco, com largura igual ao conforto: numa hora boa todas as
+ * barras ficavam cheias e da mesma cor, e "Sol · peso 0%" recebia barra idêntica a "Temperatura ·
+ * peso 45%". Aqui as variáveis estão invertidas — o PESO dimensiona a linha, porque é ele que diz
+ * o quanto o fator importa nesta atividade, e o CONFORTO dá a cor, porque é ele que diz como o
+ * fator está agora.
+ */
+function FactorLine({ row, maxWeight }: { readonly row: FactorRow; readonly maxWeight: number }) {
   const name = t.chronology.factors[row.id];
-  const pct = Math.round(row.comfort * PERCENT);
+  const comfortPct = Math.round(row.comfort * PERCENT);
+  const widthPct = Math.max(12, (row.weight / maxWeight) * PERCENT);
   return (
-    <View accessible accessibilityLabel={t.chronology.comfortAria(name, pct)} style={styles.factor}>
+    <View
+      accessible
+      accessibilityLabel={t.chronology.comfortAria(name, comfortPct)}
+      style={styles.factor}
+    >
       <AppText variant="small" style={styles.factorName}>
         {name}
       </AppText>
@@ -32,13 +48,10 @@ function FactorLine({ row }: { readonly row: FactorRow }) {
         <View
           style={[
             styles.fill,
-            { width: `${pct}%`, backgroundColor: tokens.color.score[toneFor(row.comfort)] },
+            { width: `${widthPct}%`, backgroundColor: tokens.color.score[toneFor(row.comfort)] },
           ]}
         />
       </View>
-      <AppText variant="micro" tone="muted" style={styles.weight}>
-        {t.chronology.factorWeight(Math.round(row.weight * PERCENT))}
-      </AppText>
     </View>
   );
 }
@@ -50,28 +63,36 @@ type Props = {
 };
 
 /**
- * O motor sempre soube por que uma hora é boa ou ruim; esta é a primeira tela que conta. Os
- * fatores vêm ordenados pelo que mais derruba a nota, então a primeira linha é a explicação.
+ * O motor sempre soube por que uma hora é boa ou ruim; esta é a tela que conta. Quando nada
+ * atrapalha, a resposta é uma frase — um gráfico sem variação não explica nada e ainda parece
+ * componente quebrado.
  */
 export function HourDetail({ hour, profile, onPlan }: Props) {
   const rows = factorBreakdown(hour, profile);
   const limiting = limitingFactor(rows, MIN_LIMITING_IMPACT);
+  const shown = rows.filter((row) => row.impact >= MIN_WORTH_SHOWING).slice(0, MAX_ROWS);
+  const maxWeight = Math.max(...shown.map((row) => row.weight), Number.EPSILON);
+
   return (
     <View style={styles.container}>
       <AppText variant="kicker">{t.chronology.whyTitle}</AppText>
-      {rows.map((row) => (
-        <FactorLine key={row.id} row={row} />
-      ))}
-      <AppText variant="small" tone="muted">
+
+      <AppText variant="small">
         {limiting
-          ? t.chronology.limiting(t.chronology.factors[limiting.id])
+          ? t.chronology.limitingIn(t.chronology.factors[limiting.id], profile.name)
           : t.chronology.nothingLimiting}
       </AppText>
+
+      {shown.map((row) => (
+        <FactorLine key={row.id} row={row} maxWeight={maxWeight} />
+      ))}
+
       {hour.veto ? (
         <AppText variant="small" style={styles.veto}>
           {t.chronology.vetoed(t.reasons[hour.veto])}
         </AppText>
       ) : null}
+
       {onPlan ? (
         <Button label={t.home.plan(profile.name, hour.hour.hour)} onPress={onPlan} />
       ) : null}
@@ -80,8 +101,7 @@ export function HourDetail({ hour, profile, onPlan }: Props) {
 }
 
 const TRACK_HEIGHT = 6;
-const FACTOR_NAME_WIDTH = 92;
-const WEIGHT_WIDTH = 64;
+const FACTOR_NAME_WIDTH = 96;
 
 const styles = StyleSheet.create({
   container: {
@@ -100,6 +120,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: { height: TRACK_HEIGHT, borderRadius: tokens.radius.pill },
-  weight: { width: WEIGHT_WIDTH, textAlign: 'right' },
   veto: { color: tokens.color.danger },
 });

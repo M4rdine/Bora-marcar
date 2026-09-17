@@ -202,8 +202,10 @@ export const t = {
       uv: 'UV',
       sun: 'Sol',
     } satisfies Record<FactorId, string>,
-    factorWeight: (pct: number) => `peso ${pct}%`,
-    limiting: (factor: string) => `${factor} é o que mais derruba esta hora.`,
+    // Linguagem no lugar de "peso 45%": o número pertence ao modelo de pontuação, não a alguém
+    // decidindo se vai correr.
+    limitingIn: (factor: string, activity: string) =>
+      `Numa ${activity.toLowerCase()}, ${factor.toLowerCase()} é o que mais pesa nesta hora.`,
     nothingLimiting: 'Nenhum fator atrapalha esta hora.',
     vetoed: (reason: string) => `Nota limitada por ${reason}.`,
     comfortAria: (factor: string, pct: number) => `${factor}: ${pct}% de conforto`,

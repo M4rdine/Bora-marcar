@@ -1,7 +1,12 @@
 import { defaultEngineConfig as cfg, recommendDay, type LocalDateTime } from '@/domain';
 import { makeForecast } from '@/domain/recommendation/testing/fixtures';
 
-import { bestOfSequence, buildDaySequence, buildHourlySequence } from './hourlySequence';
+import {
+  bestHoursOf,
+  bestOfSequence,
+  buildDaySequence,
+  buildHourlySequence,
+} from './hourlySequence';
 
 const DATES = ['2026-09-13', '2026-09-14'];
 const forecast = makeForecast(DATES);
@@ -78,5 +83,33 @@ describe('bestOfSequence', () => {
 
   it('devolve nulo para cronologia vazia', () => {
     expect(bestOfSequence([])).toBeNull();
+  });
+});
+
+describe('bestHoursOf', () => {
+  const seq = buildHourlySequence({
+    today: dayAt('2026-09-13'),
+    tomorrow: dayAt('2026-09-14'),
+    now: at(0),
+  });
+
+  it('marca TODAS as horas empatadas na melhor nota, não só a primeira', () => {
+    const best = bestHoursOf(seq);
+    const topScore = bestOfSequence(seq)?.hour.score ?? 0;
+    const tied = seq.filter((i) => i.hour.score === topScore);
+    expect(best.size).toBe(tied.length);
+    for (const item of tied) expect(best.has(item.hour.hour.time)).toBe(true);
+  });
+
+  it('nenhuma hora abaixo da melhor nota entra', () => {
+    const best = bestHoursOf(seq);
+    const topScore = bestOfSequence(seq)?.hour.score ?? 0;
+    for (const item of seq) {
+      if (item.hour.score < topScore) expect(best.has(item.hour.hour.time)).toBe(false);
+    }
+  });
+
+  it('cronologia vazia não marca nada', () => {
+    expect(bestHoursOf([]).size).toBe(0);
   });
 });

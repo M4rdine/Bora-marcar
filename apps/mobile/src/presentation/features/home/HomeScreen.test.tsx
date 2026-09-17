@@ -159,15 +159,40 @@ describe('HomeScreen', () => {
     expect(screen.queryByText('Por que esta nota')).toBeNull();
     fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
     await screen.findByText('Por que esta nota');
-    // os cinco fatores do motor, cada um com o peso da atividade escolhida.
-    expect(screen.getByLabelText(/^Temperatura: \d+% de conforto$/)).toBeTruthy();
-    expect(screen.getByLabelText(/^Chuva: \d+% de conforto$/)).toBeTruthy();
-    expect(screen.getByLabelText(/^Vento: \d+% de conforto$/)).toBeTruthy();
-    expect(screen.getByLabelText(/^UV: \d+% de conforto$/)).toBeTruthy();
-    expect(screen.getByLabelText(/^Sol: \d+% de conforto$/)).toBeTruthy();
+    // A fixture é uma hora perfeita, então nada atrapalha e a resposta é uma frase. Cinco barras
+    // cheias e iguais não explicariam nada e ainda pareceriam componente quebrado.
+    expect(screen.getByText('Nenhum fator atrapalha esta hora.')).toBeTruthy();
+    expect(screen.queryByLabelText(/de conforto$/)).toBeNull();
     // tocar de novo fecha
     fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
     expect(screen.queryByText('Por que esta nota')).toBeNull();
+  });
+
+  it('numa hora ruim, o detalhe nomeia o culpado e desenha só os fatores que pesam', async () => {
+    usePreferences.setState({ city: saoPaulo, activity: 'run' });
+    renderWithProviders(<HomeScreen />, {
+      services: fakeServices({
+        // chuva alta e calor: a nota cai e passa a haver o que explicar.
+        forecast: fakeForecast(
+          ok(
+            makeForecast(DATES, () => ({
+              precipitationProbability: 85,
+              apparentTemperature: 34,
+            })),
+          ),
+        ),
+      }),
+    });
+    await screen.findByText('Suas próximas horas');
+    fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
+    await screen.findByText('Por que esta nota');
+    // a frase nomeia o fator na linguagem da atividade, sem expor o peso interno do motor.
+    expect(screen.getByText(/^Numa corrida, .+ é o que mais pesa nesta hora\.$/)).toBeTruthy();
+    expect(screen.queryByText(/peso \d+%/)).toBeNull();
+    // e há barras, mas no máximo três: a explicação é curta por desenho.
+    const bars = screen.queryAllByLabelText(/de conforto$/);
+    expect(bars.length).toBeGreaterThan(0);
+    expect(bars.length).toBeLessThanOrEqual(3);
   });
 
   it('planeja numa hora escolhida na cronologia, não na que o motor recomendou', async () => {
