@@ -7,6 +7,7 @@ import { configureNotificationHandler } from '@/infrastructure/notifications/exp
 import { AppErrorBoundary, ErrorScreen } from '@/presentation/AppErrorBoundary';
 import { AppProviders } from '@/presentation/AppProviders';
 import { t } from '@/presentation/i18n/pt-BR';
+import { useAppFonts } from '@/presentation/ui';
 
 configureNotificationHandler();
 
@@ -25,9 +26,13 @@ const initServices = (): ReturnType<typeof createServices> | null => {
 
 export default function RootLayout() {
   const [services, setServices] = useState(initServices);
+  const fontsLoaded = useAppFonts();
   if (services === null) {
     return <ErrorScreen message={t.errors.env} onRetry={() => setServices(initServices())} />;
   }
+  // Segurar o primeiro quadro até a fonte chegar evita o salto de tipo do sistema para a do app,
+  // que é justamente o tipo de costura que faz um app parecer montado.
+  if (!fontsLoaded) return null;
   return (
     <AppProviders services={services}>
       <AppErrorBoundary>

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
 import { tokens } from './tokens';
+import { fontFamily, type FontRole, type FontWeight } from './typography';
 
 type Variant = 'display' | 'xp' | 'title' | 'subtitle' | 'body' | 'small' | 'micro' | 'kicker';
 type Tone = 'default' | 'muted' | 'ink' | 'mint';
@@ -8,7 +9,19 @@ type Props = TextProps & {
   readonly variant?: Variant;
   readonly tone?: Tone;
   readonly tabular?: boolean;
-  readonly weight?: '400' | '600' | '700' | '800' | '900';
+  readonly weight?: FontWeight;
+};
+
+/** Papel e peso padrão de cada variante. O papel é o que decide qual das duas famílias fala. */
+const VARIANT_FONT: Record<Variant, { readonly role: FontRole; readonly weight: FontWeight }> = {
+  display: { role: 'display', weight: '800' },
+  xp: { role: 'display', weight: '800' },
+  title: { role: 'display', weight: '700' },
+  subtitle: { role: 'text', weight: '700' },
+  body: { role: 'text', weight: '400' },
+  small: { role: 'text', weight: '400' },
+  micro: { role: 'text', weight: '500' },
+  kicker: { role: 'text', weight: '700' },
 };
 
 export function AppText({
@@ -19,6 +32,7 @@ export function AppText({
   style,
   ...rest
 }: Props) {
+  const { role, weight: defaultWeight } = VARIANT_FONT[variant];
   return (
     <Text
       {...rest}
@@ -27,7 +41,7 @@ export function AppText({
         styles[variant],
         styles[`tone_${tone}`],
         tabular && styles.tabular,
-        weight && { fontWeight: weight },
+        { fontFamily: fontFamily(role, weight ?? defaultWeight) },
         style,
       ]}
     />
@@ -36,28 +50,33 @@ export function AppText({
 
 type StyleKey = 'base' | Variant | `tone_${Tone}` | 'tabular';
 
+/**
+ * A entrelinha dos dois maiores tamanhos é maior que o corpo de propósito. Quando era igual, os
+ * acentos de "Amanhã" e "Concluído" encostavam no topo da caixa e ficavam cortados.
+ */
+const DISPLAY_LEADING = 1.08;
+
 const styles = StyleSheet.create<Record<StyleKey, TextStyle>>({
   base: { color: tokens.color.text },
   display: {
     fontSize: tokens.font.display,
-    fontWeight: '800',
-    letterSpacing: -2,
-    lineHeight: tokens.font.display,
+    letterSpacing: -1.5,
+    lineHeight: Math.round(tokens.font.display * DISPLAY_LEADING),
   },
   xp: {
     fontSize: tokens.font.xp,
-    fontWeight: '900',
-    letterSpacing: -2.5,
-    lineHeight: tokens.font.xp,
+    letterSpacing: -2,
+    lineHeight: Math.round(tokens.font.xp * DISPLAY_LEADING),
   },
-  title: { fontSize: tokens.font.title, fontWeight: '700' },
-  subtitle: { fontSize: tokens.font.subtitle, fontWeight: '700' },
+  title: { fontSize: tokens.font.title, lineHeight: 26, letterSpacing: -0.3 },
+  subtitle: { fontSize: tokens.font.subtitle, lineHeight: 22 },
   body: { fontSize: tokens.font.body, lineHeight: 20 },
-  small: { fontSize: tokens.font.small, lineHeight: 16 },
+  small: { fontSize: tokens.font.small, lineHeight: 17 },
   micro: { fontSize: tokens.font.micro, lineHeight: 14 },
   kicker: {
-    fontSize: tokens.font.small,
-    letterSpacing: 1.4,
+    fontSize: tokens.font.micro,
+    lineHeight: 14,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
     opacity: 0.85,
   },

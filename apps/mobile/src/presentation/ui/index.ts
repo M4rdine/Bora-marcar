@@ -4,6 +4,8 @@ export * from './useReducedMotion';
 export * from './skyPhase';
 export * from './screenPadding';
 export * from './Sky';
+export * from './typography';
+export * from './useAppFonts';
 export * from './Text';
 export * from './Surface';
 export * from './Button';
