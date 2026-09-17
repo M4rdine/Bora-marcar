@@ -49,7 +49,16 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: tokens.color.tabInactive,
         // Cor sozinha é sinal fraco; o fundo dá o sinal de forma.
         tabBarActiveBackgroundColor: tokens.color.tabActiveBg,
-        tabBarItemStyle: { borderRadius: tokens.radius.inner, margin: tokens.space[1] },
+        // `overflow: 'hidden'` é o que faz o raio valer, e a primeira tentativa não tinha:
+        // o fundo ativo é pintado no botão interno, onde a biblioteca fixa `borderRadius: 0`
+        // para a variante padrão. Meu estilo chega no View de fora — que já tinha o raio e
+        // recortava nada, porque nasce `overflow: 'visible'`. O resultado era um retângulo de
+        // cantos vivos dentro de uma barra arredondada, em toda tela do app.
+        tabBarItemStyle: {
+          borderRadius: tokens.radius.inner,
+          overflow: 'hidden',
+          margin: tokens.space[1],
+        },
         tabBarLabelStyle: {
           fontSize: tokens.font.micro,
           // Sem isto o rótulo cai na fonte do sistema: eram os únicos três textos do app fora

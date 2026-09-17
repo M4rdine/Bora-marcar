@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,6 +27,7 @@ import { deriveHeroState } from './heroState';
 import { deriveStreakRisk } from './streakRisk';
 import { useBadWeatherRecorder } from './useBadWeatherRecorder';
 import { useHeroActions } from './useHeroActions';
+import { useRevealReward } from './useRevealReward';
 import { weekStrip } from './weekStrip';
 
 function OverviewStatus({ overview }: { readonly overview: OverviewState }) {
@@ -84,25 +85,18 @@ function HeroSection({
     unlocked: progress.badges.filter((b) => b.unlocked).length,
     total: progress.badges.length,
   };
-  // A recompensa nasce no fim do cartão do herói, e a barra de abas flutua sobre o fim da tela.
-  // Rolar para o topo resolvia a conquista e criava outro enquadramento ruim: o botão seguinte
-  // ficava 83% coberto pela barra. Aqui o alvo é medido — o fim do herói fica logo acima da
-  // barra —, então a conquista E a próxima ação ficam visíveis. Se o herói não couber inteiro,
-  // é o fim dele que aparece, que é justamente onde moram a conquista e o botão.
-  const justUnlocked = unlockedToday.length > 0 && hero.kind === 'done';
-  const heroBottom = useRef(0);
-  useEffect(() => {
-    if (!justUnlocked) return;
-    const target = Math.max(0, heroBottom.current - visibleHeight + reservedBottom);
-    scrollRef.current?.scrollTo({ y: target, animated: true });
-  }, [justUnlocked, scrollRef, visibleHeight, reservedBottom]);
+  // A recompensa nasce no fim do cartão do herói, e a barra de abas flutua sobre o fim da tela:
+  // sem enquadrar, o botão seguinte fica 83% coberto pela barra. O enquadramento em si mora em
+  // `useRevealReward`, que espera a medida tirada com a conquista já na tela.
+  const reveal = useRevealReward({
+    rewardKey: hero.kind === 'done' && unlockedToday.length > 0 ? unlockedToday[0]!.id : null,
+    scrollRef,
+    visibleHeight,
+    reservedBottom,
+  });
   return (
     <>
-      <View
-        onLayout={(e) => {
-          heroBottom.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height;
-        }}
-      >
+      <View onLayout={reveal.onLayout}>
         <HeroCard
           state={hero}
           config={config}
