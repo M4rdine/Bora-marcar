@@ -21,6 +21,10 @@ type GlyphName = ComponentProps<typeof MaterialCommunityIcons>['name'];
  * `Icon` continua sendo a única porta — nenhuma tela sabe de onde veio o traço.
  */
 const GLYPH_BY_ICON: Partial<Record<IconName, GlyphName>> = {
+  // `today` era um sol com quatro raios E uma nuvem por cima, no mesmo espaço. Ícone composto
+  // não sobrevive a 22 pixels: na barra de abas os raios cruzavam a nuvem e o conjunto virava um
+  // borrão. O da biblioteca é desenhado para esse tamanho.
+  today: 'weather-partly-cloudy',
   walk: 'walk',
   run: 'run-fast',
   cycle: 'bike',
