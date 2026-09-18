@@ -7,12 +7,14 @@ recomendação simples: o melhor horário do dia para uma atividade ao ar livre,
 gamificação de verdade (XP, níveis, streak protegido por mau tempo, badges) para criar o
 hábito.
 
-| Boas-vindas                                                           | Planejar                                                                    | Recibo de XP                                                                        |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| ![Boas-vindas](docs/superpowers/qa/2026-09-15-web-depois/welcome.png) | ![Herói: planejar](docs/superpowers/qa/2026-09-15-web-depois/home-plan.png) | ![Concluído: recibo de XP](docs/superpowers/qa/2026-09-15-web-depois/home-done.png) |
+| Primeiro acesso                                  | Melhor horário de hoje                             | Por que esta nota                                         | Recibo de XP                                 |
+| ------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------- |
+| ![Primeiro acesso](docs/capturas/onboarding.png) | ![Melhor horário](docs/capturas/home-planejar.png) | ![Por que esta nota](docs/capturas/por-que-esta-nota.png) | ![Recibo de XP](docs/capturas/recibo-xp.png) |
 
-Mais capturas (estados "É agora", "Sem janela boa", detalhe do dia, Perfil) em
-`docs/superpowers/qa/2026-09-15-web-depois/`.
+A terceira tela é o coração do produto: a nota de 0 a 100 aberta parcela por parcela — a
+leitura de cada fator na unidade que ela tem no mundo, o critério que o perfil define, o peso,
+e quantos pontos o fator entregou dos que podia, somando até a nota final. Mais capturas em
+[`docs/capturas/`](docs/capturas/).
 
 ## Rodar em 3 comandos
 
@@ -268,8 +270,9 @@ Registradas como ADRs em [`docs/adr/`](docs/adr/README.md):
 - [0007](docs/adr/0007-motor-no-dispositivo.md) Motor no dispositivo, não no servidor.
 - [0008](docs/adr/0008-nginx-existente-em-vez-de-caddy.md) nginx existente em vez de Caddy.
 
-Roteiro completo de apresentação (os dez pontos do spec + dois extras da QA visual) em
-[`docs/apresentacao.md`](docs/apresentacao.md).
+Diagramas Mermaid prontos para slides — caminho do dado, regra de dependência, pipeline da
+nota, a decisão da pressão, gamificação por eventos, ciclo do usuário e entrega — em
+[`docs/diagramas.md`](docs/diagramas.md).
 
 ## O que faria com mais tempo
 
