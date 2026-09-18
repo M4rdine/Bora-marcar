@@ -24,6 +24,7 @@ import { AppText, Sky, tokens } from '../../ui';
 import { DayHeader } from './components/DayHeader';
 import { DayHero } from './components/DayHero';
 import { DayNotFound } from './components/DayNotFound';
+import { SwipeBetweenDays } from './components/SwipeBetweenDays';
 import { dayScreenState } from './dayScreenState';
 import { routeDate } from './routeDate';
 import { useDayActions, type DayActionsResult } from './useDayActions';
@@ -39,14 +40,15 @@ type ContentProps = {
   readonly config: EngineConfig;
   readonly progress: Progress;
   readonly actions: DayActionsResult;
+  readonly dates: readonly string[];
   readonly onBack: () => void;
 };
 
 function DayContent(props: ContentProps) {
-  const { date, today, tomorrow, day, onBack } = props;
+  const { date, today, tomorrow, day, dates, onBack } = props;
   return (
     <>
-      <DayHeader date={date} today={today} tomorrow={tomorrow} onBack={onBack} />
+      <DayHeader date={date} today={today} tomorrow={tomorrow} dates={dates} onBack={onBack} />
       {day === null ? (
         <DayNotFound onBack={onBack} />
       ) : (
@@ -79,6 +81,7 @@ type BodyProps = {
   readonly date: string;
   readonly day: DayRecommendation | null;
   readonly actions: DayActionsResult;
+  readonly dates: readonly string[];
   readonly onBack: () => void;
 };
 
@@ -97,6 +100,7 @@ function DayScreenBody(props: BodyProps) {
     date,
     day,
     actions,
+    dates,
     onBack,
   } = props;
   if (!ready || !city || !snapshot || !config || !progress || !today || isToday) {
@@ -114,6 +118,7 @@ function DayScreenBody(props: BodyProps) {
       config={config}
       progress={progress}
       actions={actions}
+      dates={dates}
       onBack={onBack}
     />
   );
@@ -145,25 +150,35 @@ export function DayScreen() {
     isToday,
   });
 
+  // Os dias que o arrasto alcança são exatamente os que a previsão trouxe.
+  const dates = overview.snapshot?.overview.nextDays.map((d) => d.date) ?? [];
+
   return (
     <Sky phase={phase}>
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.container}>
-          <DayScreenBody
-            ready={ready}
-            city={city}
-            snapshot={overview.snapshot}
-            config={config.data}
-            progress={progress.data}
-            today={today}
-            isToday={isToday}
-            activity={activity}
-            date={date}
-            day={day}
-            actions={actions}
-            onBack={() => router.back()}
-          />
-        </ScrollView>
+        <SwipeBetweenDays
+          date={date}
+          dates={dates}
+          onGo={(next) => router.replace({ pathname: '/day/[date]', params: { date: next } })}
+        >
+          <ScrollView contentContainerStyle={styles.container}>
+            <DayScreenBody
+              ready={ready}
+              city={city}
+              snapshot={overview.snapshot}
+              config={config.data}
+              progress={progress.data}
+              today={today}
+              isToday={isToday}
+              activity={activity}
+              date={date}
+              day={day}
+              actions={actions}
+              dates={dates}
+              onBack={() => router.back()}
+            />
+          </ScrollView>
+        </SwipeBetweenDays>
       </SafeAreaView>
     </Sky>
   );

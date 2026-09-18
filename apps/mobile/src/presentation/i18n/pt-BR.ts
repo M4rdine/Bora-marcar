@@ -315,6 +315,8 @@ export const t = {
     noWindow: 'Sem janela boa',
     back: 'Voltar',
     backGlyph: '‹',
+    position: (atual: number, total: number) =>
+      `Dia ${atual} de ${total}. Arraste para o lado para ver os outros.`,
     planTomorrow: (activity: string, hour: number) => `Planejar ${activity} às ${hour}h`,
     viewOnly: 'Planejamento disponível só para amanhã',
     notFound: 'Dia fora da previsão',

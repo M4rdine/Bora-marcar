@@ -4,14 +4,18 @@ import { formatDayTitle, formatLongDate } from '../../../i18n/dates';
 import { t } from '../../../i18n/pt-BR';
 import { AppText, Icon, tokens } from '../../../ui';
 
+import { DayDots } from './DayDots';
+
 type Props = {
   readonly date: string;
   readonly today: string;
   readonly tomorrow: string;
+  /** Os dias que o arrasto alcança, para o indicador de posição. */
+  readonly dates: readonly string[];
   readonly onBack: () => void;
 };
 
-export function DayHeader({ date, today, tomorrow, onBack }: Props) {
+export function DayHeader({ date, today, tomorrow, dates, onBack }: Props) {
   return (
     <View style={styles.header}>
       <Pressable
@@ -22,12 +26,13 @@ export function DayHeader({ date, today, tomorrow, onBack }: Props) {
       >
         <Icon name="back" size={ICON_SIZE} color={tokens.color.text} />
       </Pressable>
-      <View>
+      <View style={styles.titles}>
         <AppText variant="title">{formatDayTitle(date, today, tomorrow)}</AppText>
         <AppText variant="small" tone="muted">
           {formatLongDate(date)}
         </AppText>
       </View>
+      <DayDots date={date} dates={dates} />
     </View>
   );
 }
@@ -36,6 +41,7 @@ const ICON_SIZE = 22;
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  titles: { flex: 1 },
   // 44pt é o mínimo de alvo de toque da Apple; a caixa visível é menor, a de toque não.
   backButton: {
     minWidth: tokens.size.minTouch,

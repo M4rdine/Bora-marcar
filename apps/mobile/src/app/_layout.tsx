@@ -1,5 +1,7 @@
 import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { createServices } from '@/infrastructure/container';
 import { EnvError, readEnv } from '@/infrastructure/env';
@@ -34,13 +36,21 @@ export default function RootLayout() {
   // que é justamente o tipo de costura que faz um app parecer montado.
   if (!fontsLoaded) return null;
   return (
-    <AppProviders services={services}>
-      <AppErrorBoundary>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="day/[date]" options={{ presentation: 'card' }} />
-        </Stack>
-      </AppErrorBoundary>
-    </AppProviders>
+    // A raiz de gestos é montada aqui de propósito. A pilha de navegação monta uma por dentro,
+    // então o arrasto entre dias funcionaria de qualquer jeito — mas por acidente de implementação
+    // da biblioteca, e só dentro dela. Declarar na raiz torna a dependência visível e vale para
+    // qualquer gesto do app, inclusive fora da pilha.
+    <GestureHandlerRootView style={styles.root}>
+      <AppProviders services={services}>
+        <AppErrorBoundary>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="day/[date]" options={{ presentation: 'card' }} />
+          </Stack>
+        </AppErrorBoundary>
+      </AppProviders>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });
