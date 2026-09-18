@@ -134,7 +134,13 @@ export const t = {
     seeTomorrow: (startHour: number, endHour: number, label: ScoreLabel) =>
       `Amanhã: ${formatHourRange(startHour, endHour)}, ${LABELS[label].toLowerCase()}`,
     planTomorrowShortcut: (startHour: number) => `Planejar amanhã às ${startHour}h`,
-    windowPassed: 'Sua janela de hoje já passou',
+    // "Sua janela" sugeria um compromisso que ninguém marcou: este estado vale também para quem
+    // nunca planejou nada e só chegou tarde no dia. E a frase antiga não dizia QUANDO foram as
+    // boas horas, que é a única informação útil para quem acabou de perdê-las.
+    windowPassed: 'As boas horas de hoje já passaram',
+    bestPastHour: (hora: number, score: number) => `A melhor foi às ${hora}h, com ${score}`,
+    noGoodHourLeft: (atividade: string) =>
+      `Não sobrou hora boa para ${atividade.toLowerCase()} hoje`,
     planExpired: (hour: number) => `O plano das ${hour}h expirou`,
     logNow: 'Registrar atividade',
     now: 'Agora',

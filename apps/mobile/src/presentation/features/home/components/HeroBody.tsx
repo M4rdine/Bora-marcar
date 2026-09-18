@@ -207,6 +207,11 @@ function LogNoPlanBody({ state }: { readonly state: Extract<HeroState, { kind: '
   return (
     <>
       <AppText variant="kicker">{t.home.windowPassed}</AppText>
+      {state.bestPast ? (
+        <AppText variant="subtitle">
+          {t.home.bestPastHour(state.bestPast.hour, state.bestPast.score)}
+        </AppText>
+      ) : null}
       {state.expiredPlan ? (
         <AppText variant="display">
           {t.home.planExpired(state.expiredPlan.window.startHour)}

@@ -1,89 +1,107 @@
 import { Tabs } from 'expo-router';
 import { StyleSheet, View, type ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { t } from '@/presentation/i18n/pt-BR';
-import { fontFamily, Icon, tokens, type IconName } from '@/presentation/ui';
+import { AppText, fontFamily, Icon, tokens, type IconName } from '@/presentation/ui';
 
 type TabIconProps = { readonly color: ColorValue; readonly focused: boolean };
 
 const ICON_SIZE = 22;
-/** Alta o bastante para a pílula respirar em volta do ícone, baixa o bastante para o rótulo
- * caber nos 64 pontos da barra. */
-const PILL_HEIGHT = 30;
 
 /**
- * Ícone vetorial, e não emoji. Emoji ignora `tabBarActiveTintColor` — glifo colorido não responde
- * à cor —, então ativa e inativa só diferiam por opacidade. Com vetor, a cor volta a ser o sinal.
- * A acessibilidade do botão já usa o título da tela, então o desenho é decorativo.
+ * Um item da barra: ícone e rótulo dentro da MESMA pílula.
  *
- * A pílula do estado ativo é desenhada AQUI, e não por `tabBarActiveBackgroundColor`.
+ * O realce do estado ativo é desenhado aqui, e não por `tabBarActiveBackgroundColor`. Aquela
+ * propriedade pinta o botão interno da biblioteca, onde o raio é fixado em zero para a variante
+ * padrão — dava um retângulo de cantos vivos dentro de uma barra arredondada. Recortar pelo View
+ * de fora com `overflow: 'hidden'` resolvia na web e QUEBRAVA no aparelho, onde a caixa do item
+ * tem outra altura: o recorte comia o ícone e o rótulo.
  *
- * Aquela propriedade pinta o botão interno da biblioteca, onde o raio é fixado em zero para a
- * variante padrão — dava um retângulo de cantos vivos dentro de uma barra arredondada. Recortar
- * pelo View de fora com `overflow: 'hidden'` resolvia na web e QUEBRAVA no aparelho: a caixa do
- * item tem outra altura ali, e o recorte comia o ícone e o rótulo.
+ * Por isso o rótulo padrão é desligado (`tabBarShowLabel: false`) e redesenhado junto do ícone: é
+ * a única forma de a pílula envolver os DOIS sem depender de recorte, e sem um botão customizado
+ * que teria de reimplementar o toque e a acessibilidade da biblioteca.
  *
- * Desenhar a própria pílula não depende de recorte nenhum, então não tem como cortar nada.
+ * O conjunto some da leitura de tela porque o botão já anuncia o título da aba; sem isso, o leitor
+ * repetiria "Hoje, Hoje".
  */
-function tabIcon(name: IconName) {
-  function TabIcon({ color, focused }: TabIconProps) {
+function tabItem(name: IconName, label: string) {
+  function TabItem({ color, focused }: TabIconProps) {
+    const tint = focused ? tokens.color.text : String(color);
     return (
-      <View style={[styles.pill, focused ? styles.pillActive : null]}>
-        <Icon name={name} size={ICON_SIZE} color={focused ? tokens.color.text : String(color)} />
+      <View
+        style={[styles.pill, focused ? styles.pillActive : null]}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Icon name={name} size={ICON_SIZE} color={tint} />
+        <AppText variant="micro" style={[styles.label, { color: tint }]}>
+          {label}
+        </AppText>
       </View>
     );
   }
-  TabIcon.displayName = `TabIcon(${name})`;
-  return TabIcon;
+  TabItem.displayName = `TabItem(${name})`;
+  return TabItem;
 }
 
-const styles = StyleSheet.create({
-  pill: {
-    height: PILL_HEIGHT,
-    paddingHorizontal: tokens.space[4],
-    borderRadius: tokens.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillActive: { backgroundColor: tokens.color.tabActiveBg },
-});
-
-const HomeIcon = tabIcon('today');
-const CitiesIcon = tabIcon('search');
-const ProfileIcon = tabIcon('medal');
+const HomeItem = tabItem('today', t.tabs.home);
+const CitiesItem = tabItem('search', t.tabs.cities);
+const ProfileItem = tabItem('medal', t.tabs.profile);
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        // A barra encosta na borda de baixo e se estende por baixo do indicador de home. Antes ela
+        // flutuava a doze pontos do fundo, e essa faixa deixava o céu aparecer entre a barra e a
+        // borda da tela — lia como sobra, não como respiro.
         tabBarStyle: {
           position: 'absolute',
-          left: tokens.space[3],
-          right: tokens.space[3],
-          bottom: tokens.space[3],
-          height: tokens.size.tabBar,
-          borderRadius: tokens.radius.tabBar,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: tokens.size.tabBar + insets.bottom,
+          paddingBottom: insets.bottom,
+          borderTopLeftRadius: tokens.radius.tabBar,
+          borderTopRightRadius: tokens.radius.tabBar,
           borderTopWidth: 0,
           backgroundColor: tokens.color.tabBar,
         },
+        tabBarShowLabel: false,
+        // O item da biblioteca alinha o conteúdo ao TOPO (`justifyContent: 'flex-start'` com cinco
+        // de padding), e a pílula saía quatro pontos acima da barra com vinte e dois sobrando
+        // embaixo. Esticar o slot do ícone e centralizar dentro dele tira a posição das mãos da
+        // biblioteca — o realce passa a ficar no meio da barra, qualquer que seja a altura dela.
+        tabBarIconStyle: { flex: 1, justifyContent: 'center', alignItems: 'center' },
         tabBarActiveTintColor: tokens.color.text,
         // A inativa era `textMuted` (branco a 82%), 18% de alfa de diferença da ativa: a navegação
         // primária não informava onde você estava. A 50% a distinção fica 3,5x maior, e o rótulo
         // ainda passa em AA sobre a barra.
         tabBarInactiveTintColor: tokens.color.tabInactive,
-        tabBarLabelStyle: {
-          fontSize: tokens.font.micro,
-          // Sem isto o rótulo cai na fonte do sistema: eram os únicos três textos do app fora
-          // das famílias carregadas.
-          fontFamily: fontFamily('text', '600'),
-        },
         sceneStyle: { backgroundColor: tokens.gradients.dusk[3] },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t.tabs.home, tabBarIcon: HomeIcon }} />
-      <Tabs.Screen name="cities" options={{ title: t.tabs.cities, tabBarIcon: CitiesIcon }} />
-      <Tabs.Screen name="profile" options={{ title: t.tabs.profile, tabBarIcon: ProfileIcon }} />
+      <Tabs.Screen name="index" options={{ title: t.tabs.home, tabBarIcon: HomeItem }} />
+      <Tabs.Screen name="cities" options={{ title: t.tabs.cities, tabBarIcon: CitiesItem }} />
+      <Tabs.Screen name="profile" options={{ title: t.tabs.profile, tabBarIcon: ProfileItem }} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  pill: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[1],
+    borderRadius: tokens.radius.pill,
+  },
+  pillActive: { backgroundColor: tokens.color.tabActiveBg },
+  // Sem isto o rótulo cai na fonte do sistema: eram os únicos três textos do app fora das
+  // famílias carregadas.
+  label: { fontFamily: fontFamily('text', '600') },
+});

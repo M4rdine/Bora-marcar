@@ -185,9 +185,13 @@ function DefaultActions({
         </>
       );
     case 'logNoPlan':
+      // Quem descobre que perdeu a janela de hoje quer duas coisas: registrar se saiu assim
+      // mesmo, e marcar amanhã. O estado só oferecia a primeira, e a segunda é justamente a
+      // reação mais provável — "sem janela boa" já oferecia, este não.
       return (
         <>
           <Button label={t.home.logNow} onPress={onOpenPicker} disabled={busy} />
+          <PlanTomorrowButton {...tomorrowProps} />
           {state.expiredPlan ? (
             <Button
               label={t.home.cancelPlan}

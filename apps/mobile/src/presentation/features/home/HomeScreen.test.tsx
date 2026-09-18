@@ -333,7 +333,10 @@ describe('HomeScreen', () => {
         clock: fixedClock(Date.UTC(2026, 8, 13, 23, 0, 0)),
       }),
     });
-    await screen.findByText('Sua janela de hoje já passou');
+    await screen.findByText('As boas horas de hoje já passaram');
+    // A frase antiga dizia "sua janela", sugerindo um compromisso que ninguém marcou. E o cartão
+    // agora nomeia a melhor hora perdida, que é o que responde "então quando era boa?".
+    expect(screen.getByText(/^A melhor foi às \d+h, com \d+$/)).toBeTruthy();
     fireEvent.press(screen.getByText('Registrar atividade'));
     // relógio falso: 20:00 em São Paulo → o seletor abre com a hora atual já em destaque.
     fireEvent.press(await screen.findByText('Registrar às 20h'));
@@ -353,7 +356,7 @@ describe('HomeScreen', () => {
         clock: fixedClock(Date.UTC(2026, 8, 13, 23, 0, 0)),
       }),
     });
-    await screen.findByText('Sua janela de hoje já passou');
+    await screen.findByText('As boas horas de hoje já passaram');
     fireEvent.press(screen.getByText('Registrar atividade'));
     // "7h" também aparece nas horas de amanhã da cronologia; o seletor mora no herói.
     const logHero = screen.getByLabelText('hero');
