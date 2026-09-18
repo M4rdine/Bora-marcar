@@ -190,13 +190,36 @@ export const t = {
       uv: 'UV',
       sun: 'Sol',
     } satisfies Record<FactorId, string>,
-    // Linguagem no lugar de "peso 45%": o número pertence ao modelo de pontuação, não a alguém
-    // decidindo se vai correr.
     limitingIn: (factor: string, activity: string) =>
       `Numa ${activity.toLowerCase()}, ${factor.toLowerCase()} é o que mais pesa nesta hora.`,
     nothingLimiting: 'Nenhum fator atrapalha esta hora.',
     vetoed: (reason: string) => `Nota limitada por ${reason}.`,
     comfortAria: (factor: string, pct: number) => `${factor}: ${pct}% de conforto`,
+    // A prestação de contas da nota. Cada leitura aparece com a unidade que ela tem no mundo,
+    // não normalizada: "18°" e "11 km/h" dizem algo a quem vai sair; "conforto 0,92" não diz.
+    howItAdds: (activity: string) => `Como a nota de ${activity.toLowerCase()} é montada`,
+    readings: {
+      thermal: (c: number) => `${Math.round(c)}° de sensação`,
+      rain: (pct: number, mm: number) =>
+        mm > 0 ? `${pct}% de chance · ${mm.toFixed(1)} mm` : `${pct}% de chance`,
+      wind: (kmh: number, gusts: number) =>
+        gusts > kmh
+          ? `${Math.round(kmh)} km/h · rajada ${Math.round(gusts)}`
+          : `${Math.round(kmh)} km/h`,
+      uv: (index: number) => `índice ${index.toFixed(1).replace(/\.0$/, '')}`,
+      sun: (cloudPct: number) => `${Math.round(cloudPct)}% de nuvens`,
+    },
+    points: (got: number, max: number) => `${got} de ${max}`,
+    notCounted: (activity: string) => `não conta para ${activity.toLowerCase()}`,
+    pointsUnit: 'pts',
+    weightOf: (pct: number) => `vale até ${pct}% da nota`,
+    subtotal: 'Soma dos fatores',
+    finalScore: 'Nota final',
+    nightCut: (pct: number) => `Fora da luz do dia, esta atividade rende ${pct}%`,
+    fogCut: (pct: number) => `Nevoeiro no ciclismo: ${pct}% do que somou`,
+    vetoCut: (reason: string, cap: number) => `${reason} limita a nota a ${cap}`,
+    factorAria: (factor: string, reading: string, got: number, max: number) =>
+      `${factor}, ${reading}, ${got} de ${max} pontos`,
     // O dia entra no rótulo porque a cronologia atravessa a meia-noite: sem ele, hoje às 13h e
     // amanhã às 13h são lidos igual por um leitor de tela.
     hourAria: (day: string, hour: number, score: number, label: string, temperature: number) =>

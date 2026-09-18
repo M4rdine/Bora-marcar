@@ -13,7 +13,9 @@ const RAIN_PROB_VETO = 80;
 const RAIN_MM_VETO = 1;
 const FOG_CYCLING_FACTOR = 0.6;
 
-const CAPS = { storm: 0, rain: 20, snow: 20, thermal: 30 } as const;
+/** Teto que cada veto impõe à nota. Exportado para a explicação da nota poder citá-lo. */
+export const VETO_CAPS = { storm: 0, rain: 20, snow: 20, thermal: 30 } as const;
+const CAPS = VETO_CAPS;
 
 function collectVetoes(h: HourlyConditions, p: ActivityProfile): readonly Veto[] {
   const outOfTolerance =

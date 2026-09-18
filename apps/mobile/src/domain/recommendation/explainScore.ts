@@ -1,0 +1,110 @@
+import { FACTOR_IDS, type ActivityProfile, type FactorId } from '../activities/types';
+import type { HourlyConditions } from '../forecast/types';
+
+import { comfortsFor } from './scoreHour';
+import { applyVetoes, VETO_CAPS, type VetoId } from './vetoes';
+
+/**
+ * A conta de um fator dentro da nota da hora.
+ *
+ * `reading` é o que o céu mediu; `comfort` é o quanto essa medida serve PARA ESTA ATIVIDADE;
+ * `weight` é o quanto ela importa no perfil; e `points` é o que sobra dos `maxPoints` possíveis.
+ * Vento a 11 km/h é confortável para uma caminhada e caro para uma pedalada — a mesma leitura,
+ * dois pesos, duas contas.
+ */
+export type FactorAccount = {
+  readonly id: FactorId;
+  readonly reading: number;
+  /** Segunda leitura do mesmo fator quando ela existe: milímetros de chuva, rajada de vento. */
+  readonly secondary: number | null;
+  readonly comfort: number;
+  readonly weight: number;
+  /** Pontos conquistados: peso × conforto × 100. */
+  readonly points: number;
+  /** Pontos que o fator valeria com conforto perfeito: peso × 100. */
+  readonly maxPoints: number;
+};
+
+/** Um corte aplicado depois da soma dos fatores. */
+export type ScoreAdjustment =
+  | { readonly kind: 'night'; readonly factor: number }
+  | { readonly kind: 'fog'; readonly factor: number }
+  | { readonly kind: 'veto'; readonly id: VetoId; readonly cap: number };
+
+/**
+ * A nota de uma hora, aberta parcela por parcela.
+ *
+ * Existe porque um motor que pontua precisa PRESTAR CONTAS. A tela dizia "nenhum fator atrapalha
+ * esta hora" e mais nada — o que é uma não-resposta: não diz o que foi medido, nem quanto cada
+ * coisa pesou, nem como se chegou ao número. Aqui a conta aparece inteira e fecha: `total` é o
+ * mesmo valor que `scoreHour` devolve, e há teste garantindo isso para todo perfil e toda hora.
+ */
+export type ScoreExplanation = {
+  /** Os cinco fatores, do que mais vale nesta atividade para o que menos vale. */
+  readonly factors: readonly FactorAccount[];
+  /** Soma dos pontos dos fatores, antes de qualquer corte. */
+  readonly subtotal: number;
+  /** Os cortes aplicados depois da soma, na ordem em que o motor os aplica. */
+  readonly adjustments: readonly ScoreAdjustment[];
+  /** A nota final. Igual à de `scoreHour` — é o que faz a explicação ser verdadeira. */
+  readonly total: number;
+};
+
+const PERCENT = 100;
+/** Códigos WMO de nevoeiro, e o desconto que ele impõe ao ciclismo. Espelha `vetoes.ts`. */
+const FOG_CODES = new Set([45, 48]);
+const FOG_CYCLING_FACTOR = 0.6;
+
+function readingsOf(
+  h: HourlyConditions,
+): Readonly<Record<FactorId, { readonly reading: number; readonly secondary: number | null }>> {
+  return {
+    thermal: { reading: h.apparentTemperature, secondary: null },
+    rain: { reading: h.precipitationProbability, secondary: h.precipitationMm },
+    wind: { reading: h.windSpeedKmh, secondary: h.windGustsKmh },
+    uv: { reading: h.uvIndex, secondary: null },
+    sun: { reading: h.cloudCoverPct, secondary: null },
+  };
+}
+
+export function explainScore(h: HourlyConditions, profile: ActivityProfile): ScoreExplanation {
+  const comforts = comfortsFor(h, profile);
+  const readings = readingsOf(h);
+
+  const factors = FACTOR_IDS.map((id): FactorAccount => {
+    const weight = profile.weights[id];
+    const comfort = comforts[id];
+    return {
+      id,
+      ...readings[id],
+      comfort,
+      weight,
+      points: weight * comfort * PERCENT,
+      maxPoints: weight * PERCENT,
+    };
+  })
+    .slice()
+    .sort((a, b) => b.maxPoints - a.maxPoints);
+
+  // A soma é escrita EXATAMENTE como em `scoreHour` — `100 × Σ(peso × conforto)`, e não
+  // `Σ(peso × conforto × 100)`. As duas são a mesma conta na álgebra e não em ponto flutuante:
+  // com a segunda, uma hora em 50,5 arredondava para 51 aqui e 50 lá, e a explicação passava a
+  // afirmar um número que o motor não deu.
+  const weighted = FACTOR_IDS.reduce((acc, id) => acc + profile.weights[id] * comforts[id], 0);
+  const subtotal = PERCENT * weighted;
+
+  // A ordem aqui não é estética: é a mesma de `scoreHour`, porque cada corte incide sobre o
+  // resultado do anterior. Trocar a ordem mudaria o número e a explicação deixaria de fechar.
+  const light = h.isDay ? 1 : profile.nightFactor;
+  const base = Math.round(PERCENT * weighted * light);
+  const fogged = profile.id === 'cycle' && FOG_CODES.has(h.weatherCode);
+  const { score, veto } = applyVetoes(h, profile, base);
+
+  const adjustments: readonly ScoreAdjustment[] = [
+    ...(h.isDay ? [] : [{ kind: 'night', factor: light } as const]),
+    ...(fogged ? [{ kind: 'fog', factor: FOG_CYCLING_FACTOR } as const] : []),
+    ...(veto === null ? [] : [{ kind: 'veto', id: veto, cap: VETO_CAPS[veto] } as const]),
+  ];
+
+  return { factors, subtotal, adjustments, total: score };
+}

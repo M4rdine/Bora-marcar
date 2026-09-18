@@ -159,16 +159,28 @@ describe('HomeScreen', () => {
     expect(screen.queryByText('Por que esta nota')).toBeNull();
     fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
     await screen.findByText('Por que esta nota');
-    // A fixture é uma hora perfeita, então nada atrapalha e a resposta é uma frase. Cinco barras
-    // cheias e iguais não explicariam nada e ainda pareceriam componente quebrado.
-    expect(screen.getByText('Nenhum fator atrapalha esta hora.')).toBeTruthy();
-    expect(screen.queryByLabelText(/de conforto$/)).toBeNull();
+    // Os CINCO fatores aparecem, inclusive numa hora boa: saber que a chuva entregou tudo que
+    // podia é informação. Antes daqui, uma hora boa recebia só a frase "nenhum fator atrapalha".
+    // Um fator de peso zero diz "não conta para ..." em vez de "0 de 0 pontos"; o rótulo começa
+    // pelo nome do fator nos dois casos.
+    const parcelas = screen.queryAllByLabelText(/^(Temperatura|Chuva|Vento|UV|Sol), /);
+    expect(parcelas).toHaveLength(5);
+    // `getAllByText`: "UV" e "Chuva" também rotulam a linha de fatos do cartão principal.
+    for (const nome of ['Temperatura', 'Chuva', 'Vento', 'UV', 'Sol']) {
+      expect(screen.getAllByText(nome).length).toBeGreaterThan(0);
+    }
+    // e a conta fecha na tela, com as leituras na unidade que elas têm no mundo.
+    expect(screen.getByText('Soma dos fatores')).toBeTruthy();
+    expect(screen.getByText('Nota final')).toBeTruthy();
+    expect(screen.getByText(/° de sensação$/)).toBeTruthy();
+    expect(screen.getAllByText(/km\/h/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/% de nuvens$/)).toBeTruthy();
     // tocar de novo fecha
     fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
     expect(screen.queryByText('Por que esta nota')).toBeNull();
   });
 
-  it('numa hora ruim, o detalhe nomeia o culpado e desenha só os fatores que pesam', async () => {
+  it('numa hora ruim, o detalhe mostra o corte que derrubou a nota', async () => {
     usePreferences.setState({ city: saoPaulo, activity: 'run' });
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
@@ -186,13 +198,12 @@ describe('HomeScreen', () => {
     await screen.findByText('Suas próximas horas');
     fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
     await screen.findByText('Por que esta nota');
-    // a frase nomeia o fator na linguagem da atividade, sem expor o peso interno do motor.
-    expect(screen.getByText(/^Numa corrida, .+ é o que mais pesa nesta hora\.$/)).toBeTruthy();
-    expect(screen.queryByText(/peso \d+%/)).toBeNull();
-    // e há barras, mas no máximo três: a explicação é curta por desenho.
-    const bars = screen.queryAllByLabelText(/de conforto$/);
-    expect(bars.length).toBeGreaterThan(0);
-    expect(bars.length).toBeLessThanOrEqual(3);
+    // 85% de chance de chuva passa do limiar de veto: a nota deixa de ser a soma e vira o teto.
+    // Sem esta linha, a soma dos fatores na tela não bateria com a nota final e o painel mentiria.
+    expect(screen.getByText(/limita a nota a \d+$/)).toBeTruthy();
+    expect(screen.getByText('85% de chance')).toBeTruthy();
+    // os cinco continuam listados: o que muda numa hora ruim é o corte, não a prestação de contas.
+    expect(screen.queryAllByLabelText(/^(Temperatura|Chuva|Vento|UV|Sol), /)).toHaveLength(5);
   });
 
   it('planeja numa hora escolhida na cronologia, não na que o motor recomendou', async () => {
