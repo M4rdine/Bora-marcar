@@ -112,8 +112,12 @@ export const t = {
       progress: (step: number, total: number) => `Passo ${step} de ${total}`,
       activityQuestion: 'O que você costuma fazer ao ar livre?',
       activityHelp:
-        'Cada atividade pesa calor, chuva, vento e sol de um jeito. Dá para trocar depois.',
+        'Escolha quantas quiser. Cada uma pesa calor, chuva, vento e sol de um jeito, e as que você marcar aparecem primeiro na tela inicial.',
       activityAria: (name: string, hint: string) => `${name}. ${hint}`,
+      activityAriaSelected: (name: string, hint: string) => `${name}, marcada. ${hint}`,
+      activityContinue: (n: number) =>
+        n === 1 ? 'Continuar com 1 atividade' : `Continuar com ${n} atividades`,
+      activityPickAtLeastOne: 'Marque pelo menos uma para continuar',
       placeQuestion: 'De onde você sai?',
       placeHelp: 'A previsão vem desse lugar. Dá para trocar de cidade quando quiser.',
       back: 'Voltar',
@@ -139,10 +143,9 @@ export const t = {
     // boas horas, que é a única informação útil para quem acabou de perdê-las.
     windowPassed: 'As boas horas de hoje já passaram',
     bestPastHour: (hora: number) => `A melhor foi às ${hora}h`,
-    // Em letra menor que a linha de cima, e sempre qualificada: o que sobrou costuma ser ruim, e
-    // oferecer um horário sem dizer isso seria vender o resto como se fosse a melhor hora.
-    bestAheadHour: (hora: number, rotulo: string, score: number) =>
-      `Ainda resta ${hora}h — ${rotulo}, ${score}`,
+    // Cabeçalho da linha do que sobrou, em letra menor: o resto do dia costuma ser ruim, e a
+    // hierarquia diz isso antes de qualquer número.
+    stillAhead: 'O melhor que ainda resta hoje',
     noGoodHourLeft: (atividade: string) =>
       `Não sobrou hora boa para ${atividade.toLowerCase()} hoje`,
     planExpired: (hour: number) => `O plano das ${hour}h expirou`,

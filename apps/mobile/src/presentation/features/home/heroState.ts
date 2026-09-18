@@ -4,7 +4,7 @@ import {
   type ActivePlan,
   type ActivityId,
   type ActivityRecord,
-  type ScoreLabel,
+  type HourScore,
   type DayRecommendation,
   type LocalDateTime,
   type Progress,
@@ -41,11 +41,7 @@ export type HeroState =
        * sobrou. Vem com nota e rótulo de propósito — normalmente é uma hora ruim, e dizer isso é
        * mais honesto do que oferecer um horário sem qualificar.
        */
-      readonly bestAhead: {
-        readonly hour: number;
-        readonly score: number;
-        readonly label: ScoreLabel;
-      } | null;
+      readonly bestAhead: HourScore | null;
     }
   | { readonly kind: 'noWindow'; readonly day: DayRecommendation };
 
@@ -75,15 +71,10 @@ function bestPastHour(
 }
 
 /** A melhor hora que ainda resta hoje, boa ou não. `null` quando o dia acabou. */
-function bestAheadHour(
-  today: DayRecommendation,
-  now: LocalDateTime,
-): { readonly hour: number; readonly score: number; readonly label: ScoreLabel } | null {
-  return today.hours.reduce<{ hour: number; score: number; label: ScoreLabel } | null>((acc, h) => {
+function bestAheadHour(today: DayRecommendation, now: LocalDateTime): HourScore | null {
+  return today.hours.reduce<HourScore | null>((acc, h) => {
     if (h.hour.hour <= now.hour) return acc;
-    return acc === null || h.score > acc.score
-      ? { hour: h.hour.hour, score: h.score, label: h.label }
-      : acc;
+    return acc === null || h.score > acc.score ? h : acc;
   }, null);
 }
 

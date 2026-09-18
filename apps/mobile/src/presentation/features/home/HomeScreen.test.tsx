@@ -46,9 +46,18 @@ describe('HomeScreen', () => {
     expect(screen.queryByText('Usar minha localização')).toBeNull();
   });
 
-  it('escolher a atividade guarda a preferência e leva ao passo do lugar', async () => {
+  /**
+   * Marcar é reversível e não avança sozinho: dá para gostar de mais de uma coisa, e a ordem em
+   * que foram marcadas decide a ordem das abas depois.
+   */
+  it('escolher atividades guarda a preferência e leva ao passo do lugar', async () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     fireEvent.press(await screen.findByLabelText(/^Corrida\./));
+    fireEvent.press(await screen.findByLabelText(/^Praia\./));
+    // marcar não avança: a confirmação é explícita
+    expect(screen.queryByText('De onde você sai?')).toBeNull();
+    fireEvent.press(screen.getByText('Continuar com 2 atividades'));
+    expect(usePreferences.getState().favoriteActivities).toEqual(['run', 'beach']);
     expect(usePreferences.getState().activity).toBe('run');
     await screen.findByText('De onde você sai?');
     expect(screen.getByLabelText('Passo 2 de 2')).toBeTruthy();
@@ -59,10 +68,30 @@ describe('HomeScreen', () => {
   it('dá para voltar do passo do lugar e trocar a atividade', async () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     fireEvent.press(await screen.findByLabelText(/^Corrida\./));
+    fireEvent.press(screen.getByText('Continuar com 1 atividade'));
     fireEvent.press(await screen.findByText('Voltar'));
     await screen.findByText('O que você costuma fazer ao ar livre?');
+    // Voltar preserva o que já estava marcado: trocar é desmarcar e marcar outra.
+    fireEvent.press(screen.getByLabelText(/^Corrida, marcada\./));
     fireEvent.press(screen.getByLabelText(/^Praia\./));
+    fireEvent.press(screen.getByText('Continuar com 1 atividade'));
+    expect(usePreferences.getState().favoriteActivities).toEqual(['beach']);
     expect(usePreferences.getState().activity).toBe('beach');
+  });
+
+  it('sem nenhuma marcada, não há como continuar', async () => {
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    await screen.findByText('O que você costuma fazer ao ar livre?');
+    expect(screen.getByText('Marque pelo menos uma para continuar')).toBeTruthy();
+    expect(screen.queryByText(/^Continuar com/)).toBeNull();
+  });
+
+  it('desmarcar tira da lista', async () => {
+    renderWithProviders(<HomeScreen />, { services: goodServices() });
+    fireEvent.press(await screen.findByLabelText(/^Corrida\./));
+    expect(screen.getByText('Continuar com 1 atividade')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText(/^Corrida, marcada\./));
+    expect(screen.queryByText(/^Continuar com/)).toBeNull();
   });
 
   it('no passo do lugar, "Usar minha localização" seleciona a cidade do GPS', async () => {
@@ -78,6 +107,7 @@ describe('HomeScreen', () => {
       }),
     });
     fireEvent.press(await screen.findByLabelText(/^Caminhada\./));
+    fireEvent.press(screen.getByText('Continuar com 1 atividade'));
     fireEvent.press(await screen.findByText('Usar minha localização'));
     await screen.findByText('São Paulo, Brasil');
     expect(usePreferences.getState().city?.id).toBe(saoPaulo.id);
@@ -86,6 +116,7 @@ describe('HomeScreen', () => {
   it('no passo do lugar, localização negada mostra o erro traduzido', async () => {
     renderWithProviders(<HomeScreen />, { services: goodServices() });
     fireEvent.press(await screen.findByLabelText(/^Caminhada\./));
+    fireEvent.press(screen.getByText('Continuar com 1 atividade'));
     fireEvent.press(await screen.findByText('Usar minha localização'));
     await screen.findByText(t.errors.denied);
   });
@@ -337,9 +368,9 @@ describe('HomeScreen', () => {
     // A frase antiga dizia "sua janela", sugerindo um compromisso que ninguém marcou. E o cartão
     // agora nomeia a melhor hora perdida, que é o que responde "então quando era boa?".
     expect(screen.getByText(/^A melhor foi às \d+h$/)).toBeTruthy();
-    // E o que sobrou do dia, sempre qualificado: normalmente é uma hora ruim, e oferecer um
-    // horário sem dizer isso venderia o resto como se fosse a melhor hora.
-    expect(screen.getByText(/^Ainda resta \d+h — \w+, \d+$/)).toBeTruthy();
+    // E o que sobrou do dia, como LINHA — a mesma de "Suas próximas horas", que abre o detalhe.
+    // Era uma frase solta, e frase não se toca.
+    expect(screen.getByText('O melhor que ainda resta hoje')).toBeTruthy();
     fireEvent.press(screen.getByText('Registrar atividade'));
     // relógio falso: 20:00 em São Paulo → o seletor abre com a hora atual já em destaque.
     fireEvent.press(await screen.findByText('Registrar às 20h'));

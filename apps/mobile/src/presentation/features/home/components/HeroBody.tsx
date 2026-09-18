@@ -1,6 +1,7 @@
 import { REMINDER_MINUTES_BEFORE } from '@/application/useCases/planActivity';
 import {
   labelFor,
+  type ActivityProfile,
   type BadgeState,
   type EngineConfig,
   type HourScore,
@@ -18,6 +19,7 @@ import { hoursInWindow, windowFacts } from '../windowFacts';
 import { xpReceipt } from '../xpReceipt';
 
 import { FactsRow } from './FactsRow';
+import { NextBestHour } from './NextBestHour';
 import { TipsRow } from './TipsRow';
 import { UnlockCard } from './UnlockCard';
 import { XpReceipt } from './XpReceipt';
@@ -203,7 +205,13 @@ function DoneBody({
   );
 }
 
-function LogNoPlanBody({ state }: { readonly state: Extract<HeroState, { kind: 'logNoPlan' }> }) {
+function LogNoPlanBody({
+  state,
+  profile,
+}: {
+  readonly state: Extract<HeroState, { kind: 'logNoPlan' }>;
+  readonly profile: ActivityProfile;
+}) {
   return (
     <>
       <AppText variant="kicker">{t.home.windowPassed}</AppText>
@@ -211,14 +219,9 @@ function LogNoPlanBody({ state }: { readonly state: Extract<HeroState, { kind: '
         <AppText variant="subtitle">{t.home.bestPastHour(state.bestPast.hour)}</AppText>
       ) : null}
       {state.bestAhead ? (
-        <AppText variant="small" tone="muted">
-          {t.home.bestAheadHour(
-            state.bestAhead.hour,
-            t.labels[state.bestAhead.label],
-            state.bestAhead.score,
-          )}
-        </AppText>
+        <NextBestHour hour={state.bestAhead} profile={profile} onPlan={null} />
       ) : null}
+
       {state.expiredPlan ? (
         <AppText variant="display">
           {t.home.planExpired(state.expiredPlan.window.startHour)}
@@ -283,7 +286,7 @@ export function HeroBody({
         />
       );
     case 'logNoPlan':
-      return <LogNoPlanBody state={state} />;
+      return <LogNoPlanBody state={state} profile={config.activities[state.day.activityId]} />;
     case 'noWindow':
       return <NoWindowBody state={state} scope={scope} />;
   }

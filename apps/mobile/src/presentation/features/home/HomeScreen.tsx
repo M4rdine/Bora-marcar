@@ -17,6 +17,7 @@ import { useProgress } from '../../queries/useProgress';
 import { usePreferences } from '../../state/preferencesStore';
 import { AppText, Button, phaseFor, Sky, tokens, useScreenPaddingBottom } from '../../ui';
 
+import { activityOrder } from './activityOrder';
 import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
 import { HomeHeader } from './components/HomeHeader';
@@ -179,6 +180,7 @@ function HomeContent({
 }: ContentProps) {
   const router = useRouter();
   const activity = usePreferences((s) => s.activity);
+  const favorites = usePreferences((s) => s.favoriteActivities);
   const selectActivity = usePreferences((s) => s.selectActivity);
   const now = overview.snapshot?.now ?? null;
   const scoreFor = useActiveScore(overview, config);
@@ -209,6 +211,7 @@ function HomeContent({
       ) : null}
       <ActivityPicker
         config={config}
+        order={activityOrder(favorites)}
         selected={activity}
         onSelect={selectActivity}
         scoreFor={scoreFor}

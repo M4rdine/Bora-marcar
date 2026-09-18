@@ -12,6 +12,7 @@ import { activityIcon, AppText, Button, Icon, Surface, tokens } from '../../../u
 
 const TOTAL_STEPS = 2;
 const ACTIVITY_ICON_SIZE = 26;
+const CHECK_SIZE = 18;
 
 /**
  * Pontos de progresso. Duas perguntas curtas prendem mais que um cartão explicando três passos:
@@ -27,22 +28,40 @@ function Progress({ step }: { readonly step: number }) {
   );
 }
 
+/**
+ * Uma atividade da lista, marcável.
+ *
+ * Era um toque que já avançava de passo: dava para gostar de exatamente uma coisa. Quem corre e
+ * pedala tinha de escolher uma e conviver com a outra em segundo plano. Agora marca quantas
+ * quiser e confirma — e a marca vira a ordem das abas na tela inicial.
+ */
 function ActivityOption({
   id,
   name,
-  onSelect,
+  selected,
+  onToggle,
 }: {
   readonly id: ActivityId;
   readonly name: string;
-  readonly onSelect: () => void;
+  readonly selected: boolean;
+  readonly onToggle: () => void;
 }) {
   const hint = t.home.onboarding.activityHints[id];
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={t.home.onboarding.activityAria(name, hint)}
-      onPress={onSelect}
-      style={({ pressed }) => [styles.option, pressed ? styles.pressed : null]}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={
+        selected
+          ? t.home.onboarding.activityAriaSelected(name, hint)
+          : t.home.onboarding.activityAria(name, hint)
+      }
+      onPress={onToggle}
+      style={({ pressed }) => [
+        styles.option,
+        selected ? styles.optionOn : null,
+        pressed ? styles.pressed : null,
+      ]}
     >
       <Icon name={activityIcon(id)} size={ACTIVITY_ICON_SIZE} color={tokens.color.text} />
       <View style={styles.optionBody}>
@@ -53,6 +72,7 @@ function ActivityOption({
           {hint}
         </AppText>
       </View>
+      {selected ? <Icon name="starFilled" size={CHECK_SIZE} color={tokens.color.mint} /> : null}
     </Pressable>
   );
 }
@@ -66,8 +86,9 @@ export function Welcome() {
   const services = useServices();
   const config = useEngineConfig();
   const selectCity = usePreferences((s) => s.selectCity);
-  const selectActivity = usePreferences((s) => s.selectActivity);
+  const selectFavoriteActivities = usePreferences((s) => s.selectFavoriteActivities);
   const [step, setStep] = useState(1);
+  const [chosen, setChosen] = useState<readonly ActivityId[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const resolveLocation = async () => {
@@ -77,8 +98,14 @@ export function Welcome() {
     else setError(t.errors[r.error.code]);
   };
 
-  const chooseActivity = (id: ActivityId) => {
-    selectActivity(id);
+  // Marcar e desmarcar preservando a ORDEM em que foram escolhidas: é ela que decide a ordem das
+  // abas depois, então a primeira marcada é a que abre selecionada.
+  const toggleActivity = (id: ActivityId) =>
+    setChosen((atual) => (atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]));
+
+  const confirmActivities = () => {
+    if (chosen.length === 0) return;
+    selectFavoriteActivities(chosen);
     setStep(TOTAL_STEPS);
   };
 
@@ -106,12 +133,22 @@ export function Welcome() {
                   key={id}
                   id={id}
                   name={activity.name}
-
-                  onSelect={() => chooseActivity(id)}
+                  selected={chosen.includes(id)}
+                  onToggle={() => toggleActivity(id)}
                 />
               );
             })}
           </View>
+          {chosen.length === 0 ? (
+            <AppText variant="small" tone="muted">
+              {t.home.onboarding.activityPickAtLeastOne}
+            </AppText>
+          ) : (
+            <Button
+              label={t.home.onboarding.activityContinue(chosen.length)}
+              onPress={confirmActivities}
+            />
+          )}
         </>
       ) : (
         <>
@@ -167,6 +204,11 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.color.surface,
   },
   optionBody: { flex: 1, gap: tokens.space[1] },
+  optionOn: {
+    backgroundColor: tokens.color.surfaceStrong,
+    borderWidth: 1,
+    borderColor: tokens.color.mint,
+  },
   pressed: { opacity: 0.6 },
   error: { color: tokens.color.danger },
 });
