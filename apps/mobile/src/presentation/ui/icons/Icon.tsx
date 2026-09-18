@@ -1,4 +1,5 @@
-import { memo } from 'react';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { memo, type ComponentProps } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
@@ -8,6 +9,24 @@ import { ICON_SHAPES, type IconName, type IconShape } from './paths';
 
 const GRID = 24;
 const STROKE = 2;
+
+type GlyphName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+/**
+ * Nomes desenhados por uma BIBLIOTECA em vez do conjunto próprio.
+ *
+ * As figuras humanas eram o ponto fraco do conjunto: com círculo e linha, caminhada e corrida
+ * saíam bonecos de palito, e a 22 pixels na aba viravam a mesma mancha. Geometria simples desenha
+ * bem sol, nuvem e lua; desenha mal gente. O Material Community entra só onde ele ganha, e o
+ * `Icon` continua sendo a única porta — nenhuma tela sabe de onde veio o traço.
+ */
+const GLYPH_BY_ICON: Partial<Record<IconName, GlyphName>> = {
+  walk: 'walk',
+  run: 'run-fast',
+  cycle: 'bike',
+  beach: 'beach',
+  picnic: 'basket',
+};
 
 type Props = {
   readonly name: IconName;
@@ -65,6 +84,7 @@ function Shape({ shape, color }: { readonly shape: IconShape; readonly color: st
  */
 function IconView({ name, size = 20, color = tokens.color.text, label }: Props) {
   const shapes = ICON_SHAPES[name];
+  const glyph = GLYPH_BY_ICON[name];
   return (
     // A acessibilidade fica no `View`, não no `Svg`. Passadas ao `Svg`, as propriedades nativas
     // chegavam cruas ao DOM na versão web — dois erros de React por renderização — e o ícone
@@ -78,11 +98,15 @@ function IconView({ name, size = 20, color = tokens.color.text, label }: Props) 
           }
         : { accessibilityRole: 'image' as const, accessibilityLabel: label })}
     >
-      <Svg width={size} height={size} viewBox={`0 0 ${GRID} ${GRID}`}>
-        {shapes.map((shape, index) => (
-          <Shape key={index} shape={shape} color={color} />
-        ))}
-      </Svg>
+      {glyph === undefined ? (
+        <Svg width={size} height={size} viewBox={`0 0 ${GRID} ${GRID}`}>
+          {shapes.map((shape, index) => (
+            <Shape key={index} shape={shape} color={color} />
+          ))}
+        </Svg>
+      ) : (
+        <MaterialCommunityIcons name={glyph} size={size} color={color} />
+      )}
     </View>
   );
 }

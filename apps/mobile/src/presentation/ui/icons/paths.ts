@@ -183,17 +183,30 @@ export const ICON_SHAPES: Record<IconName, readonly IconShape[]> = {
   thunder: [path(CLOUD_SMALL), path('M13.2 18.4 9.8 21.8h2.4l-.6 2 3.4-3.6h-2.4Z', true)],
 
   // — atividades —
+  /**
+   * Caminhada e corrida são a mesma figura em duas posturas, e é essa diferença que precisa ler
+   * a 22 pixels na aba.
+   *
+   * As anteriores eram bonecos de palito com cabeça pequena e tronco em ziguezague: a 30 pixels
+   * viravam a mesma mancha, e caminhada e corrida ficam LADO A LADO no seletor. Aqui a caminhada
+   * é ereta e simétrica; a corrida se inclina, e ganha duas linhas de velocidade atrás — elas
+   * são o que separa as duas quando o desenho é pequeno demais para a postura contar.
+   */
   walk: [
-    circle(13, 4.5, 2.2),
-    path('M13 7.5 10.5 13l3 2 1 6'),
-    path('M10.5 13 7 16l-1 5'),
-    line(13.5, 9.5, 17, 11.5),
+    circle(12, 4.6, 2.6),
+    path('M12 7.2v6.3'),
+    path('M12 13.5 9 21'),
+    path('M12 13.5l3.2 4-.7 3.5'),
+    path('M12 9.2 15.6 11'),
+    path('M12 9.2 8.6 11.6'),
   ],
   run: [
-    circle(14.5, 4.5, 2.2),
-    path('M14.5 7.5 10 11.5l3.5 3 .5 6'),
-    path('M10 11.5 5.5 14l-.5 5'),
-    line(14, 9, 18.5, 10.5),
+    circle(15.2, 4.8, 2.5),
+    path('M14.4 7.6 11 12.4l3.4 2.8-.6 5.6'),
+    path('M11 12.4 7.4 14.2 6.6 19'),
+    path('M13.6 9.6 18 8.6'),
+    line(2.5, 10.5, 6.5, 10.5),
+    line(3.5, 14, 6, 14),
   ],
   cycle: [
     circle(5.5, 17, 3.8),
