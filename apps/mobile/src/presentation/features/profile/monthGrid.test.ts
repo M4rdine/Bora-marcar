@@ -1,4 +1,4 @@
-import { monthGrid } from './monthGrid';
+import { monthGrid, weeksOf, type MonthCell } from './monthGrid';
 
 const BASE = {
   year: 2026,
@@ -62,5 +62,51 @@ describe('monthGrid', () => {
     const trailing = grid.cells.slice(lastDayIndex + 1);
     expect(trailing.length).toBeGreaterThan(0);
     trailing.forEach((cell) => expect(cell).toBeNull());
+  });
+});
+
+describe('weeksOf', () => {
+  const celula = (day: number): MonthCell => ({
+    date: `2026-09-${String(day).padStart(2, '0')}`,
+    day,
+    state: 'future',
+  });
+
+  it('agrupa em semanas de sete', () => {
+    const semanas = weeksOf(Array.from({ length: 21 }, (_, i) => celula(i + 1)));
+    expect(semanas).toHaveLength(3);
+    for (const s of semanas) expect(s).toHaveLength(7);
+  });
+
+  /**
+   * A última semana quase nunca tem sete dias. Como cada célula divide a linha em partes iguais,
+   * uma linha com três células esticaria as três para ocupar a largura toda e as colunas
+   * deixariam de alinhar com as de cima.
+   */
+  it('completa a última semana com vazios, para as colunas continuarem alinhadas', () => {
+    const semanas = weeksOf(Array.from({ length: 17 }, (_, i) => celula(i + 1)));
+    expect(semanas).toHaveLength(3);
+    for (const s of semanas) expect(s).toHaveLength(7);
+    expect(semanas[2]?.slice(3).every((c) => c === null)).toBe(true);
+    expect(semanas[2]?.[2]?.day).toBe(17);
+  });
+
+  it('TODA linha tem exatamente sete colunas, em qualquer mês', () => {
+    for (let dias = 1; dias <= 42; dias += 1) {
+      const semanas = weeksOf(Array.from({ length: dias }, (_, i) => celula(i + 1)));
+      for (const s of semanas) expect(s).toHaveLength(7);
+    }
+  });
+
+  it('não inventa nem perde dia nenhum', () => {
+    const entrada = Array.from({ length: 30 }, (_, i) => celula(i + 1));
+    const saida = weeksOf(entrada)
+      .flat()
+      .filter((c) => c !== null);
+    expect(saida).toHaveLength(30);
+  });
+
+  it('mês vazio não vira linha nenhuma', () => {
+    expect(weeksOf([])).toHaveLength(0);
   });
 });

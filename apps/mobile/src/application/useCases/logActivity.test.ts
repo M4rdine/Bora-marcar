@@ -1,4 +1,4 @@
-import { defaultEngineConfig, err, ok, type GamificationEvent } from '@/domain';
+import { defaultEngineConfig, ok, type GamificationEvent } from '@/domain';
 
 import {
   fixedClock,
@@ -70,10 +70,19 @@ describe('logActivity', () => {
     ]);
   });
 
-  it('recusa segundo registro no mesmo dia', async () => {
+  /**
+   * Um dia pode ter mais de uma atividade. A regra anterior recusava a segunda com
+   * `alreadyDoneToday`, o que prendia quem saísse de manhã no recibo de XP até a meia-noite.
+   */
+  it('aceita um segundo registro no mesmo dia', async () => {
     const { run } = setup();
-    await run(input);
-    expect(await run(input)).toEqual(err({ code: 'alreadyDoneToday' }));
+    const primeiro = await run(input);
+    const segundo = await run(input);
+    expect(primeiro.ok).toBe(true);
+    expect(segundo.ok).toBe(true);
+    expect(segundo.ok && primeiro.ok && segundo.value.eventId).not.toBe(
+      primeiro.ok ? primeiro.value.eventId : null,
+    );
   });
 
   it('cancela o lembrete do plano pendente', async () => {

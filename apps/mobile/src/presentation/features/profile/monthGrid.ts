@@ -8,6 +8,9 @@ export type MonthCell = {
   readonly state: MonthCellState;
 };
 
+/** As células agrupadas em semanas completas, para o calendário desenhar linha por linha. */
+export type MonthWeek = readonly (MonthCell | null)[];
+
 export type MonthGrid = {
   readonly title: string;
   readonly weekdays: readonly string[];
@@ -63,4 +66,21 @@ export function monthGrid(input: Input): MonthGrid {
     weekdays,
     cells: [...padding(leading), ...days, ...padding(trailing)],
   };
+}
+
+/**
+ * Quebra as células em semanas de sete, completando a última com vazios.
+ *
+ * O calendário desenhava tudo numa fileira só com quebra automática e largura de 100/7 por
+ * cento. Duas coisas davam errado nisso: a porcentagem arredonda diferente em cada densidade de
+ * tela, então as células encostavam e os cantos arredondados se sobrepunham; e a última semana,
+ * com menos de sete dias, precisaria ser preenchida para as colunas continuarem alinhadas.
+ */
+export function weeksOf(cells: readonly (MonthCell | null)[]): readonly MonthWeek[] {
+  const weeks: MonthWeek[] = [];
+  for (let i = 0; i < cells.length; i += DAYS_IN_WEEK) {
+    const week = cells.slice(i, i + DAYS_IN_WEEK);
+    weeks.push([...week, ...Array<null>(DAYS_IN_WEEK - week.length).fill(null)]);
+  }
+  return weeks;
 }

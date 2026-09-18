@@ -29,7 +29,13 @@ export type Progress = {
   readonly citiesCount: number;
   readonly plansByDate: ReadonlyMap<string, ActivePlan>;
   readonly activePlan: ActivePlan | null;
+  /**
+   * O registro MAIS RECENTE de hoje, não o primeiro. Um dia pode ter mais de uma atividade, e o
+   * herói mostra o recibo do que acabou de acontecer.
+   */
   readonly todayRecord: ActivityRecord | null;
+  /** Quantas atividades hoje já teve. A primeira é a que conta para a sequência. */
+  readonly todayCount: number;
 };
 
 type Draft = Omit<ActivityRecord, 'streakDays' | 'xp'>;
@@ -87,13 +93,20 @@ function buildRecords(
     return e.type === 'logged' ? [draftFromLogged(e)] : [];
   });
   return drafts.reduce<readonly ActivityRecord[]>((acc, d) => {
-    // só o primeiro registro do dia rende XP; os demais entram no histórico com XP zero
     const isFirstOfDay = !acc.some((r) => r.date === d.date);
     const active = new Set([...acc.map((r) => r.date), d.date]);
     const streakDays = computeStreak(active, restDates, d.date);
-    const xp = isFirstOfDay
-      ? computeXp({ hourScore: d.hourScore, planFulfilled: d.planFulfilled, streakDays }, cfg.xp)
-      : { base: 0, hourBonus: 0, planBonus: 0, streakBonus: 0, total: 0 };
+    // A segunda atividade do dia rende XP, sim — sair duas vezes é melhor que sair uma. O que ela
+    // NÃO rende é o bônus de sequência, que é por dia e já foi creditado na primeira. Antes o
+    // registro seguinte vinha com XP zero, o que transformava "quero sair de novo" em punição.
+    const xp = computeXp(
+      {
+        hourScore: d.hourScore,
+        planFulfilled: d.planFulfilled,
+        streakDays: isFirstOfDay ? streakDays : 0,
+      },
+      cfg.xp,
+    );
     return [...acc, { ...d, streakDays, xp }];
   }, []);
 }
@@ -144,6 +157,7 @@ export function deriveProgress(
     citiesCount: new Set(records.map((r) => r.cityId)).size,
     plansByDate,
     activePlan: plansByDate.get(today) ?? null,
-    todayRecord: records.find((r) => r.date === today) ?? null,
+    todayRecord: records.findLast((r) => r.date === today) ?? null,
+    todayCount: records.filter((r) => r.date === today).length,
   };
 }

@@ -8,7 +8,7 @@ import type {
   ProgressRepository,
 } from '../ports';
 
-export type ConfirmError = { readonly code: 'planNotFound' | 'alreadyDoneToday' };
+export type ConfirmError = { readonly code: 'planNotFound' };
 export type ConfirmInput = {
   readonly planId: string;
   readonly date: string;
@@ -31,7 +31,6 @@ export const confirmActivity =
     const current = deriveProgress(events, await config.get(), input.date);
     if (current.activePlan === null || current.activePlan.planId !== input.planId)
       return err({ code: 'planNotFound' });
-    if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });
     const eventId = ids.next();
     await progress.append({
       type: 'confirmed',

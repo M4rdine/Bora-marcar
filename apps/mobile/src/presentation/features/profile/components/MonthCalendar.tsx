@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { t } from '../../../i18n/pt-BR';
 import { AppText, Icon, tokens } from '../../../ui';
-import type { MonthCell, MonthCellState, MonthGrid } from '../monthGrid';
+import { weeksOf, type MonthCell, type MonthCellState, type MonthGrid } from '../monthGrid';
 
 type Props = {
   readonly grid: MonthGrid;
@@ -89,30 +89,39 @@ export function MonthCalendar({ grid }: Props) {
           </AppText>
         ))}
       </View>
-      <View style={styles.grid}>
-        {grid.cells.map((cell, index) =>
-          cell === null ? (
-            <View key={`pad-${index}`} style={styles.cell} />
-          ) : (
-            <DayCell key={cell.date} cell={cell} />
-          ),
-        )}
-      </View>
+      {weeksOf(grid.cells).map((week, semana) => (
+        <View key={semana} style={styles.week}>
+          {week.map((cell, index) =>
+            cell === null ? (
+              <View key={`vazio-${semana}-${index}`} style={styles.cell} />
+            ) : (
+              <DayCell key={cell.date} cell={cell} />
+            ),
+          )}
+        </View>
+      ))}
       <Legend />
     </View>
   );
 }
 
-const CELL_WIDTH = `${100 / 7}%` as const;
 const FLAME_SIZE = 12;
+/**
+ * Respiro entre as colunas. Sem ele as células encostavam, e dois cantos arredondados colados
+ * desenham um entalhe entre os dias — o calendário virava uma faixa contínua recortada.
+ */
+const COLUMN_GAP = tokens.space[1];
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
-  row: { flexDirection: 'row' },
-  headerCell: { width: CELL_WIDTH, textAlign: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: tokens.space[1] },
+  row: { flexDirection: 'row', columnGap: COLUMN_GAP },
+  // `flex: 1` divide a linha em sete partes iguais DEPOIS de descontar os vãos. A largura em
+  // porcentagem que havia aqui antes não descontava nada e ainda arredondava diferente conforme
+  // a densidade da tela, o que estourava a linha no aparelho e não na web.
+  headerCell: { flex: 1, textAlign: 'center' },
+  week: { flexDirection: 'row', columnGap: COLUMN_GAP, marginTop: tokens.space[1] },
   cell: {
-    width: CELL_WIDTH,
+    flex: 1,
     aspectRatio: 1,
     borderRadius: tokens.radius.cell,
     alignItems: 'center',

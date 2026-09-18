@@ -3,7 +3,7 @@ import type { ActivityId, BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@
 
 import { formatHourRange } from '../format/hourRange';
 
-type UseCaseErrorCode = 'alreadyDoneToday' | 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
+type UseCaseErrorCode = 'alreadyPlanned' | 'planNotFound' | 'alreadyConfirmed';
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 const statLabels = {
@@ -81,7 +81,6 @@ export const t = {
     timeout: 'Demorou demais para responder.',
     denied: 'Sem permissão de localização. Busque a cidade pelo nome.',
     unavailable: 'Não foi possível obter sua localização.',
-    alreadyDoneToday: 'Você já registrou uma atividade hoje.',
     alreadyPlanned: 'Já existe um plano para hoje.',
     planNotFound: 'Plano não encontrado.',
     alreadyConfirmed: 'Esse plano já foi confirmado.',
@@ -143,6 +142,7 @@ export const t = {
     cancelPlan: 'Desfazer plano',
     confirm: 'Confirmar que fui',
     logOther: 'Saí em outro horário',
+    logAgain: 'Registrar outra atividade',
     confirmHour: (hour: number) => `Registrar às ${hour}h`,
     cancelPick: 'Cancelar',
     doneKicker: (activity: string, hour: number, minute: number) =>

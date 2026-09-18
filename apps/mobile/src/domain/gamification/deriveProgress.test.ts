@@ -57,7 +57,12 @@ describe('deriveProgress', () => {
     expect(p.records.find((r) => r.date === '2026-09-12')?.planFulfilled).toBe(false);
   });
 
-  it('só o primeiro registro do dia rende XP; o segundo fica no histórico com XP zero', () => {
+  /**
+   * A segunda atividade do dia rende XP — sair duas vezes é melhor que sair uma. O que ela não
+   * rende é o bônus de SEQUÊNCIA, que é por dia e já foi creditado na primeira. Antes o segundo
+   * registro vinha com XP zero, o que fazia de "quero sair de novo" uma punição.
+   */
+  it('a segunda atividade do dia rende XP, menos o bônus de sequência', () => {
     const p = deriveProgress(
       [
         logged(TODAY, { hourLeft: 8, hourScore: 60 }),
@@ -70,14 +75,16 @@ describe('deriveProgress', () => {
     expect(p.records[0]?.hourScore).toBe(60);
     expect(p.records[0]?.xp.total).toBe(50 + 30 + 5);
     expect(p.records[1]?.xp).toEqual({
-      base: 0,
-      hourBonus: 0,
+      base: 50,
+      hourBonus: 50,
       planBonus: 0,
       streakBonus: 0,
-      total: 0,
+      total: 100,
     });
-    expect(p.totalXp).toBe(85);
-    expect(p.todayRecord?.hourScore).toBe(60);
+    expect(p.totalXp).toBe(185);
+    // O herói mostra o recibo do que ACABOU de acontecer, então é o último registro do dia.
+    expect(p.todayRecord?.hourScore).toBe(100);
+    expect(p.todayCount).toBe(2);
   });
 
   it('plano ativo é o plano de hoje não cancelado e não confirmado', () => {

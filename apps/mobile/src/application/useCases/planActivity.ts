@@ -13,7 +13,7 @@ import { localEpochMs } from './localEpoch';
 
 export const REMINDER_MINUTES_BEFORE = 30;
 
-export type PlanError = { readonly code: 'alreadyPlanned' | 'alreadyDoneToday' };
+export type PlanError = { readonly code: 'alreadyPlanned' };
 export type PlanInput = {
   readonly city: City;
   readonly activity: ActivityId;
@@ -41,7 +41,6 @@ export const planActivity =
     const current = deriveProgress(events, await config.get(), input.window.date);
     // Precedência intencional: registro do dia é estado terminal, então prevalece mesmo
     // havendo um plano pendente para o mesmo dia.
-    if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });
     if (current.activePlan !== null) return err({ code: 'alreadyPlanned' });
 
     const planId = ids.next();

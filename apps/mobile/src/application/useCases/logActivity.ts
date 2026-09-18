@@ -1,4 +1,4 @@
-import { deriveProgress, err, ok, type ActivityId, type Result } from '@/domain';
+import { deriveProgress, ok, type ActivityId, type Result } from '@/domain';
 
 import type {
   City,
@@ -9,7 +9,11 @@ import type {
   ProgressRepository,
 } from '../ports';
 
-export type LogError = { readonly code: 'alreadyDoneToday' };
+/**
+ * Registrar não tem recusa de regra: qualquer hora do dia serve, e o dia aceita mais de uma
+ * atividade. Falha de escrita sobe como exceção, não como `Result`.
+ */
+export type LogError = never;
 export type LogInput = {
   readonly city: City;
   readonly activity: ActivityId;
@@ -31,7 +35,6 @@ export const logActivity =
   async (input: LogInput): Promise<Result<{ eventId: string }, LogError>> => {
     const events = await progress.load();
     const current = deriveProgress(events, await config.get(), input.date);
-    if (current.todayRecord !== null) return err({ code: 'alreadyDoneToday' });
     const pendingPlan = current.activePlan;
     const eventId = ids.next();
     await progress.append({

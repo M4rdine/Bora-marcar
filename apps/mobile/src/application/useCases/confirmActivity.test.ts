@@ -90,7 +90,7 @@ describe('confirmActivity', () => {
     );
   });
 
-  it('dia que já tem registro', async () => {
+  it('aceita confirmar um plano mesmo já tendo registro no dia', async () => {
     const logged: GamificationEvent = {
       type: 'logged',
       id: 'l',
@@ -103,8 +103,8 @@ describe('confirmActivity', () => {
     };
     const { run } = setup([plan, logged]);
     expect(
-      await run({ planId: 'plan-1', date: '2026-09-13', hourLeft: 17, hourScore: 86 }),
-    ).toEqual(err({ code: 'alreadyDoneToday' }));
+      (await run({ planId: 'plan-1', date: '2026-09-13', hourLeft: 17, hourScore: 86 })).ok,
+    ).toBe(true);
   });
 
   it('usa a config injetada (não a estática) ao derivar o progresso', async () => {

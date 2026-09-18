@@ -212,7 +212,14 @@ function DefaultActions({
         </>
       );
     case 'done':
-      return <PlanTomorrowButton {...tomorrowProps} />;
+      // Registrar uma atividade não encerra o dia. Antes o `done` só oferecia planejar o dia
+      // SEGUINTE, então quem saísse de manhã ficava preso no recibo de XP até a meia-noite.
+      return (
+        <>
+          <Button label={t.home.logAgain} onPress={onOpenPicker} disabled={busy} />
+          <PlanTomorrowButton {...tomorrowProps} />
+        </>
+      );
   }
 }
 

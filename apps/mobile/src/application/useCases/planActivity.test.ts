@@ -64,7 +64,11 @@ describe('planActivity', () => {
     expect(await run(base)).toEqual(err({ code: 'alreadyPlanned' }));
   });
 
-  it('recusa planejar um dia que já tem atividade registrada', async () => {
+  /**
+   * Sair de manhã não fecha o dia: dá para planejar uma segunda saída para a tarde. A regra
+   * anterior recusava com `alreadyDoneToday`.
+   */
+  it('aceita planejar um dia que já tem atividade registrada', async () => {
     const { run } = setup([
       {
         type: 'logged',
@@ -77,10 +81,11 @@ describe('planActivity', () => {
         createdAt: NOW - 1000,
       },
     ]);
-    expect(await run(base)).toEqual(err({ code: 'alreadyDoneToday' }));
+    expect((await run(base)).ok).toBe(true);
   });
 
-  it('recusa com alreadyDoneToday mesmo havendo um plano pendente para o mesmo dia', async () => {
+  /** O que continua valendo: um plano pendente por vez. Registrar não libera um segundo plano. */
+  it('recusa um segundo plano enquanto há um pendente, mesmo já tendo registro no dia', async () => {
     const { run } = setup([
       {
         type: 'planned',
@@ -103,7 +108,7 @@ describe('planActivity', () => {
         createdAt: NOW - 1000,
       },
     ]);
-    expect(await run(base)).toEqual(err({ code: 'alreadyDoneToday' }));
+    expect(await run(base)).toEqual(err({ code: 'alreadyPlanned' }));
   });
 
   it('permite planejar depois de cancelar', async () => {

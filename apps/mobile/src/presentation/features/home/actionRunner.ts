@@ -3,12 +3,7 @@ import { useState } from 'react';
 import { t } from '../../i18n/pt-BR';
 
 /** Códigos de erro que os casos de uso de gamificação podem rejeitar, com mensagem própria. */
-export const ACTION_ERROR_CODES = [
-  'alreadyDoneToday',
-  'alreadyPlanned',
-  'planNotFound',
-  'alreadyConfirmed',
-] as const;
+export const ACTION_ERROR_CODES = ['alreadyPlanned', 'planNotFound', 'alreadyConfirmed'] as const;
 
 export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number];
 
