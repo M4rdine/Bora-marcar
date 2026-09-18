@@ -336,7 +336,10 @@ describe('HomeScreen', () => {
     await screen.findByText('As boas horas de hoje já passaram');
     // A frase antiga dizia "sua janela", sugerindo um compromisso que ninguém marcou. E o cartão
     // agora nomeia a melhor hora perdida, que é o que responde "então quando era boa?".
-    expect(screen.getByText(/^A melhor foi às \d+h, com \d+$/)).toBeTruthy();
+    expect(screen.getByText(/^A melhor foi às \d+h$/)).toBeTruthy();
+    // E o que sobrou do dia, sempre qualificado: normalmente é uma hora ruim, e oferecer um
+    // horário sem dizer isso venderia o resto como se fosse a melhor hora.
+    expect(screen.getByText(/^Ainda resta \d+h — \w+, \d+$/)).toBeTruthy();
     fireEvent.press(screen.getByText('Registrar atividade'));
     // relógio falso: 20:00 em São Paulo → o seletor abre com a hora atual já em destaque.
     fireEvent.press(await screen.findByText('Registrar às 20h'));

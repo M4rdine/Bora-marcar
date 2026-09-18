@@ -4,6 +4,7 @@ import {
   type ActivePlan,
   type ActivityId,
   type ActivityRecord,
+  type ScoreLabel,
   type DayRecommendation,
   type LocalDateTime,
   type Progress,
@@ -32,7 +33,19 @@ export type HeroState =
        * única informação útil ali. Em Sinop, às 9h58, a melhor hora para corrida tinha sido de
        * madrugada, e a tela não contava isso.
        */
-      readonly bestPast: { readonly hour: number; readonly score: number } | null;
+      readonly bestPast: { readonly hour: number } | null;
+      /**
+       * A melhor hora que AINDA RESTA hoje, mesmo que não seja boa.
+       *
+       * Perder a melhor hora não encerra o assunto: quem não saiu de manhã ainda quer saber o que
+       * sobrou. Vem com nota e rótulo de propósito — normalmente é uma hora ruim, e dizer isso é
+       * mais honesto do que oferecer um horário sem qualificar.
+       */
+      readonly bestAhead: {
+        readonly hour: number;
+        readonly score: number;
+        readonly label: ScoreLabel;
+      } | null;
     }
   | { readonly kind: 'noWindow'; readonly day: DayRecommendation };
 
@@ -53,12 +66,24 @@ function bestPastHour(
   today: DayRecommendation,
   now: LocalDateTime,
   fairThreshold: number,
-): { readonly hour: number; readonly score: number } | null {
-  return today.hours.reduce<{ hour: number; score: number } | null>((melhor, h) => {
-    if (h.hour.hour >= now.hour || h.score < fairThreshold) return melhor;
-    return melhor === null || h.score > melhor.score
-      ? { hour: h.hour.hour, score: h.score }
-      : melhor;
+): { readonly hour: number } | null {
+  const melhor = today.hours.reduce<{ hour: number; score: number } | null>((acc, h) => {
+    if (h.hour.hour >= now.hour || h.score < fairThreshold) return acc;
+    return acc === null || h.score > acc.score ? { hour: h.hour.hour, score: h.score } : acc;
+  }, null);
+  return melhor === null ? null : { hour: melhor.hour };
+}
+
+/** A melhor hora que ainda resta hoje, boa ou não. `null` quando o dia acabou. */
+function bestAheadHour(
+  today: DayRecommendation,
+  now: LocalDateTime,
+): { readonly hour: number; readonly score: number; readonly label: ScoreLabel } | null {
+  return today.hours.reduce<{ hour: number; score: number; label: ScoreLabel } | null>((acc, h) => {
+    if (h.hour.hour <= now.hour) return acc;
+    return acc === null || h.score > acc.score
+      ? { hour: h.hour.hour, score: h.score, label: h.label }
+      : acc;
   }, null);
 }
 
@@ -92,6 +117,7 @@ export function deriveHeroState({
       day: today,
       expiredPlan: plan,
       bestPast: bestPastHour(today, now, fairThreshold),
+      bestAhead: bestAheadHour(today, now),
     };
   }
   if (today.result.kind === 'window')
@@ -102,6 +128,7 @@ export function deriveHeroState({
       day: today,
       expiredPlan: null,
       bestPast: bestPastHour(today, now, fairThreshold),
+      bestAhead: bestAheadHour(today, now),
     };
   return { kind: 'noWindow', day: today };
 }

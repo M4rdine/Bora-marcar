@@ -57,7 +57,10 @@ export const tokens = {
     sunMarker: 16,
     flag: 22,
     icon: 22,
-    tabBar: 64,
+    // Altura útil da barra, sem o inset do indicador de home, que ela soma por cima. Sessenta e
+    // quatro deixavam a barra alta demais depois que ela encostou na borda de baixo e passou a
+    // englobar essa faixa.
+    tabBar: 56,
   },
   /**
    * O céu. As paradas são profundas de propósito: texto branco lê direto sobre elas em nível AA

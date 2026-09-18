@@ -138,7 +138,11 @@ export const t = {
     // nunca planejou nada e só chegou tarde no dia. E a frase antiga não dizia QUANDO foram as
     // boas horas, que é a única informação útil para quem acabou de perdê-las.
     windowPassed: 'As boas horas de hoje já passaram',
-    bestPastHour: (hora: number, score: number) => `A melhor foi às ${hora}h, com ${score}`,
+    bestPastHour: (hora: number) => `A melhor foi às ${hora}h`,
+    // Em letra menor que a linha de cima, e sempre qualificada: o que sobrou costuma ser ruim, e
+    // oferecer um horário sem dizer isso seria vender o resto como se fosse a melhor hora.
+    bestAheadHour: (hora: number, rotulo: string, score: number) =>
+      `Ainda resta ${hora}h — ${rotulo}, ${score}`,
     noGoodHourLeft: (atividade: string) =>
       `Não sobrou hora boa para ${atividade.toLowerCase()} hoje`,
     planExpired: (hour: number) => `O plano das ${hour}h expirou`,
