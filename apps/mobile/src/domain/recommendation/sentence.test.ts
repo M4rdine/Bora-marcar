@@ -35,7 +35,10 @@ describe('buildSentence', () => {
 
   it('ignora o terceiro fator quando o peso é menor que 0,1', () => {
     // piquenique: thermal .35, rain .35, wind .15 → três fatores normalmente; força pesos custom
-    const profile = { ...walk, weights: { thermal: 0.6, rain: 0.35, wind: 0.05, uv: 0, sun: 0 } };
+    const profile = {
+      ...walk,
+      weights: { thermal: 0.6, rain: 0.35, wind: 0.05, uv: 0, sun: 0, pressure: 0 },
+    };
     const hours = scored([makeHour({ apparentTemperature: 20 })], profile);
     expect(buildSentence(hours, profile)).toBe('Sensação de 20° e sem chuva.');
   });
@@ -49,13 +52,19 @@ describe('buildSentence', () => {
   });
 
   it('um único fator vira frase simples', () => {
-    const profile = { ...walk, weights: { thermal: 1, rain: 0, wind: 0, uv: 0, sun: 0 } };
+    const profile = {
+      ...walk,
+      weights: { thermal: 1, rain: 0, wind: 0, uv: 0, sun: 0, pressure: 0 },
+    };
     const hours = scored([makeHour({ apparentTemperature: 20 })], profile);
     expect(buildSentence(hours, profile)).toBe('Sensação de 20°.');
   });
 
   it('UV entra na frase quando tem peso', () => {
-    const profile = { ...run, weights: { thermal: 0.5, rain: 0, wind: 0, uv: 0.5, sun: 0 } };
+    const profile = {
+      ...run,
+      weights: { thermal: 0.5, rain: 0, wind: 0, uv: 0.5, sun: 0, pressure: 0 },
+    };
     const hours = scored([makeHour({ apparentTemperature: 18, uvIndex: 4 })], profile);
     expect(buildSentence(hours, profile)).toBe('Sensação de 18° e UV moderado.');
   });

@@ -13,6 +13,14 @@ export type HourlyConditions = {
   readonly weatherCode: number; // WMO
   readonly isDay: boolean;
   readonly humidityPct: number;
+  readonly pressureHpa: number;
+  /**
+   * Variação da pressão nas últimas três horas. Negativo = caindo.
+   *
+   * Vem calculado do adaptador porque depende das horas VIZINHAS, e o motor pontua uma hora de
+   * cada vez. Manter o derivado no dado é o que permite a função de conforto continuar pura.
+   */
+  readonly pressureTrendHpa: number;
 };
 
 export type DailySummary = {

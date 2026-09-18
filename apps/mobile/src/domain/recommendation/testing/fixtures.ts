@@ -24,6 +24,8 @@ export function makeHour(overrides: Partial<HourlyConditions> = {}): HourlyCondi
     weatherCode: 1,
     isDay: true,
     humidityPct: 55,
+    pressureHpa: 1013,
+    pressureTrendHpa: 0,
     ...overrides,
   };
 }
@@ -50,7 +52,7 @@ export function makeHourScore(
   return {
     hour: makeHour({ hour }),
     score,
-    comforts: { thermal: 1, rain: 1, wind: 1, uv: 1, sun: 1, ...overrides.comforts },
+    comforts: { thermal: 1, rain: 1, wind: 1, uv: 1, sun: 1, pressure: 1, ...overrides.comforts },
     veto: overrides.veto ?? null,
     label: labelOf(score),
   };

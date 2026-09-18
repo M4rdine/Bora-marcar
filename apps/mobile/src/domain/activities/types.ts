@@ -1,7 +1,7 @@
-export const ACTIVITY_IDS = ['walk', 'run', 'cycle', 'beach', 'picnic'] as const;
+export const ACTIVITY_IDS = ['walk', 'run', 'cycle', 'beach', 'picnic', 'fish'] as const;
 export type ActivityId = (typeof ACTIVITY_IDS)[number];
 
-export const FACTOR_IDS = ['thermal', 'rain', 'wind', 'uv', 'sun'] as const;
+export const FACTOR_IDS = ['thermal', 'rain', 'wind', 'uv', 'sun', 'pressure'] as const;
 export type FactorId = (typeof FACTOR_IDS)[number];
 
 export type ThermalRange = {

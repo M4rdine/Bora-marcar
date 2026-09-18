@@ -45,7 +45,8 @@ export type IconName =
   | 'run'
   | 'cycle'
   | 'beach'
-  | 'picnic';
+  | 'picnic'
+  | 'fish';
 
 export type IconShape =
   | { readonly kind: 'path'; readonly d: string; readonly fill?: boolean }
@@ -219,6 +220,13 @@ export const ICON_SHAPES: Record<IconName, readonly IconShape[]> = {
     circle(17, 6, 3.2),
     path('M4 20.5c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 5 0'),
     path('M17 9.2v7'),
+  ],
+  // Peixe: corpo em amêndoa, cauda e olho. Desenhado porque a biblioteca cobre a figura humana,
+  // e aqui o conjunto próprio dá conta — mas o mapa de glifos manda, e hoje ele manda no peixe.
+  fish: [
+    path('M18.6 12c-2.4 3.2-5.4 4.8-8 4.8S5.8 15.2 4.4 12c1.4-3.2 3.6-4.8 6.2-4.8s5.6 1.6 8 4.8Z'),
+    path('M4.4 12 1.4 8.6v6.8Z'),
+    circle(15.2, 10.6, 0.9, true),
   ],
   picnic: [
     path('M4.5 11.5h15l-2 9h-11Z'),

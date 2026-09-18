@@ -31,6 +31,9 @@ const mapHour = (h: OpenMeteoForecast['hourly'], i: number): HourlyDto => {
     weatherCode: num(at(h.weather_code, i)),
     isDay: num(at(h.is_day, i)) === 1,
     humidityPct: num(at(h.relative_humidity_2m, i)),
+    pressureHpa: num(at(h.pressure_msl, i)),
+    // Preenchido por `withPressureTrend`, que precisa da série inteira.
+    pressureTrendHpa: 0,
   };
 };
 
@@ -43,9 +46,32 @@ const mapDay = (d: OpenMeteoForecast['daily'], i: number): DailyDto => ({
   tempMin: at(d.temperature_2m_min, i),
 });
 
+/** Quantas horas para trás a tendência de pressão olha. */
+const TREND_HOURS = 3;
+
+/**
+ * A variação da pressão nas últimas três horas, hora a hora.
+ *
+ * O que interessa a quem pesca é a TENDÊNCIA, não o valor: 1013 hPa não diz nada sozinho, mas
+ * caindo três hectopascais em três horas diz que uma frente está chegando — e é aí que o peixe
+ * se alimenta. Por isso o número derivado nasce aqui, junto da série, e não no motor: uma função
+ * que pontua uma hora não tem como olhar as vizinhas.
+ *
+ * As primeiras horas da série não têm três horas para trás e recebem zero, que é a leitura
+ * honesta de "sem tendência conhecida", e não uma extrapolação inventada.
+ */
+const withPressureTrend = (horas: readonly HourlyDto[]): readonly HourlyDto[] =>
+  horas.map((h, i) => {
+    const anterior = horas[i - TREND_HOURS];
+    return {
+      ...h,
+      pressureTrendHpa: anterior === undefined ? 0 : h.pressureHpa - anterior.pressureHpa,
+    };
+  });
+
 export const mapForecast = (dto: OpenMeteoForecast): ForecastDto => ({
   timezone: dto.timezone,
   utcOffsetSeconds: dto.utc_offset_seconds,
-  hourly: dto.hourly.time.map((_, i) => mapHour(dto.hourly, i)),
+  hourly: withPressureTrend(dto.hourly.time.map((_, i) => mapHour(dto.hourly, i))),
   daily: dto.daily.time.map((_, i) => mapDay(dto.daily, i)),
 });

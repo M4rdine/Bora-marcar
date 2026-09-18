@@ -40,6 +40,7 @@ describe('mapForecast — horário sem separador T', () => {
         weather_code: [0],
         is_day: [1],
         relative_humidity_2m: [50],
+        pressure_msl: [1013],
       },
       daily: {
         time: ['2026-09-13'],

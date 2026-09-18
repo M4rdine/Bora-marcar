@@ -1,4 +1,5 @@
 import type { LocationError, ProviderErrorCode } from '@/application/ports';
+import { ACTIVITY_IDS } from '@/domain';
 import type { ActivityId, BadgeId, FactorId, ScoreLabel, TipId, VetoId } from '@/domain';
 
 import { formatHourRange } from '../format/hourRange';
@@ -44,6 +45,7 @@ export const t = {
     wind: 'vento forte',
     uv: 'UV alto',
     sun: 'céu fechado',
+    pressure: 'pressão subindo',
     storm: 'trovoada',
     snow: 'neve',
   } satisfies Record<FactorId | VetoId, string>,
@@ -74,7 +76,7 @@ export const t = {
     explorer: 'Registrou atividades em 5 cidades diferentes.',
     planner: 'Cumpriu 10 planos.',
     week: 'Manteve a sequência por 7 dias seguidos.',
-    multi: 'Praticou as 5 atividades disponíveis.',
+    multi: `Praticou as ${ACTIVITY_IDS.length} atividades disponíveis.`,
     perfect: 'Saiu em uma hora com score 95 ou mais.',
   } satisfies Record<BadgeId, string>,
   errors: {
@@ -127,6 +129,7 @@ export const t = {
         cycle: 'O vento é o que mais atrapalha.',
         beach: 'Quer sol e calor, mas não vento.',
         picnic: 'Quer céu aberto e chão seco.',
+        fish: 'Pressão caindo e vento fraco.',
       } satisfies Record<ActivityId, string>,
     },
     bestToday: 'Melhor horário hoje',
@@ -205,6 +208,7 @@ export const t = {
       wind: 'Vento',
       uv: 'UV',
       sun: 'Sol',
+      pressure: 'Pressão',
     } satisfies Record<FactorId, string>,
     limitingIn: (factor: string, activity: string) =>
       `Numa ${activity.toLowerCase()}, ${factor.toLowerCase()} é o que mais pesa nesta hora.`,
@@ -227,6 +231,10 @@ export const t = {
           : `${Math.round(kmh)} km/h`,
       uv: (index: number) => `índice ${decimal(index)}`,
       sun: (cloudPct: number) => `${Math.round(cloudPct)}% de nuvens`,
+      // A leitura é a TENDÊNCIA, com o valor atual ao lado: 1013 hPa sozinho não diz nada, mas
+      // "caiu 3,2 hPa em 3h" diz que uma frente está chegando.
+      pressure: (trend: number, atual: number) =>
+        `${trend <= 0 ? '' : '+'}${decimal(trend)} hPa em 3h · ${Math.round(atual)}`,
     },
     points: (got: number, max: number) => `${got} de ${max}`,
     notCounted: (activity: string) => `não conta para ${activity.toLowerCase()}`,
@@ -241,6 +249,8 @@ export const t = {
       uv: (ideal: number, max: number) =>
         `ideal até ${decimal(ideal)}, piso a partir de ${decimal(max)}`,
       sun: (ideal: number) => `ideal até ${ideal}% de nuvens`,
+      pressure: (idealMin: number, idealMax: number) =>
+        `ideal caindo ${decimal(Math.abs(idealMin))} a ${decimal(Math.abs(idealMax))} hPa; subindo é pior`,
     },
     pointsUnit: 'pts',
     weightOf: (pct: number) => `vale até ${pct}% da nota`,

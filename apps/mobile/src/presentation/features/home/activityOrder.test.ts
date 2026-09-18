@@ -8,7 +8,14 @@ describe('activityOrder', () => {
   });
 
   it('as preferidas vêm primeiro, na ordem em que foram marcadas', () => {
-    expect(activityOrder(['picnic', 'beach'])).toEqual(['picnic', 'beach', 'walk', 'run', 'cycle']);
+    expect(activityOrder(['picnic', 'beach'])).toEqual([
+      'picnic',
+      'beach',
+      'walk',
+      'run',
+      'cycle',
+      'fish',
+    ]);
   });
 
   /** Preferir não é esconder: quem gosta de praia ainda pode querer caminhar num dia chuvoso. */

@@ -2,7 +2,14 @@ import { FACTOR_IDS, type ActivityProfile, type FactorId } from '../activities/t
 import type { EngineConfig } from '../config/types';
 import type { HourlyConditions } from '../forecast/types';
 
-import { rainComfort, sunComfort, thermalComfort, uvComfort, windComfort } from './comfort';
+import {
+  pressureComfort,
+  rainComfort,
+  sunComfort,
+  thermalComfort,
+  uvComfort,
+  windComfort,
+} from './comfort';
 import { applyVetoes, type VetoId } from './vetoes';
 
 export type ScoreLabel = 'great' | 'good' | 'fair' | 'poor';
@@ -29,6 +36,7 @@ export function comfortsFor(h: HourlyConditions, p: ActivityProfile): Record<Fac
     wind: windComfort(h.windSpeedKmh, h.windGustsKmh, p.wind),
     uv: uvComfort(h.uvIndex, p.uv),
     sun: sunComfort(h.cloudCoverPct),
+    pressure: pressureComfort(h.pressureTrendHpa),
   };
 }
 

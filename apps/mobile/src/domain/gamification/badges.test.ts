@@ -1,3 +1,4 @@
+import { ACTIVITY_IDS } from '../activities/types';
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
 import { evaluateBadges, newlyUnlocked, type BadgeState } from './badges';
@@ -15,7 +16,8 @@ describe('evaluateBadges', () => {
     expect(b.every((x) => !x.unlocked)).toBe(true);
     expect(badge(b, 'explorer')?.progress).toEqual({ current: 0, target: 5 });
     expect(badge(b, 'planner')?.progress).toEqual({ current: 0, target: 10 });
-    expect(badge(b, 'multi')?.progress).toEqual({ current: 0, target: 5 });
+    // Derivado de `ACTIVITY_IDS`: a meta acompanha o catálogo em vez de ficar cravada.
+    expect(badge(b, 'multi')?.progress).toEqual({ current: 0, target: ACTIVITY_IDS.length });
     expect(badge(b, 'week')?.progress).toEqual({ current: 0, target: 7 });
     expect(badge(b, 'first')?.progress).toBeNull();
   });
@@ -56,16 +58,18 @@ describe('evaluateBadges', () => {
     });
   });
 
-  it('multiatleta exige as cinco atividades', () => {
-    const acts = ['walk', 'run', 'cycle', 'beach', 'picnic'] as const;
+  it('multiatleta exige TODAS as atividades, e não um número fixo', () => {
     const r = recordsOf(
-      acts.map((activity, i) => logged(`2026-09-0${i + 1}`, { activity })),
+      ACTIVITY_IDS.map((activity, i) => logged(`2026-09-0${i + 1}`, { activity })),
       '2026-09-13',
     );
-    expect(badge(evaluateBadges(r, new Set()), 'multi')).toMatchObject({
-      unlocked: true,
-      unlockedOn: '2026-09-05',
-    });
+    expect(badge(evaluateBadges(r, new Set()), 'multi')?.unlocked).toBe(true);
+    // Faltando uma, continua bloqueada — é isso que "todas" significa.
+    const quaseTodas = recordsOf(
+      ACTIVITY_IDS.slice(0, -1).map((activity, i) => logged(`2026-09-0${i + 1}`, { activity })),
+      '2026-09-13',
+    );
+    expect(badge(evaluateBadges(quaseTodas, new Set()), 'multi')?.unlocked).toBe(false);
   });
 
   it('clima perfeito com score >= 95', () => {

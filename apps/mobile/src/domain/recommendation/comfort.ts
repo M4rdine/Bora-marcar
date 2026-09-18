@@ -88,3 +88,26 @@ const SUN_CURVE: readonly Point[] = [
 export function sunComfort(cloudCoverPct: number): number {
   return piecewise(SUN_CURVE, cloudCoverPct);
 }
+
+/**
+ * Conforto da TENDÊNCIA de pressão, e não do valor.
+ *
+ * 1013 hPa não diz nada sozinho; caindo três hectopascais em três horas diz que uma frente está
+ * chegando, e é aí que o peixe sobe para se alimentar. Pressão subindo depois da frente é o pior
+ * cenário — o peixe desce e para de comer.
+ *
+ * A curva não depende do perfil, como a do sol: quem decide se isso importa é o PESO da
+ * atividade, e para todas menos a pesca esse peso é zero.
+ */
+const PRESSURE_CURVE: readonly Point[] = [
+  [-6, 0.55],
+  [-3, 1],
+  [-1, 0.9],
+  [0, 0.7],
+  [2, 0.4],
+  [6, 0.25],
+];
+
+export function pressureComfort(trendHpa: number): number {
+  return piecewise(PRESSURE_CURVE, trendHpa);
+}

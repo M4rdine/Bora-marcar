@@ -12,6 +12,10 @@ export const HOURLY_VARS = [
   'weather_code',
   'is_day',
   'relative_humidity_2m',
+  // Pressão ao nível do mar, e não a de superfície: a de superfície varia com a ALTITUDE do
+  // ponto, então duas cidades vizinhas em alturas diferentes trariam números incomparáveis. O
+  // que o motor usa é a variação ao longo do dia, e ela só é comparável na mesma referência.
+  'pressure_msl',
 ] as const;
 export const DAILY_VARS = [
   'sunrise',

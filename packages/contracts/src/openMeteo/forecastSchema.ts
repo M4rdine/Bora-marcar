@@ -18,6 +18,7 @@ const hourlySchema = z
     weather_code: nullableNumbers,
     is_day: nullableNumbers,
     relative_humidity_2m: nullableNumbers,
+    pressure_msl: nullableNumbers,
   })
   .refine((h) => Object.values(h).every((arr) => arr.length === h.time.length), {
     message: 'arrays horários com comprimentos diferentes',

@@ -27,7 +27,9 @@ describe('scoreHour', () => {
     expect(r.score).toBe(100);
     expect(r.label).toBe('great');
     expect(r.veto).toBeNull();
-    expect(r.comforts).toEqual({ thermal: 1, rain: 1, wind: 1, uv: 1, sun: 1 });
+    // Pressão estável rende 0,7, e não 1: a curva premia a pressão CAINDO, que é o que
+    // interessa a quem pesca. Como a caminhada pesa zero nela, a nota segue 100.
+    expect(r.comforts).toEqual({ thermal: 1, rain: 1, wind: 1, uv: 1, sun: 1, pressure: 0.7 });
   });
 
   it('pondera pelos pesos da atividade', () => {

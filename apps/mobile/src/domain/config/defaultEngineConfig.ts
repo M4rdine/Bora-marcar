@@ -10,7 +10,7 @@ export const defaultEngineConfig: EngineConfig = {
       wind: { ok: 20, max: 45 },
       uv: { ok: 5, max: 9 },
       nightFactor: 0.7,
-      weights: { thermal: 0.4, rain: 0.3, wind: 0.15, uv: 0.1, sun: 0.05 },
+      weights: { thermal: 0.4, rain: 0.3, wind: 0.15, uv: 0.1, sun: 0.05, pressure: 0 },
     },
     run: {
       id: 'run',
@@ -19,7 +19,7 @@ export const defaultEngineConfig: EngineConfig = {
       wind: { ok: 20, max: 45 },
       uv: { ok: 5, max: 9 },
       nightFactor: 0.6,
-      weights: { thermal: 0.45, rain: 0.25, wind: 0.15, uv: 0.15, sun: 0 },
+      weights: { thermal: 0.45, rain: 0.25, wind: 0.15, uv: 0.15, sun: 0, pressure: 0 },
     },
     cycle: {
       id: 'cycle',
@@ -28,7 +28,7 @@ export const defaultEngineConfig: EngineConfig = {
       wind: { ok: 15, max: 35 },
       uv: { ok: 5, max: 9 },
       nightFactor: 0.3,
-      weights: { thermal: 0.3, rain: 0.3, wind: 0.3, uv: 0.1, sun: 0 },
+      weights: { thermal: 0.3, rain: 0.3, wind: 0.3, uv: 0.1, sun: 0, pressure: 0 },
     },
     beach: {
       id: 'beach',
@@ -37,7 +37,7 @@ export const defaultEngineConfig: EngineConfig = {
       wind: { ok: 15, max: 35 },
       uv: { ok: 6, max: 10 },
       nightFactor: 0,
-      weights: { thermal: 0.3, rain: 0.25, wind: 0.15, uv: 0.1, sun: 0.2 },
+      weights: { thermal: 0.3, rain: 0.25, wind: 0.15, uv: 0.1, sun: 0.2, pressure: 0 },
     },
     picnic: {
       id: 'picnic',
@@ -46,7 +46,27 @@ export const defaultEngineConfig: EngineConfig = {
       wind: { ok: 15, max: 40 },
       uv: { ok: 5, max: 9 },
       nightFactor: 0.2,
-      weights: { thermal: 0.35, rain: 0.35, wind: 0.15, uv: 0.05, sun: 0.1 },
+      weights: { thermal: 0.35, rain: 0.35, wind: 0.15, uv: 0.05, sun: 0.1, pressure: 0 },
+    },
+    /**
+     * Pesca é o perfil que mais se afasta dos outros, e é por isso que ela entrou.
+     *
+     * Ela é a única que pesa a PRESSÃO, e pesa muito: pressão caindo anuncia frente chegando, e é
+     * quando o peixe sobe para se alimentar. Também é a única indiferente ao sol — nuvem não
+     * atrapalha quem está na margem — e a que menos tolera vento, porque vento estraga a leitura
+     * da linha antes de estragar o conforto de quem pesca.
+     *
+     * A faixa térmica é a mais ampla do conjunto: ficar parado à sombra aguenta calor que uma
+     * corrida não aguenta. E o fator noturno é alto, não baixo: pescar de madrugada é comum.
+     */
+    fish: {
+      id: 'fish',
+      name: 'Pesca',
+      thermal: { idealMin: 16, idealMax: 30, tolMin: 6, tolMax: 38 },
+      wind: { ok: 8, max: 25 },
+      uv: { ok: 6, max: 10 },
+      nightFactor: 0.85,
+      weights: { thermal: 0.15, rain: 0.2, wind: 0.25, uv: 0.05, sun: 0, pressure: 0.35 },
     },
   },
   scores: { great: 80, good: 65, fair: 45 },

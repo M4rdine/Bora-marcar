@@ -1,4 +1,4 @@
-import { ACTIVITY_IDS } from '../activities/types';
+import { ACTIVITY_IDS, FACTOR_IDS } from '../activities/types';
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
 import { explainScore } from './explainScore';
@@ -41,10 +41,10 @@ describe('explainScore', () => {
     if (e.adjustments.length === 0) expect(e.total).toBe(Math.round(e.subtotal));
   });
 
-  it('os cinco fatores aparecem sempre, mesmo os que não atrapalham', () => {
+  it('todos os fatores aparecem sempre, mesmo os que não atrapalham', () => {
     const e = explainScore(makeHour(), cfg.activities.walk);
-    expect(e.factors).toHaveLength(5);
-    expect(new Set(e.factors.map((f) => f.id)).size).toBe(5);
+    expect(e.factors).toHaveLength(FACTOR_IDS.length);
+    expect(new Set(e.factors.map((f) => f.id)).size).toBe(FACTOR_IDS.length);
   });
 
   it('os fatores vêm do que mais vale nesta atividade para o que menos vale', () => {

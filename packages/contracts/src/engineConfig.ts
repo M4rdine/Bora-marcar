@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const ACTIVITY_IDS = ['walk', 'run', 'cycle', 'beach', 'picnic'] as const;
-export const FACTOR_IDS = ['thermal', 'rain', 'wind', 'uv', 'sun'] as const;
+export const ACTIVITY_IDS = ['walk', 'run', 'cycle', 'beach', 'picnic', 'fish'] as const;
+export const FACTOR_IDS = ['thermal', 'rain', 'wind', 'uv', 'sun', 'pressure'] as const;
 
 const WEIGHT_SUM_TOLERANCE = 1e-6;
 const HOURS_IN_DAY = 24;
@@ -24,11 +24,15 @@ const thermalSchema = z
   });
 
 const weightsSchema = z
-  .object({ thermal: unit, rain: unit, wind: unit, uv: unit, sun: unit })
+  .object({ thermal: unit, rain: unit, wind: unit, uv: unit, sun: unit, pressure: unit })
   .strict()
-  .refine((w) => Math.abs(w.thermal + w.rain + w.wind + w.uv + w.sun - 1) < WEIGHT_SUM_TOLERANCE, {
-    message: 'pesos devem somar 1',
-  });
+  .refine(
+    (w) =>
+      Math.abs(w.thermal + w.rain + w.wind + w.uv + w.sun + w.pressure - 1) < WEIGHT_SUM_TOLERANCE,
+    {
+      message: 'pesos devem somar 1',
+    },
+  );
 
 const activitySchema = z
   .object({
@@ -56,6 +60,7 @@ const activitiesSchema = z
     cycle: activitySchema,
     beach: activitySchema,
     picnic: activitySchema,
+    fish: activitySchema,
   })
   .strict()
   .refine((a) => ACTIVITY_IDS.every((id) => a[id].id === id), {

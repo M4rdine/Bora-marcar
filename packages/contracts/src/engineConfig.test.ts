@@ -32,7 +32,7 @@ describe('engineConfigSchema', () => {
   });
 
   it('rejeita pesos que não somam 1', () => {
-    const weights = { thermal: 0.5, rain: 0.3, wind: 0.15, uv: 0.1, sun: 0.05 };
+    const weights = { thermal: 0.5, rain: 0.3, wind: 0.15, uv: 0.1, sun: 0.05, pressure: 0 };
     expect(engineConfigSchema.safeParse(withWalk({ weights })).success).toBe(false);
   });
 

@@ -3,6 +3,7 @@ import { FACTOR_IDS, type ActivityProfile, type FactorId } from '../activities/t
 import {
   averageFactor,
   describeRain,
+  describePressure,
   describeSun,
   describeThermal,
   describeUv,
@@ -16,7 +17,13 @@ const MIN_THIRD_WEIGHT = 0.1;
 const CAVEAT_LOOKBACK_HOURS = 3;
 const CAVEAT_COMFORT = 0.5;
 
-type CaveatFactor = Exclude<FactorId, 'sun'>;
+/**
+ * Fatores que rendem um aviso de "espere um pouco".
+ *
+ * Fora sol e pressão: nuvem não é motivo para adiar, e a tendência da pressão descreve o dia
+ * inteiro — dizer "antes das 15h a pressão estava caindo" não ajuda ninguém a decidir esperar.
+ */
+type CaveatFactor = Exclude<FactorId, 'sun' | 'pressure'>;
 
 function rankedFactors(profile: ActivityProfile): readonly FactorId[] {
   const sorted = [...FACTOR_IDS]
@@ -42,6 +49,8 @@ function phraseFor(f: FactorId, value: number): string {
       return `UV ${describeUv(value)}`;
     case 'sun':
       return describeSun(value);
+    case 'pressure':
+      return describePressure(value);
   }
 }
 
@@ -82,7 +91,7 @@ export function buildCaveat(
   );
   if (before.length === 0) return null;
   const problems = FACTOR_IDS.filter(
-    (f): f is CaveatFactor => f !== 'sun' && profile.weights[f] > 0,
+    (f): f is CaveatFactor => f !== 'sun' && f !== 'pressure' && profile.weights[f] > 0,
   )
     .map((f) => ({ f, comfort: Math.min(...before.map((h) => h.comforts[f])) }))
     .filter(({ comfort }) => comfort < CAVEAT_COMFORT)

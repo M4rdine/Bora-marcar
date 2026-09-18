@@ -26,6 +26,7 @@ const GLYPH_BY_ICON: Partial<Record<IconName, GlyphName>> = {
   cycle: 'bike',
   beach: 'beach',
   picnic: 'basket',
+  fish: 'fish',
 };
 
 type Props = {

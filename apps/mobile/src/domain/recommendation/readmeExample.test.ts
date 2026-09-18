@@ -30,6 +30,7 @@ describe('exemplo numérico do README', () => {
       wind: 1,
       uv: 0.825,
       sun: 1,
+      pressure: 0.7,
     });
     expect(result.score).toBe(98);
     expect(result.label).toBe('great');

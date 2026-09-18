@@ -26,7 +26,7 @@ describe('createOpenMeteoForecast', () => {
     expect(url.searchParams.get('timezone')).toBe('auto');
     expect(url.searchParams.get('forecast_days')).toBe('5');
     expect(url.searchParams.get('hourly')).toBe(
-      'temperature_2m,apparent_temperature,precipitation_probability,precipitation,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,weather_code,is_day,relative_humidity_2m',
+      'temperature_2m,apparent_temperature,precipitation_probability,precipitation,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,weather_code,is_day,relative_humidity_2m,pressure_msl',
     );
     expect(url.searchParams.get('daily')).toBe(
       'sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min',

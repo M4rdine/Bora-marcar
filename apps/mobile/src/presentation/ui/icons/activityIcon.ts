@@ -16,6 +16,7 @@ const ICON_BY_ACTIVITY: Record<ActivityId, IconName> = {
   cycle: 'cycle',
   beach: 'beach',
   picnic: 'picnic',
+  fish: 'fish',
 };
 
 export function activityIcon(id: ActivityId): IconName {

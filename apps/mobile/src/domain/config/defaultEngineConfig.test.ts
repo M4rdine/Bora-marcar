@@ -43,7 +43,7 @@ describe('defaultEngineConfig', () => {
       { ok: 20, max: 45 },
       { ok: 5, max: 9 },
       0.7,
-      { thermal: 0.4, rain: 0.3, wind: 0.15, uv: 0.1, sun: 0.05 },
+      { thermal: 0.4, rain: 0.3, wind: 0.15, uv: 0.1, sun: 0.05, pressure: 0 },
     ],
     [
       'run',
@@ -52,7 +52,7 @@ describe('defaultEngineConfig', () => {
       { ok: 20, max: 45 },
       { ok: 5, max: 9 },
       0.6,
-      { thermal: 0.45, rain: 0.25, wind: 0.15, uv: 0.15, sun: 0 },
+      { thermal: 0.45, rain: 0.25, wind: 0.15, uv: 0.15, sun: 0, pressure: 0 },
     ],
     [
       'cycle',
@@ -61,7 +61,7 @@ describe('defaultEngineConfig', () => {
       { ok: 15, max: 35 },
       { ok: 5, max: 9 },
       0.3,
-      { thermal: 0.3, rain: 0.3, wind: 0.3, uv: 0.1, sun: 0 },
+      { thermal: 0.3, rain: 0.3, wind: 0.3, uv: 0.1, sun: 0, pressure: 0 },
     ],
     [
       'beach',
@@ -70,7 +70,7 @@ describe('defaultEngineConfig', () => {
       { ok: 15, max: 35 },
       { ok: 6, max: 10 },
       0,
-      { thermal: 0.3, rain: 0.25, wind: 0.15, uv: 0.1, sun: 0.2 },
+      { thermal: 0.3, rain: 0.25, wind: 0.15, uv: 0.1, sun: 0.2, pressure: 0 },
     ],
     [
       'picnic',
@@ -79,7 +79,7 @@ describe('defaultEngineConfig', () => {
       { ok: 15, max: 40 },
       { ok: 5, max: 9 },
       0.2,
-      { thermal: 0.35, rain: 0.35, wind: 0.15, uv: 0.05, sun: 0.1 },
+      { thermal: 0.35, rain: 0.35, wind: 0.15, uv: 0.05, sun: 0.1, pressure: 0 },
     ],
   ] as const)(
     'valores literais de %s conferem com o spec',

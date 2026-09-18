@@ -23,6 +23,8 @@ export function makeForecastDto(dates: readonly string[]): OpenMeteoForecast {
       weather_code: perHour(() => 1),
       is_day: perHour((h) => (h >= 6 && h < 18 ? 1 : 0)),
       relative_humidity_2m: perHour(() => 55),
+      // Cai um hectopascal por hora: dá à tendência de três horas um valor estável de -3.
+      pressure_msl: perHour((h) => 1016 - h),
     },
     daily: {
       time: [...dates],

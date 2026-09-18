@@ -25,7 +25,8 @@
         "rain": 0.3,
         "wind": 0.15,
         "uv": 0.1,
-        "sun": 0.05
+        "sun": 0.05,
+        "pressure": 0
       }
     },
     "run": {
@@ -52,7 +53,8 @@
         "rain": 0.25,
         "wind": 0.15,
         "uv": 0.15,
-        "sun": 0
+        "sun": 0,
+        "pressure": 0
       }
     },
     "cycle": {
@@ -79,7 +81,8 @@
         "rain": 0.3,
         "wind": 0.3,
         "uv": 0.1,
-        "sun": 0
+        "sun": 0,
+        "pressure": 0
       }
     },
     "beach": {
@@ -106,7 +109,8 @@
         "rain": 0.25,
         "wind": 0.15,
         "uv": 0.1,
-        "sun": 0.2
+        "sun": 0.2,
+        "pressure": 0
       }
     },
     "picnic": {
@@ -133,7 +137,36 @@
         "rain": 0.35,
         "wind": 0.15,
         "uv": 0.05,
-        "sun": 0.1
+        "sun": 0.1,
+        "pressure": 0
+      }
+    },
+    "fish": {
+      "id": "fish",
+      "name": "Pesca",
+      "emoji": "🎣",
+      "thermal": {
+        "idealMin": 16,
+        "idealMax": 30,
+        "tolMin": 6,
+        "tolMax": 38
+      },
+      "wind": {
+        "ok": 8,
+        "max": 25
+      },
+      "uv": {
+        "ok": 6,
+        "max": 10
+      },
+      "nightFactor": 0.85,
+      "weights": {
+        "thermal": 0.15,
+        "rain": 0.2,
+        "wind": 0.25,
+        "uv": 0.05,
+        "sun": 0,
+        "pressure": 0.35
       }
     }
   },

@@ -76,6 +76,11 @@ const RAIN_IDEAL_PCT = 20;
 const RAIN_ZERO_PCT = 80;
 const SUN_IDEAL_CLOUD_PCT = 30;
 const SUN_MAX_CLOUD_PCT = 100;
+/** Limiares da curva de pressão. Espelha `PRESSURE_CURVE` em `comfort.ts`. */
+const PRESSURE_IDEAL_FALL = -3;
+const PRESSURE_SOFT_FALL = -1;
+const PRESSURE_MIN_TREND = -6;
+const PRESSURE_MAX_TREND = 6;
 
 function readingsOf(h: HourlyConditions, p: ActivityProfile): Readonly<Record<FactorId, Reading>> {
   return {
@@ -108,6 +113,12 @@ function readingsOf(h: HourlyConditions, p: ActivityProfile): Readonly<Record<Fa
       secondary: null,
       comfortBand: [0, SUN_IDEAL_CLOUD_PCT],
       toleranceBand: [0, SUN_MAX_CLOUD_PCT],
+    },
+    pressure: {
+      reading: h.pressureTrendHpa,
+      secondary: h.pressureHpa,
+      comfortBand: [PRESSURE_IDEAL_FALL, PRESSURE_SOFT_FALL],
+      toleranceBand: [PRESSURE_MIN_TREND, PRESSURE_MAX_TREND],
     },
   };
 }

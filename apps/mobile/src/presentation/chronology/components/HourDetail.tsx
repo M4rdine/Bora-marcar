@@ -32,6 +32,7 @@ function readingOf(row: FactorAccount): string {
     wind: () => r.wind(row.reading, row.secondary ?? row.reading),
     uv: () => r.uv(row.reading),
     sun: () => r.sun(row.reading),
+    pressure: () => r.pressure(row.reading, row.secondary ?? 0),
   };
   return map[row.id]();
 }
@@ -47,6 +48,7 @@ function criterionOf(row: FactorAccount): string {
     wind: () => c.wind(idealMax, tolMax),
     uv: () => c.uv(idealMax, tolMax),
     sun: () => c.sun(idealMax),
+    pressure: () => c.pressure(idealMin, idealMax),
   };
   return map[row.id]();
 }

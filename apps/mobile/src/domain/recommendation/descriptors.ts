@@ -74,6 +74,9 @@ export function factorValue(f: FactorId, h: HourlyConditions): number {
       return h.uvIndex;
     case 'sun':
       return h.cloudCoverPct;
+    case 'pressure':
+      // A tendência, não o valor: é ela que o motor pontua.
+      return h.pressureTrendHpa;
   }
 }
 
@@ -81,3 +84,20 @@ export function averageFactor(f: FactorId, hours: readonly HourlyConditions[]): 
   if (hours.length === 0) return 0;
   return hours.reduce((acc, h) => acc + factorValue(f, h), 0) / hours.length;
 }
+
+/**
+ * A tendência da pressão em palavras.
+ *
+ * Só a pesca pesa este fator, então a frase é escrita do ponto de vista de quem pesca: pressão
+ * caindo é boa notícia, subindo é má.
+ */
+export const describePressure = (trendHpa: number): string =>
+  pick(
+    [
+      [-2, 'pressão em queda'],
+      [-0.5, 'pressão caindo de leve'],
+      [0.5, 'pressão estável'],
+    ],
+    trendHpa,
+    'pressão subindo',
+  );

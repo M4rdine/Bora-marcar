@@ -31,6 +31,9 @@ export const hourlyDtoSchema = z
     weatherCode: z.number(),
     isDay: z.boolean(),
     humidityPct: z.number(),
+    pressureHpa: z.number(),
+    /** Variação da pressão nas últimas três horas. Negativo = caindo. */
+    pressureTrendHpa: z.number(),
   })
   .strict();
 
