@@ -111,6 +111,14 @@ const FLAME_SIZE = 12;
  * desenham um entalhe entre os dias — o calendário virava uma faixa contínua recortada.
  */
 const COLUMN_GAP = tokens.space[1];
+/**
+ * TODA célula reserva a mesma borda, transparente quando não há o que marcar.
+ *
+ * Com `aspectRatio`, o Yoga soma a borda à altura: quando só o dia de hoje tinha `borderWidth`, a
+ * célula dele saía quatro pontos mais alta que as vizinhas e entortava a linha inteira. Reservar
+ * a borda em todas iguala a geometria, e só a cor muda.
+ */
+const CELL_BORDER = 2;
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
@@ -124,11 +132,13 @@ const styles = StyleSheet.create({
     flex: 1,
     aspectRatio: 1,
     borderRadius: tokens.radius.cell,
+    borderWidth: CELL_BORDER,
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  restBorder: { borderWidth: 1, borderColor: tokens.color.border, borderStyle: 'dashed' },
-  todayRing: { borderWidth: 2, borderColor: tokens.color.gold },
+  restBorder: { borderColor: tokens.color.border, borderStyle: 'dashed' },
+  todayRing: { borderColor: tokens.color.gold },
   legend: { flexDirection: 'row', gap: tokens.space[3] },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
   legendDot: {
