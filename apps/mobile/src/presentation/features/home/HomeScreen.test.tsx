@@ -174,7 +174,7 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Nota final')).toBeTruthy();
     expect(screen.getByText(/° de sensação$/)).toBeTruthy();
     expect(screen.getAllByText(/km\/h/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/% de nuvens$/)).toBeTruthy();
+    expect(screen.getAllByText(/% de nuvens$/).length).toBeGreaterThan(0);
     // tocar de novo fecha
     fireEvent.press(screen.getByLabelText(/^Hoje, 16h, /));
     expect(screen.queryByText('Por que esta nota')).toBeNull();

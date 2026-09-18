@@ -36,6 +36,21 @@ function readingOf(row: FactorAccount): string {
   return map[row.id]();
 }
 
+/** O critério do fator, com os números do perfil desta atividade. */
+function criterionOf(row: FactorAccount): string {
+  const c = t.chronology.criteria;
+  const [idealMin, idealMax] = row.comfortBand;
+  const [tolMin, tolMax] = row.toleranceBand;
+  const map: Record<FactorId, () => string> = {
+    thermal: () => c.thermal(idealMin, idealMax, tolMin, tolMax),
+    rain: () => c.rain(idealMax, tolMax),
+    wind: () => c.wind(idealMax, tolMax),
+    uv: () => c.uv(idealMax, tolMax),
+    sun: () => c.sun(idealMax),
+  };
+  return map[row.id]();
+}
+
 /**
  * Uma parcela da nota.
  *
@@ -86,24 +101,29 @@ function FactorLine({
           {t.chronology.notCounted(activity)}
         </AppText>
       ) : (
-        <View style={styles.barRow}>
-          <View style={styles.barArea}>
-            <View style={[styles.track, { width: `${trackPct}%` }]}>
-              <View
-                style={[
-                  styles.fill,
-                  {
-                    width: `${fillPct}%`,
-                    backgroundColor: tokens.color.score[toneFor(row.comfort)],
-                  },
-                ]}
-              />
-            </View>
-          </View>
-          <AppText variant="micro" tone="muted" tabular style={styles.points}>
-            {t.chronology.points(got, max)}
+        <>
+          <AppText variant="micro" tone="muted">
+            {criterionOf(row)}
           </AppText>
-        </View>
+          <View style={styles.barRow}>
+            <View style={styles.barArea}>
+              <View style={[styles.track, { width: `${trackPct}%` }]}>
+                <View
+                  style={[
+                    styles.fill,
+                    {
+                      width: `${fillPct}%`,
+                      backgroundColor: tokens.color.score[toneFor(row.comfort)],
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+            <AppText variant="micro" tone="muted" tabular style={styles.points}>
+              {t.chronology.points(got, max)}
+            </AppText>
+          </View>
+        </>
       )}
     </View>
   );

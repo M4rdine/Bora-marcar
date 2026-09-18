@@ -12,6 +12,9 @@ const statLabels = {
   cities: (n: number) => plural(n, 'cidade', 'cidades'),
   achievements: (n: number) => plural(n, 'conquista', 'conquistas'),
 };
+/** Uma casa decimal só quando ela diz alguma coisa, com vírgula: 33,4 e 33. */
+const decimal = (n: number): string => n.toFixed(1).replace(/\.0$/, '').replace('.', ',');
+
 const streakDaysLabel = (n: number): string => `${n} ${statLabels.streak(n)}`;
 
 const LABELS = {
@@ -199,18 +202,33 @@ export const t = {
     // não normalizada: "18°" e "11 km/h" dizem algo a quem vai sair; "conforto 0,92" não diz.
     howItAdds: (activity: string) => `Como a nota de ${activity.toLowerCase()} é montada`,
     readings: {
-      thermal: (c: number) => `${Math.round(c)}° de sensação`,
+      // Uma casa decimal quando ela existe. Arredondar 33,4 para "33" fazia a tela mostrar
+      // exatamente o limite do perfil ao lado de "temperatura fora do confortável" — um número
+      // que, lido de frente, não produz o resultado exibido logo abaixo.
+      thermal: (c: number) => `${decimal(c)}° de sensação`,
       rain: (pct: number, mm: number) =>
         mm > 0 ? `${pct}% de chance · ${mm.toFixed(1)} mm` : `${pct}% de chance`,
       wind: (kmh: number, gusts: number) =>
         gusts > kmh
           ? `${Math.round(kmh)} km/h · rajada ${Math.round(gusts)}`
           : `${Math.round(kmh)} km/h`,
-      uv: (index: number) => `índice ${index.toFixed(1).replace(/\.0$/, '')}`,
+      uv: (index: number) => `índice ${decimal(index)}`,
       sun: (cloudPct: number) => `${Math.round(cloudPct)}% de nuvens`,
     },
     points: (got: number, max: number) => `${got} de ${max}`,
     notCounted: (activity: string) => `não conta para ${activity.toLowerCase()}`,
+    // O critério do fator, com os números do PERFIL da atividade. É o que transforma "0 de 35"
+    // de defeito aparente em consequência visível: 33° é o teto do piquenique.
+    criteria: {
+      thermal: (idealMin: number, idealMax: number, tolMin: number, tolMax: number) =>
+        `ideal ${decimal(idealMin)}–${decimal(idealMax)}°, zera fora de ${decimal(tolMin)}–${decimal(tolMax)}°`,
+      rain: (ideal: number, zero: number) => `ideal até ${ideal}%, zera a partir de ${zero}%`,
+      wind: (ideal: number, zero: number) =>
+        `ideal até ${decimal(ideal)} km/h, zera em ${decimal(zero)}`,
+      uv: (ideal: number, max: number) =>
+        `ideal até ${decimal(ideal)}, piso a partir de ${decimal(max)}`,
+      sun: (ideal: number) => `ideal até ${ideal}% de nuvens`,
+    },
     pointsUnit: 'pts',
     weightOf: (pct: number) => `vale até ${pct}% da nota`,
     subtotal: 'Soma dos fatores',

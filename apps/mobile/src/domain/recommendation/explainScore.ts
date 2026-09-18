@@ -23,6 +23,15 @@ export type FactorAccount = {
   readonly points: number;
   /** Pontos que o fator valeria com conforto perfeito: peso × 100. */
   readonly maxPoints: number;
+  /**
+   * O critério: a faixa em que o fator entrega tudo, e aquela em que ele deixa de entregar.
+   *
+   * Sem isto, "0 de 35" numa sensação de 33° parece defeito. Com isto, lê-se que o piquenique
+   * tem conforto pleno entre 19 e 27 graus e chega a zero em 33 — e o zero passa a ser uma
+   * consequência visível do perfil, não um número caído do céu.
+   */
+  readonly comfortBand: readonly [number, number];
+  readonly toleranceBand: readonly [number, number];
 };
 
 /** Um corte aplicado depois da soma dos fatores. */
@@ -55,21 +64,57 @@ const PERCENT = 100;
 const FOG_CODES = new Set([45, 48]);
 const FOG_CYCLING_FACTOR = 0.6;
 
-function readingsOf(
-  h: HourlyConditions,
-): Readonly<Record<FactorId, { readonly reading: number; readonly secondary: number | null }>> {
+type Reading = {
+  readonly reading: number;
+  readonly secondary: number | null;
+  readonly comfortBand: readonly [number, number];
+  readonly toleranceBand: readonly [number, number];
+};
+
+/** Limiares fixos das curvas de chuva e de sol, que não dependem do perfil. Espelha `comfort.ts`. */
+const RAIN_IDEAL_PCT = 20;
+const RAIN_ZERO_PCT = 80;
+const SUN_IDEAL_CLOUD_PCT = 30;
+const SUN_MAX_CLOUD_PCT = 100;
+
+function readingsOf(h: HourlyConditions, p: ActivityProfile): Readonly<Record<FactorId, Reading>> {
   return {
-    thermal: { reading: h.apparentTemperature, secondary: null },
-    rain: { reading: h.precipitationProbability, secondary: h.precipitationMm },
-    wind: { reading: h.windSpeedKmh, secondary: h.windGustsKmh },
-    uv: { reading: h.uvIndex, secondary: null },
-    sun: { reading: h.cloudCoverPct, secondary: null },
+    thermal: {
+      reading: h.apparentTemperature,
+      secondary: null,
+      comfortBand: [p.thermal.idealMin, p.thermal.idealMax],
+      toleranceBand: [p.thermal.tolMin, p.thermal.tolMax],
+    },
+    rain: {
+      reading: h.precipitationProbability,
+      secondary: h.precipitationMm,
+      comfortBand: [0, RAIN_IDEAL_PCT],
+      toleranceBand: [0, RAIN_ZERO_PCT],
+    },
+    wind: {
+      reading: h.windSpeedKmh,
+      secondary: h.windGustsKmh,
+      comfortBand: [0, p.wind.ok],
+      toleranceBand: [0, p.wind.max],
+    },
+    uv: {
+      reading: h.uvIndex,
+      secondary: null,
+      comfortBand: [0, p.uv.ok],
+      toleranceBand: [0, p.uv.max],
+    },
+    sun: {
+      reading: h.cloudCoverPct,
+      secondary: null,
+      comfortBand: [0, SUN_IDEAL_CLOUD_PCT],
+      toleranceBand: [0, SUN_MAX_CLOUD_PCT],
+    },
   };
 }
 
 export function explainScore(h: HourlyConditions, profile: ActivityProfile): ScoreExplanation {
   const comforts = comfortsFor(h, profile);
-  const readings = readingsOf(h);
+  const readings = readingsOf(h, profile);
 
   const factors = FACTOR_IDS.map((id): FactorAccount => {
     const weight = profile.weights[id];
