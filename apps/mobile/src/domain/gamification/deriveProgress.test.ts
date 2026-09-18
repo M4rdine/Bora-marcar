@@ -1,6 +1,6 @@
 import { defaultEngineConfig as cfg } from '../config/defaultEngineConfig';
 
-import { deriveProgress } from './deriveProgress';
+import { deriveProgress, planFor } from './deriveProgress';
 import { badDay, cancelled, confirmed, logged, loggedRun, planned } from './testing/fixtures';
 
 const TODAY = '2026-09-13';
@@ -13,7 +13,7 @@ describe('deriveProgress', () => {
       streak: 0,
       records: [],
       citiesCount: 0,
-      activePlan: null,
+      todayPlans: [],
       todayRecord: null,
     });
     expect(p.level.level).toBe(1);
@@ -42,7 +42,7 @@ describe('deriveProgress', () => {
       streakBonus: 35,
       total: 153,
     });
-    expect(p.activePlan).toBeNull();
+    expect(p.todayPlans).toHaveLength(0);
   });
 
   it('confirmação até 2h após o fim ainda cumpre o plano; depois disso não', () => {
@@ -87,15 +87,37 @@ describe('deriveProgress', () => {
     expect(p.todayCount).toBe(2);
   });
 
-  it('plano ativo é o plano de hoje não cancelado e não confirmado', () => {
+  it('plano pendente de hoje é o não cancelado e não confirmado', () => {
     const plan = planned(TODAY);
-    expect(deriveProgress([plan], cfg, TODAY).activePlan).toMatchObject({
+    expect(deriveProgress([plan], cfg, TODAY).todayPlans[0]).toMatchObject({
       planId: plan.id,
       date: TODAY,
       window: plan.window,
     });
-    expect(deriveProgress([plan, cancelled(plan)], cfg, TODAY).activePlan).toBeNull();
-    expect(deriveProgress([planned('2026-09-12')], cfg, TODAY).activePlan).toBeNull();
+    expect(deriveProgress([plan, cancelled(plan)], cfg, TODAY).todayPlans).toHaveLength(0);
+    expect(deriveProgress([planned('2026-09-12')], cfg, TODAY).todayPlans).toHaveLength(0);
+  });
+
+  /**
+   * O plano é por atividade, não por dia. Pedalar de manhã e correr à tarde é um dia comum, e
+   * antes o segundo plano simplesmente substituía o primeiro na leitura.
+   */
+  it('o mesmo dia comporta um plano por atividade', () => {
+    const bike = planned(TODAY, { activity: 'cycle', startHour: 8 });
+    const run = planned(TODAY, { activity: 'run', startHour: 18 });
+    const p = deriveProgress([bike, run], cfg, TODAY);
+    expect(p.todayPlans).toHaveLength(2);
+    expect(planFor(p.todayPlans, 'cycle')?.window.startHour).toBe(8);
+    expect(planFor(p.todayPlans, 'run')?.window.startHour).toBe(18);
+    expect(planFor(p.todayPlans, 'walk')).toBeNull();
+  });
+
+  it('replanejar a MESMA atividade substitui, não soma', () => {
+    const cedo = planned(TODAY, { activity: 'run', startHour: 8 });
+    const tarde = planned(TODAY, { activity: 'run', startHour: 18 });
+    const p = deriveProgress([cedo, tarde], cfg, TODAY);
+    expect(p.todayPlans).toHaveLength(1);
+    expect(planFor(p.todayPlans, 'run')?.window.startHour).toBe(18);
   });
 
   it('confirmação de plano inexistente ou cancelado é ignorada', () => {
@@ -144,7 +166,7 @@ describe('deriveProgress', () => {
     expect(p.records[0]?.date).toBe(TODAY);
   });
 
-  it('plansByDate expõe o plano ativo de cada data e activePlan é o de hoje', () => {
+  it('plansByDate expõe os planos pendentes de cada data, e todayPlans os de hoje', () => {
     const today = planned(TODAY, { startHour: 17 });
     const tomorrow = planned('2026-09-14', { startHour: 7 });
     const cancelledPlan = planned('2026-09-15', { startHour: 9 });
@@ -154,8 +176,8 @@ describe('deriveProgress', () => {
       TODAY,
     );
     expect([...p.plansByDate.keys()].sort()).toEqual([TODAY, '2026-09-14']);
-    expect(p.plansByDate.get('2026-09-14')?.window.startHour).toBe(7);
-    expect(p.activePlan?.planId).toBe(today.id);
+    expect(p.plansByDate.get('2026-09-14')?.[0]?.window.startHour).toBe(7);
+    expect(p.todayPlans[0]?.planId).toBe(today.id);
   });
 
   it('plano confirmado sai de plansByDate', () => {

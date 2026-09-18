@@ -1,4 +1,12 @@
-import { deriveProgress, err, ok, type ActivityId, type Result, type TimeWindow } from '@/domain';
+import {
+  deriveProgress,
+  planFor,
+  err,
+  ok,
+  type ActivityId,
+  type Result,
+  type TimeWindow,
+} from '@/domain';
 
 import type {
   City,
@@ -39,9 +47,10 @@ export const planActivity =
   async (input: PlanInput): Promise<Result<{ planId: string }, PlanError>> => {
     const events = await progress.load();
     const current = deriveProgress(events, await config.get(), input.window.date);
-    // Precedência intencional: registro do dia é estado terminal, então prevalece mesmo
-    // havendo um plano pendente para o mesmo dia.
-    if (current.activePlan !== null) return err({ code: 'alreadyPlanned' });
+    // Um plano pendente por atividade. Ter ciclismo marcado não impede marcar corrida no mesmo
+    // dia; o que não pode é marcar corrida duas vezes.
+    const pendentes = current.plansByDate.get(input.window.date) ?? [];
+    if (planFor(pendentes, input.activity) !== null) return err({ code: 'alreadyPlanned' });
 
     const planId = ids.next();
     await progress.append({

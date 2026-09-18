@@ -1,4 +1,4 @@
-import { deriveProgress, ok, type ActivityId, type Result } from '@/domain';
+import { deriveProgress, planFor, ok, type ActivityId, type Result } from '@/domain';
 
 import type {
   City,
@@ -35,7 +35,9 @@ export const logActivity =
   async (input: LogInput): Promise<Result<{ eventId: string }, LogError>> => {
     const events = await progress.load();
     const current = deriveProgress(events, await config.get(), input.date);
-    const pendingPlan = current.activePlan;
+    // O lembrete cancelado é o da atividade registrada. Cancelar o de outra apagaria um plano
+    // que continua de pé.
+    const pendingPlan = planFor(current.plansByDate.get(input.date) ?? [], input.activity);
     const eventId = ids.next();
     await progress.append({
       type: 'logged',

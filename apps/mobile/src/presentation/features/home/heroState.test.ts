@@ -34,6 +34,7 @@ describe('deriveHeroState', () => {
     const now = at(8);
     const s = deriveHeroState({
       today: today(now),
+      activity: 'run',
       now,
       progress: progressOf([]),
       graceHours: 2,
@@ -49,6 +50,7 @@ describe('deriveHeroState', () => {
     expect(
       deriveHeroState({
         today: today(at(8)),
+        activity: 'run',
         now: at(8),
         progress,
         graceHours: 2,
@@ -57,6 +59,7 @@ describe('deriveHeroState', () => {
     ).toBe('planned');
     const s = deriveHeroState({
       today: today(at(17, 30)),
+      activity: 'run',
       now: at(17, 30),
       progress,
       graceHours: 2,
@@ -69,6 +72,7 @@ describe('deriveHeroState', () => {
     const plan = planned('2026-09-13', { startHour: 17 });
     const s = deriveHeroState({
       today: today(at(20)),
+      activity: 'run',
       now: at(20),
       progress: progressOf([plan, confirmed(plan)]),
       graceHours: 2,
@@ -80,6 +84,7 @@ describe('deriveHeroState', () => {
   it('sem janela boa → noWindow, mesmo com dia de folga registrado', () => {
     const s = deriveHeroState({
       today: today(at(8), true),
+      activity: 'run',
       now: at(8),
       progress: progressOf([badDay('2026-09-13')]),
       graceHours: 2,
@@ -92,6 +97,7 @@ describe('deriveHeroState', () => {
     const plan = planned('2026-09-13', { startHour: 7, endHour: 9 });
     const s = deriveHeroState({
       today: today(at(15)),
+      activity: 'run',
       now: at(15),
       progress: progressOf([plan]),
       graceHours: 2,
@@ -105,6 +111,7 @@ describe('deriveHeroState', () => {
     const now = at(20);
     const s = deriveHeroState({
       today: beachToday(now),
+      activity: 'run',
       now,
       progress: progressOf([]),
       graceHours: 2,
@@ -117,11 +124,43 @@ describe('deriveHeroState', () => {
   it('registro espontâneo também é done', () => {
     const s = deriveHeroState({
       today: today(at(20)),
+      activity: 'run',
       now: at(20),
-      progress: progressOf([logged('2026-09-13')]),
+      progress: progressOf([logged('2026-09-13', { activity: 'run' })]),
       graceHours: 2,
       fairThreshold: cfg.scores.fair,
     });
     expect(s.kind).toBe('done');
+  });
+
+  /**
+   * O cartão é da atividade selecionada. Antes ele vinha do dia inteiro: quem tinha ciclismo
+   * marcado às 8h via "ciclismo às 8h" com corrida selecionada, e trocar de aba não mudava nada.
+   */
+  it('o plano de OUTRA atividade não vira o cartão desta', () => {
+    const now = at(8);
+    const bike = planned('2026-09-13', { activity: 'cycle', startHour: 8, endHour: 10 });
+    const s = deriveHeroState({
+      today: today(now),
+      activity: 'run',
+      now,
+      progress: progressOf([bike]),
+      graceHours: 2,
+      fairThreshold: cfg.scores.fair,
+    });
+    expect(s.kind).toBe('plan');
+  });
+
+  it('o registro de OUTRA atividade não conclui esta', () => {
+    const now = at(20);
+    const s = deriveHeroState({
+      today: today(now),
+      activity: 'run',
+      now,
+      progress: progressOf([logged('2026-09-13', { activity: 'cycle' })]),
+      graceHours: 2,
+      fairThreshold: cfg.scores.fair,
+    });
+    expect(s.kind).not.toBe('done');
   });
 });

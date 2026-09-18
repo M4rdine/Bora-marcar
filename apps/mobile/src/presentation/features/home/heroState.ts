@@ -1,6 +1,8 @@
 import {
   isWithinWindow,
+  planFor,
   type ActivePlan,
+  type ActivityId,
   type ActivityRecord,
   type DayRecommendation,
   type LocalDateTime,
@@ -27,6 +29,8 @@ export type HeroState =
 
 type Input = {
   readonly today: DayRecommendation;
+  /** A atividade selecionada. O cartão é DELA: outra atividade tem outro plano e outro registro. */
+  readonly activity: ActivityId;
   readonly now: LocalDateTime;
   readonly progress: Progress;
   readonly graceHours: number;
@@ -41,13 +45,18 @@ const MINUTES_PER_HOUR = 60;
  */
 export function deriveHeroState({
   today,
+  activity,
   now,
   progress,
   graceHours,
   fairThreshold,
 }: Input): HeroState {
-  if (progress.todayRecord !== null) return { kind: 'done', record: progress.todayRecord };
-  const plan = progress.activePlan;
+  // Registro e plano são lidos pela atividade selecionada. Antes vinham do dia inteiro, e quem
+  // tinha ciclismo marcado via o cartão de ciclismo mesmo com corrida selecionada — trocar de aba
+  // não mudava nada na tela.
+  const record = progress.records.findLast((r) => r.date === now.date && r.activity === activity);
+  if (record !== undefined) return { kind: 'done', record };
+  const plan = planFor(progress.todayPlans, activity);
   if (plan !== null) {
     if (isWithinWindow(plan.window, now, graceHours)) {
       const nowScore = today.hours.find((h) => h.hour.hour === now.hour)?.score ?? null;

@@ -27,8 +27,16 @@ export type Progress = {
   readonly activeDates: ReadonlySet<string>;
   readonly restDates: ReadonlySet<string>;
   readonly citiesCount: number;
-  readonly plansByDate: ReadonlyMap<string, ActivePlan>;
-  readonly activePlan: ActivePlan | null;
+  /**
+   * Os planos pendentes de cada data. Uma data pode ter MAIS DE UM: o plano é por atividade.
+   *
+   * Era um plano por dia, e a tela inicial mostrava esse plano qualquer que fosse a atividade
+   * selecionada — quem tinha ciclismo às 8h via "ciclismo às 8h" com corrida selecionada, e
+   * trocar de aba não mudava nada. Uma pessoa pode pedalar de manhã e correr à tarde.
+   */
+  readonly plansByDate: ReadonlyMap<string, readonly ActivePlan[]>;
+  /** Os planos pendentes de hoje, em qualquer atividade. */
+  readonly todayPlans: readonly ActivePlan[];
   /**
    * O registro MAIS RECENTE de hoje, não o primeiro. Um dia pode ter mais de uma atividade, e o
    * herói mostra o recibo do que acabou de acontecer.
@@ -121,18 +129,30 @@ const toActivePlan = (plan: PlannedEvent): ActivePlan => ({
 });
 
 /** Último plano não cancelado e não confirmado de cada data. */
-function buildPlansByDate(sorted: readonly GamificationEvent[]): ReadonlyMap<string, ActivePlan> {
+function buildPlansByDate(
+  sorted: readonly GamificationEvent[],
+): ReadonlyMap<string, readonly ActivePlan[]> {
   const cancelled = new Set(sorted.flatMap((e) => (e.type === 'planCancelled' ? [e.planId] : [])));
   const confirmedIds = new Set(sorted.flatMap((e) => (e.type === 'confirmed' ? [e.planId] : [])));
-  return sorted
-    .filter(
-      (e): e is PlannedEvent =>
-        e.type === 'planned' && !cancelled.has(e.id) && !confirmedIds.has(e.id),
-    )
-    .reduce(
-      (map, plan) => new Map(map).set(plan.date, toActivePlan(plan)),
-      new Map<string, ActivePlan>(),
-    );
+  const pending = sorted.filter(
+    (e): e is PlannedEvent =>
+      e.type === 'planned' && !cancelled.has(e.id) && !confirmedIds.has(e.id),
+  );
+  // Um plano pendente por data E atividade: replanejar a mesma atividade substitui o anterior,
+  // planejar outra soma. Os eventos vêm ordenados, então o último de cada par vence.
+  const byKey = pending.reduce(
+    (map, plan) => new Map(map).set(`${plan.date}|${plan.activity}`, toActivePlan(plan)),
+    new Map<string, ActivePlan>(),
+  );
+  return [...byKey.values()].reduce(
+    (map, plan) => new Map(map).set(plan.date, [...(map.get(plan.date) ?? []), plan]),
+    new Map<string, readonly ActivePlan[]>(),
+  );
+}
+
+/** O plano pendente daquela atividade, entre os da data. */
+export function planFor(plans: readonly ActivePlan[], activity: ActivityId): ActivePlan | null {
+  return plans.find((p) => p.activity === activity) ?? null;
 }
 
 export function deriveProgress(
@@ -156,7 +176,7 @@ export function deriveProgress(
     restDates,
     citiesCount: new Set(records.map((r) => r.cityId)).size,
     plansByDate,
-    activePlan: plansByDate.get(today) ?? null,
+    todayPlans: plansByDate.get(today) ?? [],
     todayRecord: records.findLast((r) => r.date === today) ?? null,
     todayCount: records.filter((r) => r.date === today).length,
   };

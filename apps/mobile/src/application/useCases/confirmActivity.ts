@@ -29,8 +29,8 @@ export const confirmActivity =
   async (input: ConfirmInput): Promise<Result<{ eventId: string }, ConfirmError>> => {
     const events = await progress.load();
     const current = deriveProgress(events, await config.get(), input.date);
-    if (current.activePlan === null || current.activePlan.planId !== input.planId)
-      return err({ code: 'planNotFound' });
+    const pendentes = current.plansByDate.get(input.date) ?? [];
+    if (!pendentes.some((p) => p.planId === input.planId)) return err({ code: 'planNotFound' });
     const eventId = ids.next();
     await progress.append({
       type: 'confirmed',

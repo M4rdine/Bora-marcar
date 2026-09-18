@@ -230,7 +230,8 @@ describe('HomeScreen', () => {
   });
 
   it('plano ativo antes da janela mostra Planejado e permite desfazer', async () => {
-    usePreferences.setState({ city: saoPaulo });
+    // A fixture planeja corrida, e o cartão agora é da atividade SELECIONADA.
+    usePreferences.setState({ city: saoPaulo, activity: 'run' });
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
         forecast: fakeForecast(ok(makeForecast(DATES))),
@@ -239,7 +240,6 @@ describe('HomeScreen', () => {
       }),
     });
     // 08:00 em São Paulo, antes da janela 17h–19h → estado "planned"
-    // o plano da fixture é de corrida; o título usa a atividade do plano, não a selecionada.
     await screen.findByText('Corrida às 17h');
     // a fixture planeja na cidade 'sp', que não é a São Paulo selecionada (id 3448439).
     expect(screen.getByText('Plano feito em outra cidade')).toBeTruthy();
@@ -248,11 +248,12 @@ describe('HomeScreen', () => {
     expect(screen.getByText('5%')).toBeTruthy();
     fireEvent.press(screen.getByText('Desfazer plano'));
     // após desfazer, o herói volta ao estado "plan" recalculado a partir das 08:00
-    await screen.findByText(/Planejar Caminhada às \d+h/);
+    await screen.findByText(/Planejar Corrida às \d+h/);
   });
 
   it('plano feito na cidade em foco não mostra o aviso de outra cidade', async () => {
-    usePreferences.setState({ city: saoPaulo });
+    // A fixture planeja corrida, e o cartão agora é da atividade SELECIONADA.
+    usePreferences.setState({ city: saoPaulo, activity: 'run' });
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
         forecast: fakeForecast(ok(makeForecast(DATES))),
@@ -366,7 +367,8 @@ describe('HomeScreen', () => {
   });
 
   it('registra no minuto exato do relógio ao confirmar a hora atual no seletor', async () => {
-    usePreferences.setState({ city: saoPaulo });
+    // A fixture planeja corrida, e o cartão agora é da atividade SELECIONADA.
+    usePreferences.setState({ city: saoPaulo, activity: 'run' });
     renderWithProviders(<HomeScreen />, {
       services: fakeServices({
         forecast: fakeForecast(ok(makeForecast(DATES))),

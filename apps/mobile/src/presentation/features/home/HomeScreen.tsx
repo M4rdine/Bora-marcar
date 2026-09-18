@@ -21,6 +21,7 @@ import { ActivityPicker } from './components/ActivityPicker';
 import { HeroCard } from './components/HeroCard';
 import { HomeHeader } from './components/HomeHeader';
 import { NextDaysList } from './components/NextDaysList';
+import { OtherPlans } from './components/OtherPlans';
 import { StreakBar } from './components/StreakBar';
 import { Welcome } from './components/Welcome';
 import { deriveHeroState } from './heroState';
@@ -74,6 +75,7 @@ function HeroSection({
   const tomorrow = snapshot.overview.nextDays.find((d) => d.date === tomorrowDate) ?? null;
   const hero = deriveHeroState({
     today: snapshot.overview.today,
+    activity,
     now: snapshot.now,
     progress,
     graceHours: config.window.graceHoursAfterEnd,
@@ -212,6 +214,14 @@ function HomeContent({
         scoreFor={scoreFor}
       />
       <OverviewStatus overview={overview} />
+      {progress ? (
+        <OtherPlans
+          plans={progress.todayPlans}
+          selected={activity}
+          config={config}
+          onSelect={selectActivity}
+        />
+      ) : null}
       {overview.snapshot && progress ? (
         <HeroSection
           city={city}

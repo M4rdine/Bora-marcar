@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import type { City } from '@/application/ports';
+import { planFor } from '@/domain';
 import type {
   ActivityId,
   DayRecommendation,
@@ -96,7 +97,7 @@ export function DayHero({
   progress,
   actions,
 }: Props) {
-  const plan = progress.plansByDate.get(date) ?? null;
+  const plan = planFor(progress.plansByDate.get(date) ?? [], activity);
   const heroState = dayHeroState({ day, date, today, tomorrow, plan });
   const activityName = config.activities[day.activityId].name;
   return (

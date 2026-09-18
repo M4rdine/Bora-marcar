@@ -143,6 +143,9 @@ export const t = {
     confirm: 'Confirmar que fui',
     logOther: 'Saí em outro horário',
     logAgain: 'Registrar outra atividade',
+    otherPlan: (atividade: string, hora: number) => `${atividade} às ${hora}h`,
+    otherPlanGo: (atividade: string, hora: number) =>
+      `Você também planejou ${atividade} às ${hora}h. Toque para ver.`,
     confirmHour: (hour: number) => `Registrar às ${hour}h`,
     cancelPick: 'Cancelar',
     doneKicker: (activity: string, hour: number, minute: number) =>
